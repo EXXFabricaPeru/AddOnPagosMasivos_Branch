@@ -34,8 +34,8 @@ namespace SMC_APM.Controller
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and ifnull(\"U_EXC_CR\",'') = 'Y'";
             recordset.DoQuery(sqlQry);
-            if (recordset.EoF)
-                return null;
+            if (recordset.RecordCount == 0)
+                throw new Exception("No se han configurado series de retención, validar su configuración en el formulario numeración de documentos");
             else
                 return recordset;
         }
@@ -354,8 +354,6 @@ namespace SMC_APM.Controller
 
                     dtoBancoBCP _dtoBancoBCP = new dtoBancoBCP();
                     List<dtoBancoBCPDetalle> _listDetalleBCP = new List<dtoBancoBCPDetalle>();
-                    //List<dtoBancoBCPDetalle> _listDetalleBCPxProveedor = null;
-                    //List<dtoBancoBCPDetalle> _listDetalleBCPDocumentos = null;
 
                     string LineaCabeceraBCP = "";
                     string LineaDetalleBCP = "";
@@ -377,8 +375,6 @@ namespace SMC_APM.Controller
 
                     for (int i = 0; i < _listDetalleBCP.Count; i++)
                     {
-                        //_listDetalleBCPDocumentos = _listDetalleBCP.Where(x => x.NumeroDocumentoIdentidad.Equals(_listDetalleBCPxProveedor[i].NumeroDocumentoIdentidad)).ToList();
-
                         LineaDetalleBCP = " " + _listDetalleBCP[i].TipoRegistro +
                                 _listDetalleBCP[i].TipoCuenta +
                                 _listDetalleBCP[i].CuentaAbono +
@@ -394,27 +390,9 @@ namespace SMC_APM.Controller
                                 "00" + _listDetalleBCP[i].ValidacionIDC;
 
                         archivo.WriteLine(LineaDetalleBCP);
-
-
-                        /*
-                        sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + "Read Fila " + i + " de: " + _listDetalleBCP.Count
-           , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);*/
-
                     }
-                    /*Fin: Detalles*/
 
                     archivo.Close();
-                    /*
-                    oForm.Freeze(false);
-                    oButton.Item.Enabled = true;
-                    oButton.Caption = "Generar TXT";
-
-                    sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " : Archivo generado corrrectamente. ",
-                    SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-
-                    Process.Start(nombre);
-
-                    return;*/
                     break;
                 case "003":
 
@@ -471,16 +449,7 @@ namespace SMC_APM.Controller
                         archivo.WriteLine(LineaDetalle);
                     }
                     archivo.Close();
-                    /*
-            oForm.Freeze(false);
-            oButton.Item.Enabled = true;
-            oButton.Caption = "Generar TXT";
-
-            sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " : Archivo generado corrrectamente. ",
-            SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-
-            Process.Start(nombre);
-                    */
+                   
                     break;
 
                 case "009":
@@ -534,17 +503,7 @@ namespace SMC_APM.Controller
 
                     }
                     archivo.Close();
-                    /*
-                    oForm.Freeze(false);
-                    oButton.Item.Enabled = true;
-                    oButton.Caption = "Generar TXT";
 
-                    sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " : Archivo generado corrrectamente. ",
-                    SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-
-                    Process.Start(nombre);
-
-                    */
 
 
                     break;

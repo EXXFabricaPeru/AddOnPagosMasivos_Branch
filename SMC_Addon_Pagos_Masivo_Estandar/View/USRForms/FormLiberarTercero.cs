@@ -419,7 +419,22 @@ namespace SMC_APM.View.USRForms
 
             if (!e.BeforeAction)
             {
-                Globales.Aplication.MessageBox("Opción en desarrollo..., disponible en futuras versiones");
+                var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode , CodMoneda = s.Moneda }).Distinct().ToList();
+
+                foreach (var codigoBanco in lstBancos)
+                {
+                    try
+                    {
+                        string ruta = "C:\\PagosMasivos\\";
+                        string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM"); 
+                        Controller.GenerarTXTBancos(Convert.ToInt32(docEntryPM), codigoBanco.CodBanco, codigoBanco.CodMoneda);
+                        Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                    }
+                    catch (Exception ex)
+                    {
+                        Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                    }
+                }
             }
 
             return true;
@@ -466,12 +481,7 @@ namespace SMC_APM.View.USRForms
             return true;
         }
 
-        private void AbrirMOdal()
-        {
-            var formUID = string.Concat(FormModal.TYPE, "001");
-            if (!UIFormFactory.FormUIDExists(formUID))
-                UIFormFactory.AddUSRForm(formUID, new FormModal(formUID, Form.UniqueID, signal));
-        }
+
 
         private bool SeleccionarDocumento(ItemEvent e)
         {

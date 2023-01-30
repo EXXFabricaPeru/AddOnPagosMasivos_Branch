@@ -173,7 +173,6 @@
     <Compile Include="Util\utilNET.cs" />
     <Compile Include="View\frmPagoProveedores.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
-    <Compile Include="View\USRForms\FormModal.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
   </ItemGroup>
   <ItemGroup>

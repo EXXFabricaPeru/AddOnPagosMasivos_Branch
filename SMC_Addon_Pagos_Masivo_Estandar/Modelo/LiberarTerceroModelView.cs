@@ -142,7 +142,8 @@ namespace SMC_APM.Modelo
                              FilaMatrix = Convert.ToInt32(q.Element("LineId").Value),
                              Pagar = q.Element("U_EXD_IPAG").Value == "Y",
                              Escenario = Convert.ToInt32(q.Element("U_EXD_CODE").Value),
-                             Banco = q.Element("U_EXD_IPAG").Value,
+                             Banco = q.Element("U_EXD_BAES").Value,
+                             BancoCode = q.Element("U_EXD_BKCD").Value,
                              MedioPago = q.Element("U_EXD_MEDP").Value,
                              Proveedor = q.Element("U_EXD_PROV").Value,
                              TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
@@ -150,6 +151,7 @@ namespace SMC_APM.Modelo
                              LineaAsiento = Convert.ToInt32(q.Element("U_EXD_LIAS").Value),
                              NroCuota = Convert.ToInt32(q.Element("U_EXD_NCUO").Value),
                              MedioPagoSAP = GetMedioPagoSAP(q.Element("U_EXD_MEDP").Value),
+                             Moneda = q.Element("U_EXD_MONE").Value,
                              TotalDocumento = Convert.ToDouble(q.Element("U_EXD_TOTD").Value),
                              TotalML = Convert.ToDouble(q.Element("U_EXD_TOTP").Value),
                              TotalProveedorML = 0.0,
@@ -291,13 +293,16 @@ namespace SMC_APM.Modelo
         public bool Pagar { get; set; }
         public int Escenario { get; set; }
         public string Banco { get; set; }
+        public string BancoCode { get; set; }
         public string MedioPago { get; set; }
         public string MedioPagoSAP { get; set; }
         public string Proveedor { get; set; }
         public int TipoDocumento { get; set; }
         public int DocEntry { get; set; }
+
         public int NroCuota { get; set; }
         public int LineaAsiento { get; set; }
+        public string Moneda { get; set; }
         public double TotalDocumento { get; set; }
         public double TotalML { get; set; }
         public double TotalRetencionML { get; set; }

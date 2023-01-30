@@ -64,6 +64,7 @@ namespace SMC_APM.View.USRForms
             }
             catch (Exception ex)
             {
+                Form.Close();
                 Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
             }
         }
