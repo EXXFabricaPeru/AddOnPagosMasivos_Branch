@@ -12,7 +12,7 @@ namespace SMC_APM.dao
     class daoEscenario
     {
         //registra cabecera de doc seleccionados en el en tabla de usuario
-        public void registrarCabecera(string NombreBaseDatos, string UsuarioConectado,string codigo, string descripcion,string cta, string tipo,string fecha,string medioPago, string estado ,ref string mensaje)
+        public void registrarCabecera(string NombreBaseDatos, string UsuarioConectado, string codigo, string descripcion, string cta, string tipo, string fecha, string medioPago, string estado, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -88,7 +88,7 @@ namespace SMC_APM.dao
         }
 
         //actualizar fecha de pago de escenario
-        public void actualizarFechaPago(string codigo,SAPbouiCOM.Application sboApplication, string fecha, ref string mensaje)
+        public void actualizarFechaPago(string codigo, SAPbouiCOM.Application sboApplication, string fecha, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -116,7 +116,7 @@ namespace SMC_APM.dao
 
                 db.ExecuteNonQuery(CommandEmpresa);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 mensaje = "Catch => " + e.Message.ToString();
             }
@@ -195,7 +195,7 @@ namespace SMC_APM.dao
         }
 
         //registra detalle de escenario documentos seleccionados 
-        public void registrarDetalle(string NombreBD ,string UsuarioConectado,string codigo, string docEntry,string total,string tipodocumento,ref string mensaje)
+        public void registrarDetalle(string NombreBD, string UsuarioConectado, string codigo, string docEntry, string total, string tipodocumento, int lineaAS, int nroCuota, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -240,6 +240,18 @@ namespace SMC_APM.dao
                 param4.Direction = ParameterDirection.Input;
                 param4.Value = tipodocumento;
                 CommandEmpresa.Parameters.Add(param4);
+                DbParameter param5;
+                param5 = CommandEmpresa.CreateParameter();
+                param5.DbType = DbType.Int32;
+                param5.Direction = ParameterDirection.Input;
+                param5.Value = lineaAS;
+                CommandEmpresa.Parameters.Add(param5);
+                DbParameter param6;
+                param6 = CommandEmpresa.CreateParameter();
+                param6.DbType = DbType.Int32;
+                param6.Direction = ParameterDirection.Input;
+                param6.Value = nroCuota;
+                CommandEmpresa.Parameters.Add(param6);
 
                 db.ExecuteNonQuery(CommandEmpresa);
             }
@@ -253,7 +265,7 @@ namespace SMC_APM.dao
         }
 
         //actualiza detalle check retencion
-        public void actualizarDetalleRetenido(string NombreBaseDatos, string escenario, string docEntry,string documento, string retenido, string pagar,ref string mensaje)
+        public void actualizarDetalleRetenido(string NombreBaseDatos, string escenario, string docEntry, string documento, string retenido, string pagar, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -348,7 +360,7 @@ namespace SMC_APM.dao
         }
 
         //actualiza el rc embargo del escenario
-        public void actualizarRCEmbargo(string NombreBaseDatos, string escenario, string RCEmbargo, ref string mensaje, string ArchivoTxt,string fecha)
+        public void actualizarRCEmbargo(string NombreBaseDatos, string escenario, string RCEmbargo, ref string mensaje, string ArchivoTxt, string fecha)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -453,7 +465,7 @@ namespace SMC_APM.dao
                 CommandEmpresa = db.GetSqlStringCommand("SET SCHEMA " + NombreBaseDatos);
                 db.ExecuteNonQuery(CommandEmpresa);
 
-                CommandEmpresa = db.GetSqlStringCommand("DELETE FROM \"@SMC_APM_ESCDET\" WHERE \"U_SMC_DOCENTRY\" = '" + docEntry + "' AND \"U_SMC_ESCCAB\" = '" + codigo + "' AND \"U_SMC_TIPO_DOCUMENTO\" = '"+ tipodocumento + "'");
+                CommandEmpresa = db.GetSqlStringCommand("DELETE FROM \"@SMC_APM_ESCDET\" WHERE \"U_SMC_DOCENTRY\" = '" + docEntry + "' AND \"U_SMC_ESCCAB\" = '" + codigo + "' AND \"U_SMC_TIPO_DOCUMENTO\" = '" + tipodocumento + "'");
 
                 db.ExecuteNonQuery(CommandEmpresa);
             }
@@ -467,7 +479,7 @@ namespace SMC_APM.dao
         }
 
         //no se utiliza
-        public void marcarDetalle(SAPbouiCOM.Application sboApplication, string docentry, string marca,string escenario, ref string mensaje)
+        public void marcarDetalle(SAPbouiCOM.Application sboApplication, string docentry, string marca, string escenario, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -538,7 +550,7 @@ namespace SMC_APM.dao
         }
 
         //registrar anexo de escenario dependiendo su tipo L (liberacion) E (embargo)
-        public void registrarEscenarioAnexo(SAPbouiCOM.Application sboApplication, string escenario, string ruta,string tipo, ref string mensaje)
+        public void registrarEscenarioAnexo(SAPbouiCOM.Application sboApplication, string escenario, string ruta, string tipo, ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -631,7 +643,7 @@ namespace SMC_APM.dao
             }
             catch (Exception)
             {
-                
+
                 throw;
             }
             finally { Util.utilNET.liberarObjeto(rs); }
