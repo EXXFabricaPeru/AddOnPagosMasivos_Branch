@@ -3,11 +3,8 @@ using SAP_AddonFramework;
 using SMC_APM.Controller;
 using SMC_APM.dao;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SMC_APM.View.USRForms
 {
@@ -59,7 +56,7 @@ namespace SMC_APM.View.USRForms
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Find, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
 
                 Form.Items.Item("Item_27").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_27").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                Form.Items.Item("Item_27").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_27").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Find, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
 
                 Form.Items.Item("btnLstDocs").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
@@ -96,6 +93,7 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("btnGenPag").Enabled = false;
             Form.Items.Item("btnLibSNT").Enabled = false;
         }
+
         protected override void CargarEventos()
         {
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "btnLstDocs", e =>
@@ -173,7 +171,6 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
-
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "btnGenPag", e =>
             {
@@ -298,10 +295,8 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
-
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "1", e =>
             {
-
                 var btnCrgEnv = (SAPbouiCOM.Button)Form.Items.Item("btnGrbEnv").Specific;
                 var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
                 if (!e.BeforeAction && Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && e.InnerEvent == false)
@@ -322,7 +317,6 @@ namespace SMC_APM.View.USRForms
                 }
                 else if (!e.BeforeAction && Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE)
                 {
-
                 }
 
                 return true;

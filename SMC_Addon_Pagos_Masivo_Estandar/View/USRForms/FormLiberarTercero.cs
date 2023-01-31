@@ -225,8 +225,21 @@ namespace SMC_APM.View.USRForms
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_17", e => SeleccionarArchivoSUNAT(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_18", e => ValidarMontos(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_MATRIX_LINK_PRESSED, "Item_18", e => LinkButtonAction(e)));
+            Eventos.Add(new EventoItem(BoEventTypes.et_DOUBLE_CLICK, "Item_16", e => AbrirRespuestaSUNAT(e)));
 
             Eventos.Add(new EventoData(BoEventTypes.et_FORM_DATA_LOAD, TYPE, e => DataLoad(e)));
+        }
+
+        private bool AbrirRespuestaSUNAT(ItemEvent e)
+        {
+            if(!e.BeforeAction)
+            {
+                string rutaArchivo = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_ARRE");
+                if(!string.IsNullOrEmpty(rutaArchivo))
+                    Process.Start(rutaArchivo);
+            }
+
+            return true;
         }
 
         private bool LinkButtonAction(ItemEvent e)
@@ -419,6 +432,9 @@ namespace SMC_APM.View.USRForms
 
             if (!e.BeforeAction)
             {
+                if (Modelo.Filas.Count == 0)
+                    throw new Exception("No hay datos para generar los archivos");
+
                 var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode , CodMoneda = s.Moneda }).Distinct().ToList();
 
                 foreach (var codigoBanco in lstBancos)
@@ -428,11 +444,12 @@ namespace SMC_APM.View.USRForms
                         string ruta = "C:\\PagosMasivos\\";
                         string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM"); 
                         Controller.GenerarTXTBancos(Convert.ToInt32(docEntryPM), codigoBanco.CodBanco, codigoBanco.CodMoneda);
-                        Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                        
+                        Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     }
                     catch (Exception ex)
                     {
-                        Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                        Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
                     }
                 }
             }

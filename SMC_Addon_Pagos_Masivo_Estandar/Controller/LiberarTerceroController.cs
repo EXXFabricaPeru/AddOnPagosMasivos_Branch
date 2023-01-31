@@ -8,10 +8,10 @@ using SMC_APM.dto;
 using SMC_APM.Modelo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-
 
 namespace SMC_APM.Controller
 {
@@ -135,11 +135,8 @@ namespace SMC_APM.Controller
             }
             catch (Exception)
             {
-
                 throw;
             }
-
-
         }
 
         internal double GetTipoCambio(DateTime fecha)
@@ -162,9 +159,7 @@ namespace SMC_APM.Controller
             {
                 Globales.Aplication.MessageBox($"No se ha encontrado tipo de cambio para la fecha {fecha.ToString("dd-MM-yyyy")}");
                 return tc;
-                //Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
-
         }
 
         internal void BloquearLineaConPago(Form form, Matrix matrix)
@@ -186,7 +181,6 @@ namespace SMC_APM.Controller
             }
             catch (Exception)
             {
-
                 throw;
             }
             finally { form.Freeze(false); }
@@ -256,228 +250,225 @@ namespace SMC_APM.Controller
             {
                 var nombre = @"C:\PagosMasivos\";
                 nombre = nombre + "ArchivoBancoLiberacion-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
-                var archivo = new System.IO.StreamWriter(nombre, false, Encoding.GetEncoding(1252));
 
                 switch (codBanco)
                 {
-                    case "002":
-
-                        dtoBancoBCP _dtoBancoBCP = new dtoBancoBCP();
-                        List<dtoBancoBCPDetalle> _listDetalleBCP = new List<dtoBancoBCPDetalle>();
-
-                        string LineaCabeceraBCP = "";
-                        string LineaDetalleBCP = "";
-
-
-                        _dtoBancoBCP = ObtenerDatosCabArchivoTXTBCP_Retencion(docEntry, codMoneda).FirstOrDefault();
-                        _listDetalleBCP = ObtenerDatosDetArchivoTXTBCP(docEntry).ToList();
-
-                        LineaCabeceraBCP = "#1P" + _dtoBancoBCP.TipoCuenta + _dtoBancoBCP.CuentaCargo +
-                            _dtoBancoBCP.Moneda +
-                            (_dtoBancoBCP.Montototal).Replace(".", "") +
-                            _dtoBancoBCP.FechaProceso +
-                            "                    " + _dtoBancoBCP.Cadena + (_listDetalleBCP.Count()).ToString("D6") +
-                            "                0";
-
-
-                        archivo.WriteLine(LineaCabeceraBCP);
-
-
-                        for (int i = 0; i < _listDetalleBCP.Count; i++)
-                        {
-                            LineaDetalleBCP = " " + _listDetalleBCP[i].TipoRegistro +
-                                    _listDetalleBCP[i].TipoCuenta +
-                                    _listDetalleBCP[i].CuentaAbono +
-
-                                    _listDetalleBCP[i].NombreProveedor +
-
-                                    _listDetalleBCP[i].Moneda +
-                                    (_listDetalleBCP[i].Importetotal).Replace(".", "") +
-                                    _listDetalleBCP[i].TipoDocumentoIdentidad +
-                                    _listDetalleBCP[i].NumeroDocumentoIdentidad +
-                                    _listDetalleBCP[i].TipoDocumentoPagar +
-                                    _listDetalleBCP[i].NumeroDocumento +
-                                    "00" + _listDetalleBCP[i].ValidacionIDC;
-
-                            archivo.WriteLine(LineaDetalleBCP);
-                        }
-
-                        archivo.Close();
-                        break;
-
-                    case "003":
-
-                        dtoBancoBCP _dtoBanco = new dtoBancoBCP();
-                        List<dtoBancoBCPDetalle> _listDetalle = new List<dtoBancoBCPDetalle>();
-
-                        string LineaCabecera = "";
-                        string LineaDetalle = "";
-
-
-                        _listDetalle = ObtenerDatosDetArchivoTXTInterBank(docEntry).ToList();
-
-
-                        /*Detalles*/
-
-                        for (int i = 0; i < _listDetalle.Count; i++)
-                        {
-                            string tipo = "";
-                            if (_listDetalle[i].TipoCuenta == "I") //cuenta interbancara
-                            {
-                                tipo = "109";
-                                LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
-                                            _listDetalle[i].TipoDocumentoPagar +
-                                            _listDetalle[i].NumeroDocumento +
-                                            "          " + _listDetalle[i].FechaVencimiento +
-                                            _listDetalle[i].Moneda +
-                                            (_listDetalle[i].ImporteParcial).Replace(".", "") +
-                                            " " + "99" +
-                                            "   " + //espaco de tipo de cuenta
-                                            "  " + //espacio de moneda cuando es interbancario
-                                            "   " + //espacio de ofinia a la que pertenece
-                                            _listDetalle[i].CuentaAbono +
-                                            _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad +
-                                            _listDetalle[i].NumeroDocumentoIdentidad +
-                                            _listDetalle[i].NombreProveedor + "000000000000000";
-                                ;
-                            }
-                            else  //cuenta normla
-                            {
-                                tipo = "009";
-                                LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
-                                            _listDetalle[i].TipoDocumentoPagar +
-                                            _listDetalle[i].NumeroDocumento +
-                                            "          " + _listDetalle[i].FechaVencimiento +
-                                            _listDetalle[i].Moneda +
-                                            (_listDetalle[i].ImporteParcial).Replace(".", "") +
-                                            " " + "09" +
-                                            "001" +
-                                            _listDetalle[i].Moneda + "200" +
-                                            _listDetalle[i].CuentaAbono +
-                                            _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad + _listDetalle[i].NumeroDocumentoIdentidad +
-                                            _listDetalle[i].NombreProveedor + "000000000000000";
-                            }
-                            archivo.WriteLine(LineaDetalle);
-                        }
-                        archivo.Close();
-
-                        break;
-
-                    case "009":
-
-
-
-                        dtoBancoBCP _dtoBancoSC = new dtoBancoBCP();
-                        List<dtoBancoBCPDetalle> _listDetalleSC = new List<dtoBancoBCPDetalle>();
-
-                        string LineaCabeceraSC = "";
-                        string LineaDetalleSC = "";
-
-                        //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
-                        _listDetalleSC = ObtenerDatosDetArchivoTXTScotiaBank(docEntry).ToList();
-
-
-                        for (int i = 0; i < _listDetalleSC.Count; i++)
-                        {
-                            string FormaPago = "";
-                            if (_listDetalleSC[i].TipoCuenta == "I")
-                            {
-                                FormaPago = "4";
-
-                                LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
-                                            _listDetalleSC[i].NombreProveedor +
-                                            _listDetalleSC[i].NumeroDocumento +
-                                            _listDetalleSC[i].FechaVencimiento +
-                                            (_listDetalleSC[i].Importetotal).Replace(".", "") +
-                                            FormaPago +
-                                           "                                                             "
-                                           + _listDetalleSC[i].CuentaAbonoCCI + _listDetalleSC[i].Moneda + "01";
-
-                            }
-                            else //nomral
-                            {
-                                FormaPago = "2";
-
-                                LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
-                                           _listDetalleSC[i].NombreProveedor +
-                                           _listDetalleSC[i].NumeroDocumento +
-                                           _listDetalleSC[i].FechaVencimiento +
-                                           (_listDetalleSC[i].Importetotal).Replace(".", "") +
-                                           FormaPago +
-                                           _listDetalleSC[i].CuentaAbono + "                                                                       " + _listDetalleSC[i].Moneda + "01";
-                            }
-
-
-
-                            archivo.WriteLine(LineaDetalleSC);
-
-
-                        }
-                        archivo.Close();
-
-
-
-                        break;
-                    case "022":
-
-
-                        dtoBancoBCP _dtoBancoSA = new dtoBancoBCP();
-                        List<dtoBancoBCPDetalle> _listDetalleSA = new List<dtoBancoBCPDetalle>();
-
-                        string LineaCabeceraSA = "";
-                        string LineaDetalleSA = "";
-
-                        //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
-                        _listDetalleSA = ObtenerDatosDetArchivoTXTSantander(docEntry).ToList();
-
-
-                        for (int i = 0; i < _listDetalleSA.Count; i++)
-                        {
-                            string FormaPago = "";
-                            if (_listDetalleSA[i].TipoCuenta == "I")
-                            {
-                                FormaPago = "03";
-
-                                LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
-                                       _listDetalleSA[i].TipoDocumentoPagar +
-                                       _listDetalleSA[i].NumeroDocumento +
-                                       _listDetalleSA[i].Moneda +
-                                        _listDetalleSA[i].ImporteParcial +
-                                       _listDetalleSA[i].FechaVencimiento + "Confirming" +
-                                       "                    " + FormaPago + "          " + _listDetalleSA[i].CuentaAbonoCCI +
-                                       _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
-                                        "CONFIRMING";
-
-                            }
-                            else
-                            { //normal
-
-                                FormaPago = "01";
-
-                                LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
-                                       _listDetalleSA[i].TipoDocumentoPagar +
-                                       _listDetalleSA[i].NumeroDocumento +
-                                       _listDetalleSA[i].Moneda +
-                                        _listDetalleSA[i].ImporteParcial +
-                                       _listDetalleSA[i].FechaVencimiento + "Confirming" +
-                                       "                    " + FormaPago + _listDetalleSA[i].CuentaAbono +
-                                        _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
-                                        "CONFIRMING";
-
-                            }
-                            archivo.WriteLine(LineaDetalleSA);
-                        }
-                        archivo.Close();
-                        break;
-
+                    //PODRÍA SER UNA INTERFAZ
+                    case "002": GenerarTXT_BCP(nombre, docEntry, codMoneda); break;
+                    case "003": GenerarTXT_Interbank(nombre, docEntry); break;
+                    case "009": GenerarTXT_Scotiabank(nombre, docEntry); break;
+                    case "022": GenerarTXT_Santander(nombre, docEntry); break;
                 }
-
-
             }
             catch (Exception)
             {
                 throw;
             }
+        }
+
+        private void GenerarTXT_Santander(string nombre, int docEntry)
+        {
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+            dtoBancoBCP _dtoBancoSA = new dtoBancoBCP();
+            List<dtoBancoBCPDetalle> _listDetalleSA = new List<dtoBancoBCPDetalle>();
+
+            string LineaCabeceraSA = "";
+            string LineaDetalleSA = "";
+
+            //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
+            _listDetalleSA = ObtenerDatosDetArchivoTXTSantander(docEntry).ToList();
+
+            for (int i = 0; i < _listDetalleSA.Count; i++)
+            {
+                string FormaPago = "";
+                if (_listDetalleSA[i].TipoCuenta == "I")
+                {
+                    FormaPago = "03";
+
+                    LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
+                           _listDetalleSA[i].TipoDocumentoPagar +
+                           _listDetalleSA[i].NumeroDocumento +
+                           _listDetalleSA[i].Moneda +
+                            _listDetalleSA[i].ImporteParcial +
+                           _listDetalleSA[i].FechaVencimiento + "Confirming" +
+                           "                    " + FormaPago + "          " + _listDetalleSA[i].CuentaAbonoCCI +
+                           _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
+                            "CONFIRMING";
+                }
+                else
+                { //normal
+                    FormaPago = "01";
+
+                    LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
+                           _listDetalleSA[i].TipoDocumentoPagar +
+                           _listDetalleSA[i].NumeroDocumento +
+                           _listDetalleSA[i].Moneda +
+                            _listDetalleSA[i].ImporteParcial +
+                           _listDetalleSA[i].FechaVencimiento + "Confirming" +
+                           "                    " + FormaPago + _listDetalleSA[i].CuentaAbono +
+                            _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
+                            "CONFIRMING";
+                }
+                archivo.WriteLine(LineaDetalleSA);
+            }
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
+        }
+
+        private void GenerarTXT_Scotiabank(string nombre, int docEntry)
+        {
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+            dtoBancoBCP _dtoBancoSC = new dtoBancoBCP();
+            List<dtoBancoBCPDetalle> _listDetalleSC = new List<dtoBancoBCPDetalle>();
+
+            string LineaCabeceraSC = "";
+            string LineaDetalleSC = "";
+
+            _listDetalleSC = ObtenerDatosDetArchivoTXTScotiaBank(docEntry).ToList();
+
+            for (int i = 0; i < _listDetalleSC.Count; i++)
+            {
+                string FormaPago = "";
+                if (_listDetalleSC[i].TipoCuenta == "I")
+                {
+                    FormaPago = "4";
+
+                    LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
+                                _listDetalleSC[i].NombreProveedor +
+                                _listDetalleSC[i].NumeroDocumento +
+                                _listDetalleSC[i].FechaVencimiento +
+                                (_listDetalleSC[i].Importetotal).Replace(".", "") +
+                                FormaPago +
+                               "                                                             "
+                               + _listDetalleSC[i].CuentaAbonoCCI + _listDetalleSC[i].Moneda + "01";
+                }
+                else //nomral
+                {
+                    FormaPago = "2";
+
+                    LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
+                               _listDetalleSC[i].NombreProveedor +
+                               _listDetalleSC[i].NumeroDocumento +
+                               _listDetalleSC[i].FechaVencimiento +
+                               (_listDetalleSC[i].Importetotal).Replace(".", "") +
+                               FormaPago +
+                               _listDetalleSC[i].CuentaAbono + "                                                                       " + _listDetalleSC[i].Moneda + "01";
+                }
+
+                archivo.WriteLine(LineaDetalleSC);
+            }
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
+        }
+
+        private void GenerarTXT_Interbank(string nombre, int docEntry)
+        {
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+
+            dtoBancoBCP _dtoBanco = new dtoBancoBCP();
+            List<dtoBancoBCPDetalle> _listDetalle = new List<dtoBancoBCPDetalle>();
+
+            string LineaCabecera = "";
+            string LineaDetalle = "";
+
+            _listDetalle = ObtenerDatosDetArchivoTXTInterBank(docEntry).ToList();
+
+            /*Detalles*/
+
+            for (int i = 0; i < _listDetalle.Count; i++)
+            {
+                string tipo = "";
+                if (_listDetalle[i].TipoCuenta == "I") //cuenta interbancara
+                {
+                    tipo = "109";
+                    LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
+                                _listDetalle[i].TipoDocumentoPagar +
+                                _listDetalle[i].NumeroDocumento +
+                                "          " + _listDetalle[i].FechaVencimiento +
+                                _listDetalle[i].Moneda +
+                                (_listDetalle[i].ImporteParcial).Replace(".", "") +
+                                " " + "99" +
+                                "   " + //espaco de tipo de cuenta
+                                "  " + //espacio de moneda cuando es interbancario
+                                "   " + //espacio de ofinia a la que pertenece
+                                _listDetalle[i].CuentaAbono +
+                                _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad +
+                                _listDetalle[i].NumeroDocumentoIdentidad +
+                                _listDetalle[i].NombreProveedor + "000000000000000";
+                    ;
+                }
+                else  //cuenta normla
+                {
+                    tipo = "009";
+                    LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
+                                _listDetalle[i].TipoDocumentoPagar +
+                                _listDetalle[i].NumeroDocumento +
+                                "          " + _listDetalle[i].FechaVencimiento +
+                                _listDetalle[i].Moneda +
+                                (_listDetalle[i].ImporteParcial).Replace(".", "") +
+                                " " + "09" +
+                                "001" +
+                                _listDetalle[i].Moneda + "200" +
+                                _listDetalle[i].CuentaAbono +
+                                _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad + _listDetalle[i].NumeroDocumentoIdentidad +
+                                _listDetalle[i].NombreProveedor + "000000000000000";
+                }
+                archivo.WriteLine(LineaDetalle);
+            }
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
+        }
+
+        private void GenerarTXT_BCP(string nombre, int docEntry, string codMoneda)
+        {
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+            dtoBancoBCP _dtoBancoBCP = new dtoBancoBCP();
+            List<dtoBancoBCPDetalle> _listDetalleBCP = new List<dtoBancoBCPDetalle>();
+
+            string LineaCabeceraBCP = "";
+            string LineaDetalleBCP = "";
+
+            _dtoBancoBCP = ObtenerDatosCabArchivoTXTBCP_Retencion(docEntry, codMoneda).FirstOrDefault();
+            _listDetalleBCP = ObtenerDatosDetArchivoTXTBCP(docEntry).ToList();
+
+            LineaCabeceraBCP = "#1P" + _dtoBancoBCP.TipoCuenta + _dtoBancoBCP.CuentaCargo +
+                _dtoBancoBCP.Moneda +
+                (_dtoBancoBCP.Montototal).Replace(".", "") +
+                _dtoBancoBCP.FechaProceso +
+                "                    " + _dtoBancoBCP.Cadena + (_listDetalleBCP.Count()).ToString("D6") +
+                "                0";
+
+            archivo.WriteLine(LineaCabeceraBCP);
+
+            for (int i = 0; i < _listDetalleBCP.Count; i++)
+            {
+                LineaDetalleBCP = " " + _listDetalleBCP[i].TipoRegistro +
+                        _listDetalleBCP[i].TipoCuenta +
+                        _listDetalleBCP[i].CuentaAbono +
+
+                        _listDetalleBCP[i].NombreProveedor +
+
+                        _listDetalleBCP[i].Moneda +
+                        (_listDetalleBCP[i].Importetotal).Replace(".", "") +
+                        _listDetalleBCP[i].TipoDocumentoIdentidad +
+                        _listDetalleBCP[i].NumeroDocumentoIdentidad +
+                        _listDetalleBCP[i].TipoDocumentoPagar +
+                        _listDetalleBCP[i].NumeroDocumento +
+                        "00" + _listDetalleBCP[i].ValidacionIDC;
+
+                archivo.WriteLine(LineaDetalleBCP);
+            }
+
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
         }
 
         private static IEnumerable<dtoBancoBCPDetalle> ObtenerDatosDetArchivoTXTInterBank(int docEntry)
@@ -519,7 +510,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),
@@ -551,7 +541,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),
@@ -583,7 +572,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),
