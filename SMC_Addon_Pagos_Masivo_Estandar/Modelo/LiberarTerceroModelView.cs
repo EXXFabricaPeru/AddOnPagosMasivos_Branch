@@ -2,10 +2,13 @@
 using SAP_AddonFramework;
 using SAPbobsCOM;
 using SAPbouiCOM;
+using SMC_APM.Controller;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace SMC_APM.Modelo
 {
@@ -15,6 +18,8 @@ namespace SMC_APM.Modelo
         public string CuentaBanco { get; set; }
         public double TipoCambio { get; set; }
         public string NroOperacion { get; set; }
+        public bool PagarRetenciones { get; set; }
+        public bool PagarProveedores { get; set; }
         public Form Form { get; set; }
         public List<DatosSUNATRetencion> RptaSUNAT { get; set; }
         public List<LiberarTercero_Fila> Filas { get; set; }
@@ -26,7 +31,7 @@ namespace SMC_APM.Modelo
             Filas = new List<LiberarTercero_Fila>();
         }
 
-        public void BindDataCabecera()
+        public void BindData()
         {
             try
             {
@@ -34,6 +39,18 @@ namespace SMC_APM.Modelo
                 CuentaBanco = Form.GetDBDataSource("@EXD_OTRR").GetValueExt("U_EXD_BNPA");
                 TipoCambio = Convert.ToDouble(Form.GetDBDataSource("@EXD_OTRR").GetValueExt("U_EXD_TIPC"));
                 NroOperacion = Form.GetDBDataSource("@EXD_OTRR").GetValueExt("U_EXD_NROP");
+                PagarProveedores = Form.GetUserDataSource("UD_PP").Value == "Y";
+                PagarRetenciones = Form.GetUserDataSource("UD_PR").Value == "Y";
+
+                //EL DETALLE YA SE CARGÓ EN LA CONSULTA, ACÁ RECORREMOS PARA VALIDAR LAS SELECCIONES MASIVAS (CONTROL + CLICK)
+                Matrix matrix = Form.GetMatrix("Item_18");
+                CheckBox chk;
+
+                for (int i = 1; i <= matrix.VisualRowCount; i++)
+                {
+                    chk = matrix.GetCellSpecific("Col_0", i);
+                    Filas.Where(x => x.FilaMatrix == i).FirstOrDefault().Pagar = chk.Checked;
+                }
             }
             catch (Exception)
             {
@@ -59,21 +76,30 @@ namespace SMC_APM.Modelo
 
         internal void ValidarDatos()
         {
+            if (!PagarRetenciones && !PagarProveedores)
+                throw new Exception("Debe seleccionar al menos una opción de pago. Pago Proveedores / Retenciones");
+
             if (string.IsNullOrEmpty(NroOperacion))
                 throw new Exception("Debe ingresar un número de operación");
 
             if (RptaSUNAT == null)
                 throw new Exception("Debe cargar una respuesta de SUNAT antes de procesar los pagos");
 
-            foreach (DatosSUNATRetencion lineaArchivo in RptaSUNAT)
-            {
-                LiberarTercero_Fila fila = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).FirstOrDefault();
+            if (Filas.Where(x => x.Pagar).Count() == 0)
+                throw new Exception("Debe seleccionar al menos un documento para iniciar el proceso");
 
-                if (fila != null) //SI ESTÁ PRESENTE EN EL ARCHIVO PERO NO EN LA GRILLA, SE IGNORA
+            if (PagarRetenciones)
+            {
+                foreach (DatosSUNATRetencion lineaArchivo in RptaSUNAT)
                 {
-                    double totalRetencionProveedor = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).Sum(y => y.TotalRetencionML);
-                    if (totalRetencionProveedor != lineaArchivo.MontoEmbargo)
-                        throw new Exception($"El monto de retención para el proveedor P{lineaArchivo.RUC} no ha sido ingresado en su totalidad. Falta registrar {lineaArchivo.MontoEmbargo - totalRetencionProveedor} soles");
+                    LiberarTercero_Fila fila = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).FirstOrDefault();
+
+                    if (fila != null) //SI ESTÁ PRESENTE EN EL ARCHIVO PERO NO EN LA GRILLA, SE IGNORA
+                    {
+                        double totalRetencionProveedor = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).Sum(y => y.TotalRetencionML);
+                        if (totalRetencionProveedor != lineaArchivo.MontoEmbargo)
+                            throw new Exception($"El monto de retención para el proveedor P{lineaArchivo.RUC} no ha sido ingresado en su totalidad. Falta registrar {lineaArchivo.MontoEmbargo - totalRetencionProveedor} soles");
+                    }
                 }
             }
         }
@@ -82,40 +108,174 @@ namespace SMC_APM.Modelo
         {
             try
             {
-                Filas = Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO ANTERIORMENTE
+                if (PagarRetenciones)
+                    ProcesarRetenciones();
 
-                if ((Filas == null || Filas.Count == 0) && Form.Mode == BoFormMode.fm_ADD_MODE)
-                    throw new Exception("Debe seleccionar al menos un documento");
+                if (PagarProveedores)
+                    ProcesarProveedores();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
-                List<Terceros_Retencion> agrupados = Filas
-                                                    .Where(x => x.TotalRetencionML > 0)
-                                                    .GroupBy(u => u.Proveedor)
-                                                    .Select(_ => new Terceros_Retencion
-                                                    {
-                                                        Proveedor = _.Key,
-                                                        MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
-                                                        MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
-                                                        Banco = _.Max(x => x.Banco),
-                                                        CuentaTransferencia = CuentaBanco,
-                                                        CuentaCheque = CuentaBanco,
-                                                        FechaTransferencia = FechaPago,
-                                                        NroOperacion = NroOperacion,
-                                                        Documentos = _.Select(x => new DatoDocumento() { DocEntry = x.DocEntry, ObjType = x.TipoDocumento, Cuota = x.NroCuota, MontoAplicado = x.TotalRetencionML, Linea = x.LineaAsiento }).ToList()
+        private void ProcesarProveedores()
+        {
+            DBDataSource HEADER = Form.GetDBDataSource("@EXD_OTRR");
+            DBDataSource DETAIL = Form.GetDBDataSource("@EXD_TRR1");
+            DBDataSource PAGOMASIVO = Form.GetDBDataSource("@EXP_OPMP");
+            Matrix matrix = Form.GetMatrix("Item_18");
 
-                                                    }).ToList();
+            var pgoDS = DETAIL.GetAsXML();
+            string docEntryPM = HEADER.GetValueExt("U_EXD_NRPM");
 
-                foreach (Terceros_Retencion proveedor in agrupados)
+
+            Conditions conditions = new Conditions();
+            Condition cnd = conditions.Add();
+            cnd.Alias = "DocEntry";
+
+            cnd.Operation = BoConditionOperation.co_EQUAL;
+            cnd.CondVal = docEntryPM;
+
+            PAGOMASIVO.Query(conditions);
+
+            var lstPagos = ObtenerListaPagos(HEADER,PAGOMASIVO, pgoDS);
+            var estado = string.Empty;
+            var msjError = string.Empty;
+            var nroPago = 0;
+
+
+            try
+            {
+                Globales.Aplication.StatusBar.SetSystemMessage("Iniciando generacion de pagos proveedores...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
+                
+                foreach (var pgo in lstPagos)
                 {
-                    int docEntryPago = proveedor.CrearPagoRetencion();
-                    if (docEntryPago != -1)
+                    msjError = string.Empty;
+                    estado = "OK";
+                    nroPago = 0;
+                    try
                     {
-                        Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
+                        nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
+                    }
+                    catch (Exception ex)
+                    {
+                        msjError = ex.Message;
+                        estado = "ER";
+                    }
+
+                    foreach (var linea in pgo.ExtLineasDS)
+                    {
+                        matrix.GetCellSpecific("Col_15", linea).Value = nroPago == 0 ? string.Empty : nroPago.ToString();
+                        matrix.GetCellSpecific("Col_25", linea).Value = msjError;
+
+                        ComboBox cb = matrix.GetCellSpecific("Col_26", linea);
+                        cb.Select(estado == "OK" ? "Y" : "N", BoSearchKey.psk_ByValue);
+                        
+                        //DETAIL.SetValue("U_EXD_IDPP", linea - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
+                        //DETAIL.SetValue("U_EXP_ESTADO", linea - 1, estado);
+                        //DETAIL.SetValue("U_EXP_MSJERROR", linea - 1, msjError);
                     }
                 }
             }
             catch (Exception)
             {
                 throw;
+            }
+        }
+
+        private IEnumerable<SBOPago> ObtenerListaPagos(DBDataSource dbsCabLR, DBDataSource dbsCabPM, object obj)
+        {
+            XDocument xDoc = null;
+
+            try
+            {
+                var rsltNroLinea = 0;
+                var rsltNroCuota = 0;
+                var fechaPago = DateTime.ParseExact(dbsCabLR.GetValue("U_EXD_FPAG", 0).Trim(), "yyyyMMdd", CultureInfo.InvariantCulture);
+                var refTransf = dbsCabLR.GetValue("U_EXD_NROP", 0).Trim();
+
+                var codSeriePago = Convert.ToInt32(dbsCabPM.GetValue("U_EXP_SERIEPAGO", 0).Trim());
+                var codSerieRtcn = Convert.ToInt32(dbsCabPM.GetValue("U_EXP_SERIERETENCION", 0).Trim());
+                
+
+                xDoc = XDocument.Parse((string)obj);
+
+                var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
+               .Any(a => a.Element("uid").Value.Equals("U_EXD_IPAG") && a.Element("value").Value.Equals("Y"))
+               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXD_GEPP") && a.Element("value").Value == "N"));
+                
+                return xElements.Descendants("cells").GroupBy(g => new
+                {
+                    CardCode = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_PROV")).FirstOrDefault().Element("value").Value,
+                    MedioDePago = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MEDP")).FirstOrDefault()?.Element("value").Value,
+                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MONE")).FirstOrDefault()?.Element("value").Value,
+                    Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_BKCD")).FirstOrDefault()?.Element("value").Value,
+                    CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_CTAB")).FirstOrDefault()?.Element("value").Value,
+                    AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_INDR")).FirstOrDefault()?.Element("value").Value
+                }).Select(s => new SBOPago
+                {
+                    CodSerieSBO = s.Key.AplSerieRetencion == "Y" ? codSerieRtcn : codSeriePago,
+                    CodigoSN = s.Key.CardCode,
+                    Moneda = s.Key.Moneda,
+                    FechaContabilizacion = fechaPago,
+                    FechaDocumento = fechaPago,
+                    FechaVencimiento = fechaPago,
+                    Monto = s.Sum(sm => Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_PPME")).FirstOrDefault()?.Element("value").Value)),
+                    ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
+                    MetodoPago = new SBOMetodoPago
+                    {
+                        Tipo = s.Key.MedioDePago,
+                        Pais = "PE",
+                        Banco = s.Key.Banco,
+                        Cuenta = s.Key.CtaBanco,
+                        Referencia = refTransf
+                    },
+                    Detalle = s.Select(s1 => new SBOPagoDetalle
+                    {
+                        TipoDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_TDOC")).FirstOrDefault()?.Element("value").Value),
+                        IdDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_NUMI")).FirstOrDefault()?.Element("value").Value),
+                        IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_LIAS")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
+                        NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_NCUO")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
+                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_PAGP")).FirstOrDefault()?.Element("value").Value)
+                    })
+                });
+            }
+            finally { }
+        }
+
+        private void ProcesarRetenciones()
+        {
+            Filas = Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO ANTERIORMENTE
+
+            if ((Filas == null || Filas.Count == 0) && Form.Mode == BoFormMode.fm_ADD_MODE)
+                throw new Exception("Debe seleccionar al menos un documento");
+
+            List<Terceros_Retencion> agrupados = Filas
+                                                .Where(x => x.TotalRetencionML > 0)
+                                                .GroupBy(u => u.Proveedor)
+                                                .Select(_ => new Terceros_Retencion
+                                                {
+                                                    Proveedor = _.Key,
+                                                    MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
+                                                    MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
+                                                    Banco = _.Max(x => x.Banco),
+                                                    CuentaTransferencia = CuentaBanco,
+                                                    CuentaCheque = CuentaBanco,
+                                                    FechaTransferencia = FechaPago,
+                                                    NroOperacion = NroOperacion,
+                                                    Documentos = _.Select(x => new DatoDocumento() { DocEntry = x.DocEntry, ObjType = x.TipoDocumento, Cuota = x.NroCuota, MontoAplicado = x.TotalRetencionML, Linea = x.LineaAsiento }).ToList()
+
+                                                }).ToList();
+
+            foreach (Terceros_Retencion proveedor in agrupados)
+            {
+                int docEntryPago = proveedor.CrearPagoRetencion();
+                if (docEntryPago != -1)
+                {
+                    Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
+                }
             }
         }
 

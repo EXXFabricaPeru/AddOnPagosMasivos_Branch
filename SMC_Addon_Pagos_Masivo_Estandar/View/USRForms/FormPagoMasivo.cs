@@ -178,6 +178,7 @@ namespace SMC_APM.View.USRForms
                 {
                     var rslt = Globales.Aplication.MessageBox("Se procederá a generar el pago de los documentos seleccionados \n ¿Desea continuar con esta accion?"
                     , Btn1Caption: "SI", Btn2Caption: "NO");
+                    
                     if (rslt == 1)
                     {
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;

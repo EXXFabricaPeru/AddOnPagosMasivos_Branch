@@ -10,13 +10,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
 namespace SMC_APM.Controller
 {
-    class PagoMasivoController
+    internal class PagoMasivoController
     {
         public static SAPbobsCOM.Recordset ObtenerSeriesDocumentoPago()
         {
@@ -58,6 +57,7 @@ namespace SMC_APM.Controller
             else
                 return Tuple.Create(recordset.Fields.Item(0).Value, recordset.Fields.Item(1).Value);
         }
+
         public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -185,7 +185,7 @@ namespace SMC_APM.Controller
             //if (!string.IsNullOrWhiteSpace(pago.MedioPagoSUNAT)) sboPayments.UserFields.Fields.Item("U_BPP_MPPG").Value = pago.MedioPagoSUNAT;
             switch (pago.MetodoPago.Tipo)
             {
-                case "CB": //Pago con cheque 
+                case "CB": //Pago con cheque
                     var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
                     sboPayments.Checks.AccounttNum = sucursalBanco.Item1;
                     sboPayments.Checks.BankCode = pago.MetodoPago.Banco;
@@ -221,6 +221,7 @@ namespace SMC_APM.Controller
                     //    lo_PgoEfc.PrimaryFormItems.Add();
                     //}
                     break;
+
                 case "CG":
                 case "PV":
                 case "TB"://Pago con Transferencia
@@ -244,6 +245,7 @@ namespace SMC_APM.Controller
                     //    lo_PgoEfc.PrimaryFormItems.Add();
                     //}
                     break;
+
                 case "3"://Pago en Efectivo
                     sboPayments.CashAccount = pago.MetodoPago.Cuenta;
                     sboPayments.CashSum = pago.Monto;
@@ -358,7 +360,6 @@ namespace SMC_APM.Controller
                     string LineaCabeceraBCP = "";
                     string LineaDetalleBCP = "";
 
-
                     _dtoBancoBCP = ObtenerDatosCabArchivoTXTBCP(docEntry).FirstOrDefault();
                     _listDetalleBCP = ObtenerDatosDetArchivoTXTBCP(docEntry).ToList();
 
@@ -369,9 +370,7 @@ namespace SMC_APM.Controller
                         "                    " + _dtoBancoBCP.Cadena + (_listDetalleBCP.Count()).ToString("D6") +
                         "                0";
 
-
                     archivo.WriteLine(LineaCabeceraBCP);
-
 
                     for (int i = 0; i < _listDetalleBCP.Count; i++)
                     {
@@ -394,6 +393,7 @@ namespace SMC_APM.Controller
 
                     archivo.Close();
                     break;
+
                 case "003":
 
                     dtoBancoBCP _dtoBanco = new dtoBancoBCP();
@@ -402,9 +402,7 @@ namespace SMC_APM.Controller
                     string LineaCabecera = "";
                     string LineaDetalle = "";
 
-
                     _listDetalle = ObtenerDatosDetArchivoTXTInterBank(docEntry).ToList();
-
 
                     /*Detalles*/
 
@@ -449,12 +447,10 @@ namespace SMC_APM.Controller
                         archivo.WriteLine(LineaDetalle);
                     }
                     archivo.Close();
-                   
+
                     break;
 
                 case "009":
-
-
 
                     dtoBancoBCP _dtoBancoSC = new dtoBancoBCP();
                     List<dtoBancoBCPDetalle> _listDetalleSC = new List<dtoBancoBCPDetalle>();
@@ -464,7 +460,6 @@ namespace SMC_APM.Controller
 
                     //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
                     _listDetalleSC = ObtenerDatosDetArchivoTXTScotiaBank(docEntry).ToList();
-
 
                     for (int i = 0; i < _listDetalleSC.Count; i++)
                     {
@@ -481,7 +476,6 @@ namespace SMC_APM.Controller
                                         FormaPago +
                                        "                                                             "
                                        + _listDetalleSC[i].CuentaAbonoCCI + _listDetalleSC[i].Moneda + "01";
-
                         }
                         else //nomral
                         {
@@ -496,19 +490,13 @@ namespace SMC_APM.Controller
                                        _listDetalleSC[i].CuentaAbono + "                                                                       " + _listDetalleSC[i].Moneda + "01";
                         }
 
-
-
                         archivo.WriteLine(LineaDetalleSC);
-
-
                     }
                     archivo.Close();
 
-
-
                     break;
-                case "022":
 
+                case "022":
 
                     dtoBancoBCP _dtoBancoSA = new dtoBancoBCP();
                     List<dtoBancoBCPDetalle> _listDetalleSA = new List<dtoBancoBCPDetalle>();
@@ -518,7 +506,6 @@ namespace SMC_APM.Controller
 
                     //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
                     _listDetalleSA = ObtenerDatosDetArchivoTXTSantander(docEntry).ToList();
-
 
                     for (int i = 0; i < _listDetalleSA.Count; i++)
                     {
@@ -536,11 +523,9 @@ namespace SMC_APM.Controller
                                    "                    " + FormaPago + "          " + _listDetalleSA[i].CuentaAbonoCCI +
                                    _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
                                     "CONFIRMING";
-
                         }
                         else
                         { //normal
-
                             FormaPago = "01";
 
                             LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
@@ -552,7 +537,6 @@ namespace SMC_APM.Controller
                                    "                    " + FormaPago + _listDetalleSA[i].CuentaAbono +
                                     _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
                                     "CONFIRMING";
-
                         }
                         archivo.WriteLine(LineaDetalleSA);
                     }
@@ -569,9 +553,7 @@ namespace SMC_APM.Controller
                     */
 
                     break;
-
             }
-
         }
 
         private static IEnumerable<dtoBancoBCP> ObtenerDatosCabArchivoTXTBCP(int docEntry)
@@ -605,7 +587,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),
@@ -665,7 +646,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),
@@ -697,7 +677,6 @@ namespace SMC_APM.Controller
             {
                 return new dtoBancoBCPDetalle
                 {
-
                     TipoRegistro = dc["TipoRegistro"].ToString(),
                     TipoCuenta = dc["TipoCuenta"].ToString(),
                     CuentaAbono = dc["CuentaAbono"].ToString(),

@@ -16,19 +16,18 @@ namespace SMC_APM.View.USRForms
         public const string TYPE = "FrmLPG";
         public const string UNQID = "FrmLPG";
         public const string MENU = "MNUID_TRET";
+
         //public const string PATH = "Resources/frmSMC_PM_LiberarTerceroRet.srf";
         private readonly string HEADER = "@EXD_OTRR";
+
         private readonly string DETAIL = "@EXD_TRR1";
         private readonly string UDO_CODE = "EXD_OTRR";
-
-        private AutoResetEvent signal = new AutoResetEvent(false);
-        public bool PagosRetenciones { get; set; }
-        public bool PagosProveedores { get; set; }
+        //public bool PagosRetenciones { get; set; }
+        //public bool PagosProveedores { get; set; }
         public string FechaPM { get; set; }
         public string DocEntryPM { get; set; }
         public LiberarTerceroController Controller { get; set; }
         public LiberarTerceroModelView Modelo { get; set; }
-
 
         public FormLiberarTercero(string id, string path, string fechaPM, string docEntry) : base(TYPE, MENU, id, path)
         {
@@ -51,7 +50,6 @@ namespace SMC_APM.View.USRForms
                 ConfigurarMatrix();
                 Automanage();
 
-
                 if (!Controller.ExisteRegistro(DocEntryPM) || !isExternal)
                 {
                     ConsultarPagos();
@@ -66,7 +64,6 @@ namespace SMC_APM.View.USRForms
 
                     cnd.Operation = BoConditionOperation.co_EQUAL;
                     cnd.CondVal = docEntry.ToString();
-
 
                     Form.GetDBDataSource(HEADER).Query(conditions);
                     Form.GetDBDataSource(DETAIL).Query(conditions);
@@ -120,15 +117,17 @@ namespace SMC_APM.View.USRForms
 
         internal void CrearPagos()
         {
+            //YA SE HIZO EL BINDING
             try
             {
+                Modelo.BindData();
+
                 Globales.Aplication.StatusBar.SetText("Creando pagos, espere por favor...", BoMessageTime.bmt_Long, BoStatusBarMessageType.smt_Warning);
 
                 Form.Freeze(true);
 
                 Modelo.ValidarDatos();
                 //Modelo = new LiberarTerceroModelView(Form);
-
 
                 //Modelo.BindData(); //SE HACE UN BINDING INTERNO
                 Modelo.CrearPagos();
@@ -174,6 +173,8 @@ namespace SMC_APM.View.USRForms
 
         private void ConfigurarMatrix()
         {
+            Matrix.Columns.Item("Col_22").Visible = false;
+
             Matrix.Columns.Item("Col_14").Visible = !(Form.Mode == BoFormMode.fm_ADD_MODE);
             Matrix.Columns.Item("Col_15").Visible = !(Form.Mode == BoFormMode.fm_ADD_MODE);
 
@@ -181,6 +182,7 @@ namespace SMC_APM.View.USRForms
             Matrix.Columns.Item("Col_12").ColumnSetting.SumType = BoColumnSumType.bst_Auto;
             Matrix.Columns.Item("Col_13").ColumnSetting.SumType = BoColumnSumType.bst_Auto;
 
+            
             Matrix.AutoResizeColumns();
         }
 
@@ -202,7 +204,7 @@ namespace SMC_APM.View.USRForms
             Form.GetDBDataSource(HEADER).SetValueExt("DocNum", Form.BusinessObject.GetNextSerialNumber(Combo.Value, UDO_CODE).ToString());
 
             Form.GetUserDataSource("UD_PR").Value = "Y";
-            Form.GetUserDataSource("UD_PP").Value = "N";
+            Form.GetUserDataSource("UD_PP").Value = "Y";
 
             //BANCOS
             Combo = Form.GetComboBox("Item_14");
@@ -217,8 +219,8 @@ namespace SMC_APM.View.USRForms
         {
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_5", e => ActualizarTipoCambio(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_10", e => ValidateTipoCambio(e)));
-            //Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_18", e => ValidateTipoCambio(e)));
 
+            Eventos.Add(new EventoItem(BoEventTypes.et_DOUBLE_CLICK, "Item_18", e => { if (e.BeforeAction && e.Row > 0) return false;  return true; })); //DESHABILITAMOS PARA NO PERMITIR LOS CLICKS RAPIDOS SE CONFUNDAN CON DOBLE CLICK
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_18", e => SeleccionarDocumento(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_19", e => GenerarTXT(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "1", e => BotonCrear(e)));
@@ -226,16 +228,17 @@ namespace SMC_APM.View.USRForms
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_18", e => ValidarMontos(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_MATRIX_LINK_PRESSED, "Item_18", e => LinkButtonAction(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_DOUBLE_CLICK, "Item_16", e => AbrirRespuestaSUNAT(e)));
+            
 
             Eventos.Add(new EventoData(BoEventTypes.et_FORM_DATA_LOAD, TYPE, e => DataLoad(e)));
         }
 
         private bool AbrirRespuestaSUNAT(ItemEvent e)
         {
-            if(!e.BeforeAction)
+            if (!e.BeforeAction)
             {
                 string rutaArchivo = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_ARRE");
-                if(!string.IsNullOrEmpty(rutaArchivo))
+                if (!string.IsNullOrEmpty(rutaArchivo))
                     Process.Start(rutaArchivo);
             }
 
@@ -256,7 +259,7 @@ namespace SMC_APM.View.USRForms
 
         private bool ValidarMontos(ItemEvent e)
         {
-            if (e.BeforeAction && e.Row > 0 && !e.InnerEvent)
+            if (e.BeforeAction && e.Row > 0 && !e.InnerEvent && e.ItemChanged)
             {
                 if (e.ColUID == "Col_12")
                 {
@@ -287,7 +290,7 @@ namespace SMC_APM.View.USRForms
                 }
             }
 
-            if (!e.BeforeAction && e.Row > 0 && !e.InnerEvent)
+            if (!e.BeforeAction && e.Row > 0 && !e.InnerEvent && e.ItemChanged)
             {
                 try
                 {
@@ -295,11 +298,17 @@ namespace SMC_APM.View.USRForms
 
                     if (e.ColUID == "Col_12")
                     {
+                        int decimales = Util.utilNET.GetDecimalesConfigurado();
+
+                        string moneda = Matrix.GetCellSpecific("Col_10", e.Row).Value;
                         double totalPagar = Convert.ToDouble(Matrix.GetCellSpecific("Col_17", e.Row).Value);
                         double montoRetencion = Convert.ToDouble(Matrix.GetCellSpecific("Col_12", e.Row).Value);
+                        double tipoCambio = Convert.ToDouble(Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_TIPC"));
 
                         //Matrix.GetCellSpecific("Col_13", e.Row).Value = (totalPagar - montoRetencion).ToString();
-                        Matrix.Columns.Item("Col_13").Cells.Item(e.Row).Specific.Value = (totalPagar - montoRetencion).ToString();
+                        Matrix.Columns.Item("Col_13").Cells.Item(e.Row).Specific.Value = (totalPagar - montoRetencion).ToString(); //TOTAL PAGAR SOLES
+                        Matrix.Columns.Item("Col_24").Cells.Item(e.Row).Specific.Value = moneda == "SOL" ? (totalPagar - montoRetencion).ToString() : Math.Round(((totalPagar - montoRetencion) / tipoCambio), decimales).ToString(); //TOTAL PAGAR MONEDA DE DOCUMENTO
+
 
                         //ACTUALIZAMOS EL MODELO
                         Modelo.Filas.Where(x => x.FilaMatrix == e.Row).FirstOrDefault().TotalRetencionML = montoRetencion;
@@ -392,6 +401,7 @@ namespace SMC_APM.View.USRForms
                 //DESBLOQUEAMOS LOS CAMPOS DE RETENCIÓN Y PROVEEDOR
                 DesbloquearColumnasRetencion();
                 RegistrarEmbargos();
+                Matrix.AutoResizeColumns();
             }
         }
 
@@ -435,16 +445,16 @@ namespace SMC_APM.View.USRForms
                 if (Modelo.Filas.Count == 0)
                     throw new Exception("No hay datos para generar los archivos");
 
-                var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode , CodMoneda = s.Moneda }).Distinct().ToList();
+                var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode, CodMoneda = s.Moneda }).Distinct().ToList();
 
                 foreach (var codigoBanco in lstBancos)
                 {
                     try
                     {
                         string ruta = "C:\\PagosMasivos\\";
-                        string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM"); 
+                        string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM");
                         Controller.GenerarTXTBancos(Convert.ToInt32(docEntryPM), codigoBanco.CodBanco, codigoBanco.CodMoneda);
-                        
+
                         Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     }
                     catch (Exception ex)
@@ -479,9 +489,7 @@ namespace SMC_APM.View.USRForms
 
                 if (rpta != 1)
                     return false;
-                //Task.Run(() => AbrirMOdal());
-                //Task.WaitAll();
-                Modelo.BindDataCabecera();
+
                 CrearPagos();
             }
 
@@ -498,8 +506,6 @@ namespace SMC_APM.View.USRForms
             return true;
         }
 
-
-
         private bool SeleccionarDocumento(ItemEvent e)
         {
             if (!e.BeforeAction && e.ColUID == "Col_0" && e.Row > 0)
@@ -514,6 +520,9 @@ namespace SMC_APM.View.USRForms
                         Matrix.GetCellSpecific("Col_12", e.Row).Value = "0.0";
                         Matrix.GetCellSpecific("Col_13", e.Row).Value = "0.0";
                     }
+
+                    //actualizamos el modelo
+                    Modelo.Filas.Where(x => x.FilaMatrix == e.Row).FirstOrDefault().Pagar = check.Checked;
                 }
                 catch (Exception)
                 {
