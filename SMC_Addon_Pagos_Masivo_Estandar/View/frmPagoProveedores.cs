@@ -147,12 +147,14 @@ namespace SMC_APM.View
             lstFiltroBancos = new List<dtoBanco>();
             daoBanco = new daoBanco();
             daoEscenario = new daoEscenario();
-            if (tipoEscenario.Equals("PRO")) { 
+            if (tipoEscenario.Equals("PRO"))
+            {
                 lstBancos = daoBanco.listarBancos(sboApplication, ref mensaje); // consulta cuentas de los bancos
                 lstFiltroBancos = daoBanco.listarFiltroBancos(sboApplication, ref mensaje); // consulta bancos para filtrarlo
             }
-            else { 
-                lstBancos = daoBanco.listarBancosDet(sboApplication,ref mensaje);
+            else
+            {
+                lstBancos = daoBanco.listarBancosDet(sboApplication, ref mensaje);
             }
             #endregion
 
@@ -244,7 +246,7 @@ namespace SMC_APM.View
             }
             #endregion
 
-            
+
 
             //lee la lista de los bancos y llena el combo
             #region ComboBox
@@ -255,8 +257,8 @@ namespace SMC_APM.View
             cmbBanco.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly;
             cmbBanco.Item.DisplayDesc = true;
 
-            cmbMon.ValidValues.Add("USD","USD");
-            cmbMon.ValidValues.Add("SOL","SOL");
+            cmbMon.ValidValues.Add("USD", "USD");
+            cmbMon.ValidValues.Add("SOL", "SOL");
             cmbMon.ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly;
             cmbMon.Item.DisplayDesc = true;
             cmbMon.Select("USD", SAPbouiCOM.BoSearchKey.psk_ByValue);
@@ -304,6 +306,9 @@ namespace SMC_APM.View
             dtaFact.Columns.Add("BloqueoPago", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
             dtaFact.Columns.Add("DetraccionPend", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
 
+          
+            dtaFact.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
+            dtaFact.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
 
             //inicializa las columnas del datatable de la matrix seleccionados
             dtaSelect.Columns.Add("FILA", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
@@ -330,6 +335,9 @@ namespace SMC_APM.View
             dtaSelect.Columns.Add("Documento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("NombreBanco", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("Origen", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
+            
+            dtaSelect.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
+            dtaSelect.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             #endregion
 
             #region Matrices
@@ -366,6 +374,8 @@ namespace SMC_APM.View
 
             mtxFact.Columns.Item("Col_1").DataBind.Bind("dtaFact", "BloqueoPago");//BLOQUEO PAGO
             mtxFact.Columns.Item("Col_2").DataBind.Bind("dtaFact", "DetraccionPend");//DETRACCIÓN PENDIENTE
+            mtxFact.Columns.Item("clmNroCuo").DataBind.Bind("dtaFact", "NroCuota");
+            mtxFact.Columns.Item("clmNrLnAS").DataBind.Bind("dtaFact", "LineaAsiento");
 
 
             //relaciona la columna del databable con la columna de la matrix para los selecionados
@@ -387,6 +397,9 @@ namespace SMC_APM.View
             mtxSelect.Columns.Item("fDoc").DataBind.Bind("dtaSelect", "Documento");//new
             mtxSelect.Columns.Item("NBank").DataBind.Bind("dtaSelect", "NombreBanco");//new
             mtxSelect.Columns.Item("origen").DataBind.Bind("dtaSelect", "Origen");//new
+
+            mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
+            mtxSelect.Columns.Item("clmNroCuo").DataBind.Bind("dtaSelect", "NroCuota");
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
             SAPbouiCOM.Column oColumn2 = mtxSelect.Columns.Item("fReten");
@@ -475,12 +488,12 @@ namespace SMC_APM.View
                                 {
                                     case "btnUpdate":
                                         //actualiza fecha de pago
-                                        daoEscenario.actualizarFechaPago(codEscenario,sboApplication, txtFecha.Value.ToString(), ref mensaje);
+                                        daoEscenario.actualizarFechaPago(codEscenario, sboApplication, txtFecha.Value.ToString(), ref mensaje);
                                         sboApplication.MessageBox("Se actualizó la fecha de pago correctamente");
                                         break;
                                     case "btnBuscar":
                                         //buscar documentos
-                                        if(txtEsc.Value.ToString().Equals(""))
+                                        if (txtEsc.Value.ToString().Equals(""))
                                         {
                                             codEscenario = "";
                                         }
@@ -519,12 +532,12 @@ namespace SMC_APM.View
                                         Thread th = new Thread(new ThreadStart(agregarDoc));
                                         th.Start();
 
-                                 
+
                                         break;
                                     case "btnQuitar":
 
                                         //quitar documentos
-                                        this.quitarDoc(Properties.Resources.nomFormulario1,codEscenario);
+                                        this.quitarDoc(Properties.Resources.nomFormulario1, codEscenario);
                                         break;
                                     case "btnCar":
 
@@ -550,13 +563,13 @@ namespace SMC_APM.View
 
                                             ComboBox cmb;
 
-                                            if (!string.IsNullOrEmpty(dtoBanco.MedioPago) )
+                                            if (!string.IsNullOrEmpty(dtoBanco.MedioPago))
                                             {
                                                 cmb = oForm.Items.Item("Item_5").Specific;
                                                 cmb.Select(dtoBanco.MedioPago, BoSearchKey.psk_ByValue);
                                             }
 
-                                            if(!string.IsNullOrEmpty(dtoBanco.Estado))
+                                            if (!string.IsNullOrEmpty(dtoBanco.Estado))
                                             {
                                                 cmb = oForm.Items.Item("Item_7").Specific;
                                                 cmb.Select(dtoBanco.Estado, BoSearchKey.psk_ByValue);
@@ -572,7 +585,7 @@ namespace SMC_APM.View
                                             oForm.Items.Item("Item_5").Enabled = dtoBanco.Estado == "P" || dtoBanco.Estado == "R";
                                             oForm.Items.Item("btnSig").Enabled = dtoBanco.Estado == "P";
 
-                                            
+
                                             oForm.Mode = estado == "E" || estado == "A" ? BoFormMode.fm_VIEW_MODE : BoFormMode.fm_OK_MODE;
                                         }
                                         catch (Exception ex)
@@ -581,14 +594,14 @@ namespace SMC_APM.View
                                             return;
                                             throw;
                                         }
-                                       
+
                                         break;
 
                                     case "btnSig":
 
                                         int rpta = sboApplication.MessageBox("Está a punto de enviar las facturas seleccionadas a aprobación. ¿Desea continuar?", 2, "Sí", "No");
-                                        
-                                        if(rpta == 1)
+
+                                        if (rpta == 1)
                                             EnviarAAutorizacion();
 
                                         //valida las autorizaciones
@@ -633,7 +646,7 @@ namespace SMC_APM.View
                                         //}
 
 
-;
+                                        ;
 
                                         ////inicia formulario
                                         //if (tipoEscenario.Equals("PRO"))
@@ -661,10 +674,10 @@ namespace SMC_APM.View
                                         //    {
                                         //        ctrFrmDatos.cargarFormulario(dtaSelect, txtMoneda.Value.ToString(), dtoBanco.CuentaBank, tipoEscenario, "frmSMC4", codEscenario, tipoBanco);
                                         //    }
-                                           
+
                                         //}
 
-                                      break;
+                                        break;
 
                                     case "btnLib":
 
@@ -675,7 +688,7 @@ namespace SMC_APM.View
                                             sboApplication.Forms.Item("frmSMC3").Select();
                                             _ctrFrmLiberarTerceroRet.iniciarFormulario("frmSMC3");
                                         }
-                                         catch
+                                        catch
                                         {
                                             _ctrFrmLiberarTerceroRet.cargarFormulario("frmSMC3");
                                         }
@@ -693,14 +706,14 @@ namespace SMC_APM.View
                                         break;
 
 
-                                    //case "Item_10"://TEST LIBERACIÓN TERCERO
+                                        //case "Item_10"://TEST LIBERACIÓN TERCERO
 
-                                    //    var formUID = string.Concat(FormLiberarTercero.TYPE, new Random().Next(0, 1000));
+                                        //    var formUID = string.Concat(FormLiberarTercero.TYPE, new Random().Next(0, 1000));
 
-                                    //    if (!UIFormFactory.FormUIDExists(formUID))
-                                    //        UIFormFactory.AddUSRForm(formUID, new FormLiberarTercero(formUID));
+                                        //    if (!UIFormFactory.FormUIDExists(formUID))
+                                        //        UIFormFactory.AddUSRForm(formUID, new FormLiberarTercero(formUID));
 
-                                    //    break;
+                                        //    break;
 
 
                                 }
@@ -735,8 +748,8 @@ namespace SMC_APM.View
                                 }
                                 break;
                             case SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED: //evento al linkedbutton
-                                
-                                if(pVal.ColUID == "fEntry")
+
+                                if (pVal.ColUID == "fEntry")
                                 {
                                     switch (pVal.ItemUID)
                                     {
@@ -841,7 +854,7 @@ namespace SMC_APM.View
                         }
                         break;
 
-                        //BEFORE ACTION
+                    //BEFORE ACTION
                     case true:
 
                         switch (pVal.EventType)
@@ -852,13 +865,13 @@ namespace SMC_APM.View
                                 {
                                     case "mtxFact":
 
-                                        if(pVal.ColUID == "lSelect" && pVal.Row > 0) //CLICK EN SELECCIONAR DOCUMENTO
+                                        if (pVal.ColUID == "lSelect" && pVal.Row > 0) //CLICK EN SELECCIONAR DOCUMENTO
                                         {
                                             Matrix matrix = oForm.Items.Item("mtxFact").Specific;
                                             CheckBox check = matrix.GetCellSpecific("lSelect", pVal.Row);
-                                            if(!check.Checked)
+                                            if (!check.Checked)
                                             {
-                                                string bloqueoPago  = matrix.GetCellSpecific("Col_1", pVal.Row).Value;
+                                                string bloqueoPago = matrix.GetCellSpecific("Col_1", pVal.Row).Value;
                                                 string detPendiente = matrix.GetCellSpecific("Col_2", pVal.Row).Value;
 
                                                 BubbleEvent = (bloqueoPago == "N" && detPendiente == "N");
@@ -873,7 +886,7 @@ namespace SMC_APM.View
                                 break;
                             case BoEventTypes.et_DOUBLE_CLICK:
                                 break;
-                            
+
                         }
 
                         break;
@@ -894,13 +907,13 @@ namespace SMC_APM.View
                 if (string.IsNullOrEmpty(codigoEscenario))
                     throw new Exception("Debe enviar a autorización un código de escenario de pago");
 
-                daoEscenario.ActualizarEstadoAutorizacion(sboCompany,codigoEscenario,"A"); //AUTORIZAMOS AUTOMÁTICAMENTE PARA ANTES DE LA IMPLEMENTACIÓN DEL MÓDULO DE APROBACIONES
+                daoEscenario.ActualizarEstadoAutorizacion(sboCompany, codigoEscenario, "A"); //AUTORIZAMOS AUTOMÁTICAMENTE PARA ANTES DE LA IMPLEMENTACIÓN DEL MÓDULO DE APROBACIONES
                 oForm.Items.Item("btnCar").Click(BoCellClickType.ct_Regular); //VOLVEMOS A CARGAR LOS DATOS
 
                 sboApplication.StatusBar.SetText("Escenario de pago enviado a autorización", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
             }
             catch (Exception ex)
-            { 
+            {
                 sboApplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
             }
         }
@@ -916,7 +929,7 @@ namespace SMC_APM.View
 
 
 
-        
+
 
             try
             {
@@ -930,7 +943,7 @@ namespace SMC_APM.View
                 //asigna variables a la consulta
                 if (tipoEscenario.Equals("PRO"))
                 {
-                    consulta = "CALL \"SMC_APM_LISTAR_FACPENDIENTES_PP\" ('" + txtFechaF.Value.ToString() + "','" + txtMoneda.Value.ToString() + "','" + txtProve.Value.ToString() + "','" + codEscenario + "','"+ tipoBanco + "','"+filtrobanco+"') ";
+                    consulta = "CALL \"SMC_APM_LISTAR_FACPENDIENTES_PP\" ('" + txtFechaF.Value.ToString() + "','" + txtMoneda.Value.ToString() + "','" + txtProve.Value.ToString() + "','" + codEscenario + "','" + tipoBanco + "','" + filtrobanco + "') ";
                     consulta1 = "CALL \"SMC_APM_LISTAR_FACSELECT_PP\" ('" + txtFechaF.Value.ToString() + "','" + txtMoneda.Value.ToString() + "','" + txtProve.Value.ToString() + "','" + codEscenario + "','" + tipoBanco + "','" + filtrobanco + "') ";
                 }
                 else
@@ -938,7 +951,7 @@ namespace SMC_APM.View
                     consulta = "CALL \"SMC_APM_LISTAR_FACPENDIENTES_DET\" ('" + txtFechaF.Value.ToString() + "','" + cmbMon.Selected.Value.ToString() + "','" + txtProve.Value.ToString() + "','" + codEscenario + "') ";
                     consulta1 = "CALL \"SMC_APM_LISTAR_FACSELECT_DET\" ('" + txtFechaF.Value.ToString() + "','" + cmbMon.Selected.Value.ToString() + "','" + txtProve.Value.ToString() + "','" + codEscenario + "') ";
                 }
-                
+
                 //ejecuta consulta
                 dtaFact.ExecuteQuery(consulta);
                 dtaSelect.ExecuteQuery(consulta1);
@@ -971,11 +984,13 @@ namespace SMC_APM.View
 
         //agrea documento seleccionado
         private void agregarDoc()
-        { 
+        {
             SAPbouiCOM.CheckBox ocheckBox = null;
             SAPbouiCOM.EditText oEdit = null;
             SAPbouiCOM.EditText oEdit1 = null;
             SAPbouiCOM.EditText oEdit2 = null;
+            SAPbouiCOM.EditText oEdit3 = null;
+            SAPbouiCOM.EditText oEdit4 = null;
 
             ConexionDAO conexion = new ConexionDAO();
             string NombreBaseDatos = conexion.BaseDatos(sboApplication, ref mensaje);
@@ -998,14 +1013,14 @@ namespace SMC_APM.View
                         throw new Exception("Debe seleccionar el medio de pago");
 
                     codEscenario = daoEscenario.obtenerCodigo(NombreBaseDatos, ref mensaje);
-                    daoEscenario.registrarCabecera(NombreBaseDatos, UserNameConectado, codEscenario, DateTime.Now.ToString("dd-MM-yyy") + " " + DateTime.Now.ToString("hh:mm:ss") + " " + txtMoneda.Value.ToString(), 
-                                cmbBanco.Selected.Value.ToString(), tipoEscenario,txtFecha.Value.ToString(), medioPago , estado ,ref mensaje);
+                    daoEscenario.registrarCabecera(NombreBaseDatos, UserNameConectado, codEscenario, DateTime.Now.ToString("dd-MM-yyy") + " " + DateTime.Now.ToString("hh:mm:ss") + " " + txtMoneda.Value.ToString(),
+                                cmbBanco.Selected.Value.ToString(), tipoEscenario, txtFecha.Value.ToString(), medioPago, estado, ref mensaje);
                 }
 
-    
+
 
                 int rows = dtaFact.Rows.Count;
-      
+
 
                 //valida que el escenario este autorizado 
                 if (codEscenario != "")
@@ -1027,13 +1042,15 @@ namespace SMC_APM.View
                 {
                     int i = j - 1;
 
-                    
+
                     ocheckBox = (SAPbouiCOM.CheckBox)mtxFact.Columns.Item("lSelect").Cells.Item(j).Specific;
                     if (ocheckBox.Checked == true)
                     {
                         oEdit = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fEntry").Cells.Item(j).Specific;
                         oEdit1 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fTotalP").Cells.Item(j).Specific;
                         oEdit2 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fDoc").Cells.Item(j).Specific;
+                        oEdit3 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNroCuo").Cells.Item(j).Specific;
+                        oEdit4 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNrLnAS").Cells.Item(j).Specific;
 
                         //Debug.Print("Detalle: " + i + " Chequeado DocEntry: "+ oEdit.Value.ToString()+" Documento: "+ oEdit2.Value.ToString());
 
@@ -1041,7 +1058,8 @@ namespace SMC_APM.View
                     , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
 
 
-                        daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString(), oEdit2.Value.ToString(), ref mensaje);
+                        daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString()
+                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), ref mensaje);
                     }
                 }
 
@@ -1067,7 +1085,7 @@ namespace SMC_APM.View
         }
 
         //quita documetnos seleccionados
-        private void quitarDoc(string FormUID,string codEscenario)
+        private void quitarDoc(string FormUID, string codEscenario)
         {
             SAPbouiCOM.CheckBox ocheckBox = null;
             SAPbouiCOM.EditText oEdit = null;
@@ -1114,7 +1132,7 @@ namespace SMC_APM.View
                 }
 
 
-          
+
                 //actualiza total escenario
                 cargarTotalEscenario(codEscenario);
                 //consulta documetnos
