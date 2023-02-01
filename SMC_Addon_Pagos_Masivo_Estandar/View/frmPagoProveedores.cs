@@ -305,7 +305,6 @@ namespace SMC_APM.View
             dtaFact.Columns.Add("Origen", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaFact.Columns.Add("BloqueoPago", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
             dtaFact.Columns.Add("DetraccionPend", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
-
           
             dtaFact.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaFact.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
@@ -398,8 +397,9 @@ namespace SMC_APM.View
             mtxSelect.Columns.Item("NBank").DataBind.Bind("dtaSelect", "NombreBanco");//new
             mtxSelect.Columns.Item("origen").DataBind.Bind("dtaSelect", "Origen");//new
 
-            mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
             mtxSelect.Columns.Item("clmNroCuo").DataBind.Bind("dtaSelect", "NroCuota");
+            mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
+            
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
             SAPbouiCOM.Column oColumn2 = mtxSelect.Columns.Item("fReten");
