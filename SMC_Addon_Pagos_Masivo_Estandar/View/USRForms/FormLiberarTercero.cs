@@ -52,11 +52,13 @@ namespace SMC_APM.View.USRForms
 
                 if (!Controller.ExisteRegistro(DocEntryPM) || !isExternal)
                 {
-                    ConsultarPagos();
+                    ConsultarPagosRetenidos(DocEntryPM);
                 }
                 else
                 {
                     int docEntry = Controller.GetDocEntryFromPM(DocEntryPM);
+                    
+                    //int docEntry = Controller.GetDocEntryFromPM(DocEntryPM);
 
                     Conditions conditions = new Conditions();
                     Condition cnd = conditions.Add();
@@ -68,11 +70,16 @@ namespace SMC_APM.View.USRForms
                     Form.GetDBDataSource(HEADER).Query(conditions);
                     Form.GetDBDataSource(DETAIL).Query(conditions);
 
+                    ConsultarLiberacionSUNAT(docEntry);
+                    ConfigurarMatrix();
+
                     Matrix.LoadFromDataSource();
-                    Matrix.AutoResizeColumns();
+                    
 
                     Form.Mode = BoFormMode.fm_OK_MODE;
                     DataLoad();
+
+                    Matrix.AutoResizeColumns();
                 }
 
                 Form.Visible = true;
@@ -85,6 +92,14 @@ namespace SMC_APM.View.USRForms
             {
                 Form.Freeze(false);
             }
+        }
+
+        private void ConsultarLiberacionSUNAT(int docEntry)
+        {
+            //CUANDO YA FUE CREADO CONSULTAMOS LA TABLA DEL UDO
+            Modelo.GetDatosLiberacionTerceroRetendor_Creado(docEntry);
+            string filepath = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_ARRE");
+            Modelo.RptaSUNAT = Controller.GetRespuetaSUNAT(filepath);
         }
 
         private void Automanage()
@@ -143,7 +158,7 @@ namespace SMC_APM.View.USRForms
             finally { Form.Freeze(false); }
         }
 
-        private void ConsultarPagos()
+        private void ConsultarPagosRetenidos(string docEntryPM)
         {
             try
             {
@@ -158,7 +173,7 @@ namespace SMC_APM.View.USRForms
 
                 Globales.Aplication.StatusBar.SetText("Consultando pagos retenidos, espere por favor...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
 
-                Modelo.GetDatosLiberacionTerceroRetendor(fecha);
+                Modelo.GetDatosLiberacionTerceroRetendor(docEntryPM, fecha);
                 Form.GetDBDataSource(DETAIL).LoadFromXML(Modelo.FilasAsXML);
 
                 Matrix.LoadFromDataSource();
@@ -218,8 +233,7 @@ namespace SMC_APM.View.USRForms
         protected override void CargarEventos()
         {
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_5", e => ActualizarTipoCambio(e)));
-            Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_10", e => ValidateTipoCambio(e)));
-
+            //Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_10", e => ValidateTipoCambio(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_DOUBLE_CLICK, "Item_18", e => { if (e.BeforeAction && e.Row > 0) return false;  return true; })); //DESHABILITAMOS PARA NO PERMITIR LOS CLICKS RAPIDOS SE CONFUNDAN CON DOBLE CLICK
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_18", e => SeleccionarDocumento(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_19", e => GenerarTXT(e)));
@@ -228,7 +242,6 @@ namespace SMC_APM.View.USRForms
             Eventos.Add(new EventoItem(BoEventTypes.et_VALIDATE, "Item_18", e => ValidarMontos(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_MATRIX_LINK_PRESSED, "Item_18", e => LinkButtonAction(e)));
             Eventos.Add(new EventoItem(BoEventTypes.et_DOUBLE_CLICK, "Item_16", e => AbrirRespuestaSUNAT(e)));
-            
 
             Eventos.Add(new EventoData(BoEventTypes.et_FORM_DATA_LOAD, TYPE, e => DataLoad(e)));
         }
@@ -259,7 +272,7 @@ namespace SMC_APM.View.USRForms
 
         private bool ValidarMontos(ItemEvent e)
         {
-            if (e.BeforeAction && e.Row > 0 && !e.InnerEvent && e.ItemChanged)
+            if (e.BeforeAction && e.Row > 0  && e.ItemChanged)
             {
                 if (e.ColUID == "Col_12")
                 {
@@ -290,7 +303,7 @@ namespace SMC_APM.View.USRForms
                 }
             }
 
-            if (!e.BeforeAction && e.Row > 0 && !e.InnerEvent && e.ItemChanged)
+            if (!e.BeforeAction && e.Row > 0  && e.ItemChanged)
             {
                 try
                 {
@@ -305,10 +318,8 @@ namespace SMC_APM.View.USRForms
                         double montoRetencion = Convert.ToDouble(Matrix.GetCellSpecific("Col_12", e.Row).Value);
                         double tipoCambio = Convert.ToDouble(Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_TIPC"));
 
-                        //Matrix.GetCellSpecific("Col_13", e.Row).Value = (totalPagar - montoRetencion).ToString();
                         Matrix.Columns.Item("Col_13").Cells.Item(e.Row).Specific.Value = (totalPagar - montoRetencion).ToString(); //TOTAL PAGAR SOLES
                         Matrix.Columns.Item("Col_24").Cells.Item(e.Row).Specific.Value = moneda == "SOL" ? (totalPagar - montoRetencion).ToString() : Math.Round(((totalPagar - montoRetencion) / tipoCambio), decimales).ToString(); //TOTAL PAGAR MONEDA DE DOCUMENTO
-
 
                         //ACTUALIZAMOS EL MODELO
                         Modelo.Filas.Where(x => x.FilaMatrix == e.Row).FirstOrDefault().TotalRetencionML = montoRetencion;
@@ -469,7 +480,7 @@ namespace SMC_APM.View.USRForms
 
         private bool DataLoad(BusinessObjectInfo e)
         {
-            if (!e.BeforeAction)
+            if (!e.BeforeAction && e.ActionSuccess)
                 DataLoad();
 
             return true;
@@ -477,8 +488,21 @@ namespace SMC_APM.View.USRForms
 
         private void DataLoad()
         {
-            ConfigurarMatrix();
-            Controller.BloquearLineaConPago(Form, Matrix);
+            try
+            {
+                Form.Freeze(true);
+                int docEntry = Convert.ToInt32(Form.GetDBDataSource(HEADER).GetValueExt("DocEntry"));
+                ConsultarLiberacionSUNAT(docEntry);
+                Controller.BloquearLineaConPago(Form, Matrix);
+                ConfigurarMatrix();
+                Matrix.AutoResizeColumns();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally { Form.Freeze(false); }
+
         }
 
         private bool BotonCrear(ItemEvent e)
@@ -495,7 +519,7 @@ namespace SMC_APM.View.USRForms
 
             if (!e.BeforeAction && Form.Mode == BoFormMode.fm_ADD_MODE)
             {
-                FormLoadAdd();
+                Globales.Aplication.ActivateMenuItem("1288");
             }
 
             if (!e.BeforeAction && Form.Mode == BoFormMode.fm_OK_MODE)
@@ -534,15 +558,15 @@ namespace SMC_APM.View.USRForms
             return true;
         }
 
-        private bool ValidateTipoCambio(ItemEvent e)
-        {
-            if (!e.BeforeAction && e.ItemChanged)
-            {
-                ConsultarPagos();
-            }
+        //private bool ValidateTipoCambio(ItemEvent e)
+        //{
+        //    if (!e.BeforeAction && e.ItemChanged)
+        //    {
+        //        ConsultarPagosRetenidos();
+        //    }
 
-            return true;
-        }
+        //    return true;
+        //}
 
         private bool ActualizarTipoCambio(ItemEvent e)
         {

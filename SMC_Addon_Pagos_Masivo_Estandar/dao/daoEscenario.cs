@@ -17,9 +17,6 @@ namespace SMC_APM.dao
             DbCommand CommandEmpresa = null;
             mensaje = "";
 
-            //ConexionDAO conexion = new ConexionDAO();
-            //string NombreBaseDatos = conexion.BaseDatos(sboApplication, ref mensaje);
-
             try
             {
                 Database db = DatabaseFactory.CreateDatabase();

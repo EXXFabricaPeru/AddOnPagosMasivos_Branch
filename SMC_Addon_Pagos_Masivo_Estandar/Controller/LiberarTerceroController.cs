@@ -129,7 +129,10 @@ namespace SMC_APM.Controller
                     if (chk.Checked && string.IsNullOrEmpty(idPago) && montoRentencion > 0)
                     {
                         int docEntryPagoRetencion = modelo.Filas.Where(x => x.Proveedor == proveedor).Max(y => y.DocEntryPagoRet);
+                        string mensajeError = modelo.Filas.Where(x => x.Proveedor == proveedor).Max(y => y.MensajeError);
+
                         matrix.GetCellSpecific("Col_14", i).Value = docEntryPagoRetencion.ToString();
+                        matrix.GetCellSpecific("Col_25", i).Value = mensajeError;
                     }
                 }
             }
@@ -139,7 +142,7 @@ namespace SMC_APM.Controller
             }
         }
 
-        internal double GetTipoCambio(DateTime fecha)
+        public double GetTipoCambio(DateTime fecha)
         {
             double tc = 0.0;
 
@@ -177,6 +180,14 @@ namespace SMC_APM.Controller
                     {
                         matrix.CommonSetting.SetRowEditable(i, false);
                     }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(idPagoRet))
+                        {
+                            matrix.CommonSetting.SetCellEditable(i, 21, true);
+                        }
+                    }
+
                 }
             }
             catch (Exception)
