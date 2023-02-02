@@ -228,7 +228,9 @@ namespace SMC_APM.View.USRForms
                                         }
                                     };
                                 }
+
                                 pgo.Detalle = pgoDetAux.Where(d => d.TipoDocumento != 140);
+
                                 if (pgo.Detalle.Count() > 0)
                                 {
                                     try
