@@ -47,8 +47,7 @@ namespace SMC_APM.Modelo
         public string CentroCosto3 { get; set; }
         public string CentroCosto4 { get; set; }
         public string CentroCosto5 { get; set; }
-        public string CCHSerie { get; set; }
-        public string CCHCorrelativo { get; set; }
+        public int LineaPgoMsv { get; set; }
 
     }
 
