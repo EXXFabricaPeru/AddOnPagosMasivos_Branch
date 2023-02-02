@@ -3,6 +3,7 @@ using SAP_AddonFramework;
 using SAPbobsCOM;
 using SAPbouiCOM;
 using SMC_APM.Controller;
+using SMC_APM.Util;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -70,7 +71,6 @@ namespace SMC_APM.Modelo
 
                 case "CB": return "C";
                 default: return "T";
-
             }
         }
 
@@ -130,7 +130,6 @@ namespace SMC_APM.Modelo
             var pgoDS = DETAIL.GetAsXML();
             string docEntryPM = HEADER.GetValueExt("U_EXD_NRPM");
 
-
             Conditions conditions = new Conditions();
             Condition cnd = conditions.Add();
             cnd.Alias = "DocEntry";
@@ -140,16 +139,15 @@ namespace SMC_APM.Modelo
 
             PAGOMASIVO.Query(conditions);
 
-            var lstPagos = ObtenerListaPagos(HEADER,PAGOMASIVO, pgoDS);
+            var lstPagos = ObtenerListaPagos(HEADER, PAGOMASIVO, pgoDS);
             var estado = string.Empty;
             var msjError = string.Empty;
             var nroPago = 0;
 
-
             try
             {
                 Globales.Aplication.StatusBar.SetSystemMessage("Iniciando generacion de pagos proveedores...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
-                
+
                 foreach (var pgo in lstPagos)
                 {
                     msjError = string.Empty;
@@ -172,7 +170,7 @@ namespace SMC_APM.Modelo
 
                         ComboBox cb = matrix.GetCellSpecific("Col_26", linea);
                         cb.Select(estado == "OK" ? "Y" : "N", BoSearchKey.psk_ByValue);
-                        
+
                         //DETAIL.SetValue("U_EXD_IDPP", linea - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
                         //DETAIL.SetValue("U_EXP_ESTADO", linea - 1, estado);
                         //DETAIL.SetValue("U_EXP_MSJERROR", linea - 1, msjError);
@@ -198,14 +196,13 @@ namespace SMC_APM.Modelo
 
                 var codSeriePago = Convert.ToInt32(dbsCabPM.GetValue("U_EXP_SERIEPAGO", 0).Trim());
                 var codSerieRtcn = Convert.ToInt32(dbsCabPM.GetValue("U_EXP_SERIERETENCION", 0).Trim());
-                
 
                 xDoc = XDocument.Parse((string)obj);
 
                 var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
                .Any(a => a.Element("uid").Value.Equals("U_EXD_IPAG") && a.Element("value").Value.Equals("Y"))
                && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXD_GEPP") && a.Element("value").Value == "N"));
-                
+
                 return xElements.Descendants("cells").GroupBy(g => new
                 {
                     CardCode = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_PROV")).FirstOrDefault().Element("value").Value,
@@ -247,50 +244,52 @@ namespace SMC_APM.Modelo
 
         private void ProcesarRetenciones()
         {
-            Filas = Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO ANTERIORMENTE
+            Filas = Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0 && x.TotalRetencionML > 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO
 
-            if ((Filas == null || Filas.Count == 0) && Form.Mode == BoFormMode.fm_ADD_MODE)
-                throw new Exception("Debe seleccionar al menos un documento");
+            //if ((Filas == null || Filas.Count == 0) && (Form.Mode == BoFormMode.fm_ADD_MODE))
+            //    throw new Exception("Debe seleccionar al menos un documento");
 
-            List<Terceros_Retencion> agrupados = Filas
-                                                .Where(x => x.TotalRetencionML > 0)
-                                                .GroupBy(u => u.Proveedor)
-                                                .Select(_ => new Terceros_Retencion
-                                                {
-                                                    Proveedor = _.Key,
-                                                    MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
-                                                    MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
-                                                    Banco = _.Max(x => x.Banco),
-                                                    CuentaTransferencia = CuentaBanco,
-                                                    CuentaCheque = CuentaBanco,
-                                                    FechaTransferencia = FechaPago,
-                                                    NroOperacion = NroOperacion,
-                                                    Documentos = _.Select(x => new DatoDocumento() { DocEntry = x.DocEntry, ObjType = x.TipoDocumento, Cuota = x.NroCuota, MontoAplicado = x.TotalRetencionML, Linea = x.LineaAsiento }).ToList()
-
-                                                }).ToList();
-
-            foreach (Terceros_Retencion proveedor in agrupados)
+            if(Filas != null && Filas.Count > 0) //HAY RETENCIONES POR PROCESAR
             {
-                int docEntryPago = proveedor.CrearPagoRetencion();
-                if (docEntryPago != -1)
+                List<Terceros_Retencion> agrupados = Filas
+                                    .Where(x => x.TotalRetencionML > 0)
+                                    .GroupBy(u => u.Proveedor)
+                                    .Select(_ => new Terceros_Retencion
+                                    {
+                                        Proveedor = _.Key,
+                                        MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
+                                        MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
+                                        Banco = _.Max(x => x.Banco),
+                                        CuentaTransferencia = CuentaBanco,
+                                        CuentaCheque = CuentaBanco,
+                                        FechaTransferencia = FechaPago,
+                                        NroOperacion = NroOperacion,
+                                        TipoCambio = TipoCambio,
+                                        Documentos = _.Select(x => new DatoDocumento() { DocEntry = x.DocEntry, ObjType = x.TipoDocumento, Cuota = x.NroCuota, MontoAplicado = x.TotalRetencionML, Moneda = x.Moneda, Linea = x.LineaAsiento }).ToList()
+                                    }).ToList();
+
+                foreach (Terceros_Retencion proveedor in agrupados)
                 {
-                    Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
+                    int docEntryPago = proveedor.CrearPagoRetencion();
+                    if (docEntryPago != -1)
+                    {
+                        Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
+                        Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.MensajeError = proveedor.MensajeError; return true; });
+                    }
                 }
             }
         }
 
-        internal void GetDatosLiberacionTerceroRetendor(string fecha)
+        internal void GetDatosLiberacionTerceroRetendor(string docEntryPM, string fecha)
         {
             try
             {
                 Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-                string query = Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB ? $"CALL SP_EXD_GET_LIBERACION_SUNAT('{fecha}')" : $"EXEC SP_EXD_GET_LIBERACION_SUNAT('{fecha}')";
+                string query = Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB ? $"CALL SP_EXD_GET_LIBERACION_SUNAT('{docEntryPM}', '{fecha}')" : $"EXEC SP_EXD_GET_LIBERACION_SUNAT('{docEntryPM}', '{fecha}')";
                 recordset.DoQuery(query);
 
-
-
                 if (recordset.RecordCount == 0)
-                    throw new Exception($"No existen documentos retenidos para la fecha {fecha}");
+                    throw new Exception($"No existen documentos retenidos para el pago masivo {docEntryPM}");
 
                 string xml = recordset.GetAsXML();
 
@@ -325,6 +324,66 @@ namespace SMC_APM.Modelo
                 throw;
             }
         }
+
+        internal void GetDatosLiberacionTerceroRetendor_Creado(int docEntry)
+        {
+            try
+            {
+                Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                string query = Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB ? $"CALL SP_EXD_GET_LIBERACION_SUNAT_CREADO({docEntry})" : $"EXEC SP_EXD_GET_LIBERACION_SUNAT_CREADO({docEntry})";
+                recordset.DoQuery(query);
+
+                if (recordset.RecordCount == 0)
+                    throw new Exception($"No existen documentos retenidos para el registro {docEntry}");
+
+                string xml = recordset.GetAsXML();
+
+                XDocument XDoc = XDocument.Parse(xml);
+
+                Filas = (from q in XDoc.Descendants("row")
+                         select new LiberarTercero_Fila
+                         {
+                             FilaMatrix = Convert.ToInt32(q.Element("LineId").Value),
+                             Pagar = q.Element("U_EXD_IPAG").Value == "Y",
+                             Escenario = Convert.ToInt32(q.Element("U_EXD_CODE").Value),
+                             Banco = q.Element("U_EXD_BAES").Value,
+                             BancoCode = q.Element("U_EXD_BKCD").Value,
+                             MedioPago = q.Element("U_EXD_MEDP").Value,
+                             Proveedor = q.Element("U_EXD_PROV").Value,
+                             TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
+                             DocEntry = Convert.ToInt32(q.Element("U_EXD_NUMI").Value),
+                             LineaAsiento = Convert.ToInt32(q.Element("U_EXD_LIAS").Value),
+                             NroCuota = Convert.ToInt32(q.Element("U_EXD_NCUO").Value),
+                             MedioPagoSAP = GetMedioPagoSAP(q.Element("U_EXD_MEDP").Value),
+                             Moneda = q.Element("U_EXD_MONE").Value,
+                             TotalDocumento = Convert.ToDouble(q.Element("U_EXD_TOTD").Value),
+                             TotalML = Convert.ToDouble(q.Element("U_EXD_TOTP").Value),
+                             TotalProveedorML = Convert.ToDouble(q.Element("U_EXD_PAGP").Value),
+                             TotalRetencionML = Convert.ToDouble(q.Element("U_EXD_PAGR").Value),
+                             DocEntryPagoProv = GetElementValue(q, "U_EXD_IDPP") == string.Empty ? 0 : Convert.ToInt32(GetElementValue(q, "U_EXD_IDPP")),
+                             DocEntryPagoRet = GetElementValue(q, "U_EXD_IDPR") == string.Empty ? 0 : Convert.ToInt32(GetElementValue(q, "U_EXD_IDPR")),
+                             MensajeError = GetElementValue(q, "U_EXD_MSJE") == string.Empty ? "" : GetElementValue(q, "U_EXD_MSJE")
+                         }).ToList();
+
+                FilasAsXML = recordset.GetFixedXML(RecordsetXMLModeEnum.rxmData).Replace("<Table>Recordset</Table>", "").Replace("Rows", "rows").Replace("Row", "row").Replace("Fields", "cells").Replace("Field", "cell").Replace("Alias", "uid").Replace("Value", "value").Replace("<Recordset xmlns=\"http://www.sap.com/SBO/SDK/DI\">", "<dbDataSources Uid=\"@EXD_TRR1\">").Replace("</Recordset>", "</dbDataSources>");
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public static string GetElementValue(XElement parentEl, string elementName, string defaultValue = "")
+        {
+            var foundEl = parentEl.Element(elementName);
+
+            if (foundEl != null)
+            {
+                return foundEl.Value;
+            }
+
+            return defaultValue;
+        }
     }
 
     public class Terceros_Retencion
@@ -336,13 +395,17 @@ namespace SMC_APM.Modelo
         public string Banco { get; set; }
         public double MontoTransferencia { get; set; }
         public DateTime FechaTransferencia { get; set; }
+        public double TipoCambio { get; set; }
         public double MontoCheques { get; set; }
         public List<DatoDocumento> Documentos { get; set; }
+        public string MensajeError { get; set; }
 
         internal int CrearPagoRetencion()
         {
             try
             {
+                int decimales = utilNET.GetDecimalesConfigurado();
+
                 Payments oPagoEf = Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
                 oPagoEf.DocTypte = BoRcptTypes.rSupplier;
                 oPagoEf.CardCode = Proveedor;
@@ -366,14 +429,23 @@ namespace SMC_APM.Modelo
                 {
                     oPagoEf.Checks.SetCurrentLine(0);
 
-                    oPagoEf.Checks.CheckAccount = CuentaCheque;
+                    //oPagoEf.Checks.CheckAccount = CuentaCheque;
+                    //oPagoEf.Checks.BankCode = GetBankCode(Banco);
+                    //oPagoEf.Checks.CheckSum = MontoCheques;
+                    //oPagoEf.Checks.DueDate = FechaTransferencia;
+
+                    var sucursalBanco = PagoMasivoController.ObtenerSucursaCtaBanco(GetBankCode(Banco), CuentaCheque);
+                    oPagoEf.Checks.AccounttNum = sucursalBanco.Item1;
                     oPagoEf.Checks.BankCode = GetBankCode(Banco);
+                    oPagoEf.Checks.Branch = sucursalBanco.Item2;
+                    oPagoEf.Checks.CheckAccount = CuentaCheque;
+
                     oPagoEf.Checks.CheckSum = MontoCheques;
-                    oPagoEf.Checks.DueDate = FechaTransferencia;
+                    oPagoEf.Checks.CountryCode = "PE";
+                    oPagoEf.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
 
                     oPagoEf.Checks.Add();
                 }
-
 
                 int indice = 0;
 
@@ -384,14 +456,19 @@ namespace SMC_APM.Modelo
 
                     switch (documento.ObjType)
                     {
-                        case 18: oPagoEf.Invoices.InvoiceType = BoRcptInvTypes.it_PurchaseInvoice; break;
-                        case 30: oPagoEf.Invoices.InvoiceType = BoRcptInvTypes.it_JournalEntry; break;
+                        case 18: oPagoEf.Invoices.InvoiceType = BoRcptInvTypes.it_PurchaseInvoice; oPagoEf.Invoices.InstallmentId = documento.Cuota; break;
+                        case 30: oPagoEf.Invoices.InvoiceType = BoRcptInvTypes.it_JournalEntry; oPagoEf.Invoices.DocLine = documento.Linea; break;
                         default:
                             break;
                     }
 
-                    oPagoEf.Invoices.InstallmentId = documento.Cuota;
-                    oPagoEf.Invoices.SumApplied = documento.MontoAplicado;
+                    if (documento.Moneda == "SOL")
+                        oPagoEf.Invoices.SumApplied = documento.MontoAplicado;
+                    else
+                    {
+                        oPagoEf.Invoices.SumApplied = documento.MontoAplicado;
+                        oPagoEf.Invoices.AppliedFC = Math.Round(documento.MontoAplicado / TipoCambio, decimales);
+                    }
 
                     oPagoEf.Invoices.Add();
                     indice++;
@@ -401,11 +478,11 @@ namespace SMC_APM.Modelo
                     throw new Exception(Globales.Company.GetLastErrorDescription());
 
                 return Convert.ToInt32(Globales.Company.GetNewObjectKey());
-
             }
             catch (Exception ex)
             {
                 Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                MensajeError = ex.Message;
                 return -1;
             }
         }
@@ -425,17 +502,14 @@ namespace SMC_APM.Modelo
             }
             catch (Exception)
             {
-
                 throw;
             }
-            finally { Util.utilNET.liberarObjeto(rs); }
-
+            finally { utilNET.liberarObjeto(rs); }
         }
     }
 
     public class DatosTransferencia
     {
-
     }
 
     public class DatoDocumento
@@ -444,6 +518,7 @@ namespace SMC_APM.Modelo
         public int ObjType { get; set; }
         public int Linea { get; set; }
         public int Cuota { get; set; }
+        public string Moneda { get; set; }
         public double MontoAplicado { get; set; }
     }
 
@@ -469,5 +544,6 @@ namespace SMC_APM.Modelo
         public double TotalProveedorML { get; set; }
         public int DocEntryPagoRet { get; set; }
         public int DocEntryPagoProv { get; set; }
+        public string MensajeError { get; set; }
     }
 }

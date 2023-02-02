@@ -1,4 +1,4 @@
-﻿using SAP_AddonFramework;
+using SAP_AddonFramework;
 using SAPbobsCOM;
 using SMC_APM.dao;
 using SMC_APM.dto;
@@ -58,7 +58,7 @@ namespace SMC_APM.Controller
             return !recordset.EoF;
         }
 
-        private static Tuple<string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
+        public static Tuple<string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             var sqlQry = $"select top 1 \"Account\",\"Branch\" from DSC1 where \"BankCode\" = '{codBanco}' and \"GLAccount\" = '{codCta}';";
@@ -231,6 +231,7 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPayments.Checks.Branch = sucursalBanco.Item2;
                     sboPayments.Checks.CheckAccount = pago.MetodoPago.Cuenta;
+
                     sboPayments.Checks.CheckSum = pago.Monto;
                     sboPayments.Checks.CountryCode = "PE";
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
@@ -350,8 +351,13 @@ namespace SMC_APM.Controller
                         IdDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_DOCENTRYDOC")).FirstOrDefault()?.Element("value").Value),
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_ASNROLINEA")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
+
                         MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value),
                         LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
+
+                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+
+
                     })
                 });
             }
