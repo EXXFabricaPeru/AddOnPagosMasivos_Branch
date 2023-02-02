@@ -39,6 +39,17 @@ namespace SMC_APM.Controller
                 return recordset;
         }
 
+        public static SAPbobsCOM.Recordset ObtenerInfoBancos()
+        {
+            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            var sqlQry = $"select \"BankCode\",\"BankName\" from ODSC";
+            recordset.DoQuery(sqlQry);
+            if (recordset.RecordCount == 0)
+                throw new Exception("No se ha definido información de bancos");
+            else
+                return recordset;
+        }
+
         public static bool ValidarRegistroUnicoPorFecha(string fechaFiltro)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -149,14 +160,43 @@ namespace SMC_APM.Controller
         {
             if (File.Exists(filePath))
             {
-                foreach (var line in File.ReadAllLines(filePath))
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                if (string.IsNullOrWhiteSpace(fileName.Split('_')[2])) throw new InvalidOperationException("No se pudo obtener ID de registro en BD");
+                var docEntryPM = Convert.ToInt32(fileName.Split('_')[2]);
+                var sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntryPM}')";
+                var lstTerReten = QueryResultManager.executeQueryAsType(sqlQry, dc =>
                 {
-                    var segments = line.Split('|');
-                    yield return new TXT3RetenedorRsp
+                    return new
                     {
-                        RUC = segments[0].Trim(),
-                        Estado = segments[3][0].ToString()
+                        RUC = dc["RUC"],
+                        Documentos = dc["Documentos"]
                     };
+                });
+                if (lstTerReten.Count() == 0) throw new InvalidOperationException("No se obtuvieron datos BD");
+
+                var fileLines = File.ReadAllLines(filePath).Select(s =>
+                {
+                    return new
+                    {
+                        RUC = s.Split('|')[0].Trim(),
+                        Estado = s.Split('|')[3].Trim()
+                    };
+                });
+
+                if (fileLines.Count() == 0) throw new InvalidOperationException("No se obtuvieron datos TXT");
+                foreach (var terReten in lstTerReten)
+                {
+                    var lstDocumentos = terReten.Documentos.Split('|').ToList();
+                    foreach (var doc in lstDocumentos)
+                    {
+                        yield return new TXT3RetenedorRsp
+                        {
+                            RUC = terReten.RUC,
+                            TipoDocumento = Convert.ToInt32(doc.Split('-')[0]),
+                            IdDocumento = Convert.ToInt32(doc.Split('-')[1]),
+                            Estado = fileLines.FirstOrDefault(fl => fl.RUC == terReten.RUC).Estado
+                        };
+                    }
                 }
             }
             else
@@ -191,37 +231,10 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPayments.Checks.Branch = sucursalBanco.Item2;
                     sboPayments.Checks.CheckAccount = pago.MetodoPago.Cuenta;
-                    //if (lo_DBDSCCHAPR.GetValue(gs_UflChqMnl, 0).Trim() != "Y")
-                    //{
-                    //    lo_PgoEfc.Checks.ManualCheck = SAPbobsCOM.BoYesNoEnum.tNO;
-                    //}
-                    //else
-                    //{
-                    //    lo_PgoEfc.Checks.ManualCheck = SAPbobsCOM.BoYesNoEnum.tYES;
-                    //    lo_PgoEfc.Checks.CheckNumber = Convert.ToInt32(lo_DBDSCCHAPR.GetValue(gs_UflChqNum, 0).Trim());
-                    //}
                     sboPayments.Checks.CheckSum = pago.Monto;
                     sboPayments.Checks.CountryCode = "PE";
-                    //lo_PgoEfc.Checks.DueDate = DateTime.ParseExact(lo_DBDSCCHAPR.GetValue(gs_UflChqFchVnc, 0).Trim(), "yyyyMMdd", System.Globalization.DateTimeFormatInfo.InvariantInfo);
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
-                    //Cash Flow
-                    //if (lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim() != string.Empty)
-                    //{
-                    //    if (lo_DBDSCCHAPR.GetValue(gs_UflMndCaja, 0).Trim() == Cls_Global.sb_ObtenerMonedaLocal())
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountLC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    else
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountFC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    lo_PgoEfc.PrimaryFormItems.CheckNumber = "0";
-                    //    lo_PgoEfc.PrimaryFormItems.CashFlowLineItemID = Convert.ToInt32(lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim());
-                    //    lo_PgoEfc.PrimaryFormItems.PaymentMeans = SAPbobsCOM.PaymentMeansTypeEnum.pmtChecks;
-                    //    lo_PgoEfc.PrimaryFormItems.Add();
-                    //}
                     break;
-
                 case "CG":
                 case "PV":
                 case "TB"://Pago con Transferencia
@@ -229,44 +242,11 @@ namespace SMC_APM.Controller
                     sboPayments.TransferDate = pago.FechaContabilizacion;
                     sboPayments.TransferReference = pago.MetodoPago.Referencia;
                     sboPayments.TransferSum = pago.Monto;
-                    //Cash Flow
-                    //if (lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim() != string.Empty)
-                    //{
-                    //    if (lo_DBDSCCHAPR.GetValue(gs_UflMndCaja, 0).Trim() == Cls_Global.sb_ObtenerMonedaLocal())
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountLC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    else
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountFC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    lo_PgoEfc.PrimaryFormItems.CashFlowLineItemID = Convert.ToInt32(lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim());
-                    //    lo_PgoEfc.PrimaryFormItems.PaymentMeans = SAPbobsCOM.PaymentMeansTypeEnum.pmtBankTransfer;
-                    //    lo_PgoEfc.PrimaryFormItems.Add();
-                    //}
                     break;
 
-                case "3"://Pago en Efectivo
+                case "NN"://Pago en Efectivo
                     sboPayments.CashAccount = pago.MetodoPago.Cuenta;
                     sboPayments.CashSum = pago.Monto;
-                    //Para aperturas con caja chica
-                    //lo_PgoEfc.UserFields.Fields.Item("U_BPP_CCHI").Value = lo_DBDSCCHAPR.GetValue("U_CC_CCHOC", 0).Trim();
-                    //lo_PgoEfc.UserFields.Fields.Item("U_BPP_NUMC").Value = lo_DBDSCCHAPR.GetValue("U_CC_CCHON", 0).Trim();
-                    //Cash Flow
-                    //if (lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim() != string.Empty)
-                    //{
-                    //    if (lo_DBDSCCHAPR.GetValue(gs_UflMndCaja, 0).Trim() == Cls_Global.sb_ObtenerMonedaLocal())
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountLC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    else
-                    //    {
-                    //        lo_PgoEfc.PrimaryFormItems.AmountFC = Convert.ToDouble(lo_DBDSCCHAPR.GetValue(gs_UflMntTotApr, 0).Trim());
-                    //    }
-                    //    lo_PgoEfc.PrimaryFormItems.PaymentMeans = SAPbobsCOM.PaymentMeansTypeEnum.pmtCash;
-                    //    lo_PgoEfc.PrimaryFormItems.CashFlowLineItemID = Convert.ToInt32(lo_DBDSCCHAPR.GetValue(gs_UflCshFlw, 0).Trim());
-                    //    lo_PgoEfc.PrimaryFormItems.Add();
-                    //}
                     break;
             }
 
@@ -284,6 +264,39 @@ namespace SMC_APM.Controller
             });
 
             if (sboPayments.Add() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
+            var rslt = 0;
+            return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
+        }
+
+        public static int GenerarPagoEfectuadoSBODesdeDraft(int idDraft, SBOPago pago)
+        {
+            var sboPaymentDraft = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oPaymentsDrafts);
+            sboPaymentDraft.GetByKey(idDraft);
+            sboPaymentDraft.DocDate = pago.FechaContabilizacion;
+            sboPaymentDraft.TaxDate = pago.FechaDocumento;
+            sboPaymentDraft.DueDate = pago.FechaVencimiento;
+
+            switch (pago.MetodoPago.Tipo)
+            {
+                case "CB": //Pago con cheque
+                    var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
+                    sboPaymentDraft.Checks.AccounttNum = sucursalBanco.Item1;
+                    sboPaymentDraft.Checks.BankCode = pago.MetodoPago.Banco;
+                    sboPaymentDraft.Checks.Branch = sucursalBanco.Item2;
+                    sboPaymentDraft.Checks.CheckAccount = pago.MetodoPago.Cuenta;
+                    break;
+                case "CG":
+                case "PV":
+                case "TB"://Pago con Transferencia
+                    sboPaymentDraft.TransferAccount = pago.MetodoPago.Cuenta;
+                    sboPaymentDraft.TransferReference = pago.MetodoPago.Referencia;
+                    break;
+
+                case "3"://Pago en Efectivo
+                    sboPaymentDraft.CashAccount = pago.MetodoPago.Cuenta;
+                    break;
+            }
+            if (sboPaymentDraft.SaveDraftToDocument() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
             var rslt = 0;
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
@@ -322,7 +335,7 @@ namespace SMC_APM.Controller
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
                     Monto = s.Sum(sm => Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)),
-                    ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
+                    //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
                     MetodoPago = new SBOMetodoPago
                     {
                         Tipo = s.Key.MedioDePago,
@@ -337,7 +350,8 @@ namespace SMC_APM.Controller
                         IdDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_DOCENTRYDOC")).FirstOrDefault()?.Element("value").Value),
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_ASNROLINEA")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
-                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value),
+                        LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
                     })
                 });
             }

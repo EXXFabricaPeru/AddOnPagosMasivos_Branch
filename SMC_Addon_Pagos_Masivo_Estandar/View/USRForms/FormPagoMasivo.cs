@@ -51,6 +51,15 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
+                var cmbClm = Matrix.Columns.Item("Col_5");
+                while (cmbClm.ValidValues.Count > 0) cmbClm.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                recSet = PagoMasivoController.ObtenerInfoBancos();
+                while (!recSet.EoF)
+                {
+                    cmbClm.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    recSet.MoveNext();
+                }
+
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Find, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -149,7 +158,8 @@ namespace SMC_APM.View.USRForms
                         if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(serieRetencion)) throw new InvalidOperationException("Seleccione una serie de retención");
                         if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && (dbsPMP1.Size == 0 || (dbsPMP1.Size > 0 && string.IsNullOrWhiteSpace(dbsPMP1.GetValue("U_EXP_DOCENTRYDOC", 0)))))
                             throw new InvalidOperationException("Debe registrar al menos un documento para pagar");
-                        if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && PagoMasivoController.ValidarRegistroUnicoPorFecha(dbsOPMP.GetValueExt("U_EXP_FECHA").Trim())) throw new InvalidOperationException("Ya existe un registro para la fecha seleccionada como filtro");
+                        /*if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && PagoMasivoController.ValidarRegistroUnicoPorFecha(dbsOPMP.GetValueExt("U_EXP_FECHA").Trim())) 
+                            throw new InvalidOperationException("Ya existe un registro para la fecha seleccionada como filtro");*/
                         Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     }
                 }
@@ -178,7 +188,7 @@ namespace SMC_APM.View.USRForms
                 {
                     var rslt = Globales.Aplication.MessageBox("Se procederá a generar el pago de los documentos seleccionados \n ¿Desea continuar con esta accion?"
                     , Btn1Caption: "SI", Btn2Caption: "NO");
-                    
+
                     if (rslt == 1)
                     {
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
@@ -198,20 +208,44 @@ namespace SMC_APM.View.USRForms
                                 msjError = string.Empty;
                                 estado = "OK";
                                 nroPago = 0;
-                                try
+                                var pgoDetAux = pgo.Detalle;
+                                pgo.Detalle = pgoDetAux.Where(d => d.TipoDocumento == 140);
+                                if (pgo.Detalle.Count() > 0)
                                 {
-                                    nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
+                                    foreach (var pgoDet in pgo.Detalle)
+                                    {
+                                        try
+                                        {
+                                            nroPago = PagoMasivoController.GenerarPagoEfectuadoSBODesdeDraft(pgoDet.IdDocumento, pgo);
+                                            dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 1, nroPago.ToString());
+                                            dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, "OK");
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 11, nroPago == 0 ? string.Empty : nroPago.ToString());
+                                            dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, "ER");
+                                            dbsPMP1.SetValue("U_EXP_MSJERROR", pgoDet.LineaPgoMsv - 1, ex.Message);
+                                        }
+                                    };
                                 }
-                                catch (Exception ex)
+                                pgo.Detalle = pgoDetAux.Where(d => d.TipoDocumento != 140);
+                                if (pgo.Detalle.Count() > 0)
                                 {
-                                    msjError = ex.Message;
-                                    estado = "ER";
-                                }
-                                foreach (var linea in pgo.ExtLineasDS)
-                                {
-                                    dbsPMP1.SetValue("U_EXP_NROPGOEFEC", linea - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
-                                    dbsPMP1.SetValue("U_EXP_ESTADO", linea - 1, estado);
-                                    dbsPMP1.SetValue("U_EXP_MSJERROR", linea - 1, msjError);
+                                    try
+                                    {
+                                        nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        msjError = ex.Message;
+                                        estado = "ER";
+                                    }
+                                    foreach (var pgoDet in pgo.Detalle)
+                                    {
+                                        dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
+                                        dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, estado);
+                                        dbsPMP1.SetValue("U_EXP_MSJERROR", pgoDet.LineaPgoMsv - 1, msjError);
+                                    }
                                 }
                             }
                             Matrix.LoadFromDataSource();
@@ -242,14 +276,18 @@ namespace SMC_APM.View.USRForms
                     {
                         var lstRspSNT = PagoMasivoController.LeerTXT3RetenedorRsp(fpRspSNT).ToList();
                         var nroRUC = string.Empty;
+                        var tipoDocumento = 0;
+                        var idDocumento = 0;
                         TXT3RetenedorRsp rspSNT = null;
-
                         for (int i = 0; i < dbsPMP1.Size; i++)
                         {
                             dbsPMP1.Offset = i;
                             nroRUC = dbsPMP1.GetValue("U_EXP_NRODOCUMENTOSN", i).Trim();
-                            rspSNT = lstRspSNT.Find(f => f.RUC == nroRUC);
-                            if (rspSNT != null && rspSNT.Estado == "E")
+                            tipoDocumento = Convert.ToInt32(dbsPMP1.GetValue("U_EXP_TIPODOC", i).Trim());
+                            idDocumento = Convert.ToInt32(dbsPMP1.GetValue("U_EXP_DOCENTRYDOC", i).Trim());
+                            dbsPMP1.SetValue("U_EXP_SLC_RETENCION", i, "N");
+                            rspSNT = lstRspSNT.Find(r => r.RUC == nroRUC && r.TipoDocumento == tipoDocumento && r.IdDocumento == idDocumento);
+                            if (rspSNT != null && rspSNT.Estado.ToUpper().Substring(0, 6) == "EN REV")
                                 dbsPMP1.SetValue("U_EXP_SLC_RETENCION", i, "Y");
                         }
                         Matrix.LoadFromDataSource();
