@@ -276,7 +276,8 @@ namespace SMC_APM.View.USRForms
                     var fpRspSNT = dbsOPMP.GetValue("U_EXP_RUTARSPSUNAT", 0).Trim();
                     if (!string.IsNullOrWhiteSpace(fpRspSNT))
                     {
-                        var lstRspSNT = PagoMasivoController.LeerTXT3RetenedorRsp(fpRspSNT).ToList();
+                        var docEntry = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
+                        var lstRspSNT = PagoMasivoController.LeerTXT3RetenedorRsp(fpRspSNT, docEntry).ToList();
                         var nroRUC = string.Empty;
                         var tipoDocumento = 0;
                         var idDocumento = 0;

@@ -156,14 +156,12 @@ namespace SMC_APM.Controller
             }
         }
 
-        public static IEnumerable<TXT3RetenedorRsp> LeerTXT3RetenedorRsp(string filePath)
+        public static IEnumerable<TXT3RetenedorRsp> LeerTXT3RetenedorRsp(string filePath, int docEntry)
         {
             if (File.Exists(filePath))
             {
-                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                if (string.IsNullOrWhiteSpace(fileName.Split('_')[2])) throw new InvalidOperationException("No se pudo obtener ID de registro en BD");
-                var docEntryPM = Convert.ToInt32(fileName.Split('_')[2]);
-                var sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntryPM}')";
+                var fileName = Path.GetFileNameWithoutExtension(filePath);             
+                var sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntry}')";
                 var lstTerReten = QueryResultManager.executeQueryAsType(sqlQry, dc =>
                 {
                     return new
@@ -285,6 +283,7 @@ namespace SMC_APM.Controller
                     sboPaymentDraft.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPaymentDraft.Checks.Branch = sucursalBanco.Item2;
                     sboPaymentDraft.Checks.CheckAccount = pago.MetodoPago.Cuenta;
+                    sboPaymentDraft.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
                     break;
                 case "CG":
                 case "PV":
@@ -293,10 +292,11 @@ namespace SMC_APM.Controller
                     sboPaymentDraft.TransferReference = pago.MetodoPago.Referencia;
                     break;
 
-                case "3"://Pago en Efectivo
+                case "NN"://Pago en Efectivo
                     sboPaymentDraft.CashAccount = pago.MetodoPago.Cuenta;
                     break;
             }
+            if (sboPaymentDraft.Update() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
             if (sboPaymentDraft.SaveDraftToDocument() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
             var rslt = 0;
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
