@@ -1,0 +1,15 @@
+﻿CREATE PROCEDURE SP_EXD_GET_LIBERACION_SUNAT_CREADO
+(
+	DocEntry int
+)
+AS
+BEGIN
+
+	SELECT
+	*
+	FROM
+	"@EXD_TRR1"
+	
+	WHERE "DocEntry" = DocEntry;
+
+END;

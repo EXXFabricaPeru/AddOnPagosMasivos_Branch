@@ -201,6 +201,7 @@ namespace SMC_APM.Controladores
 
                 oForm.PaneLevel = 1;
 
+            
                 oForm.Visible = true;
                 oForm.Freeze(false);
             }
@@ -268,6 +269,7 @@ namespace SMC_APM.Controladores
                 mt.AutoResizeColumns();
 
                 mt.Columns.Item("#").TitleObject.Sortable = false;
+                mt.Columns.Item("lblNum").TitleObject.Sortable = true;
                 mt.Columns.Item("#").Editable = false;
 
                 oForm.Freeze(false);

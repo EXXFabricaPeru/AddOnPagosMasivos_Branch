@@ -1,4 +1,5 @@
-﻿using SAP_AddonFramework;
+﻿using EXX_MetaData.BL;
+using SAP_AddonFramework;
 using SAPbouiCOM;
 using SMC_APM.Controller;
 using SMC_APM.SAP;
@@ -49,12 +50,45 @@ namespace SMC_APM.Controladores
 
         public void iniciarAddon()
         {
+            
+            //CrearEstructuraDeDatos();
+
             //carga los menus
             cargarMenus();
             cargarObjetosUsuario();
             registrarEventos();
 
             setFiltersCustom();
+        }
+
+        private void CrearEstructuraDeDatos()
+        {
+            try
+            {
+                MDResources.Messages = (s, t) =>
+                {
+                    switch (t)
+                    {
+                        case MDResources.MessageType.Info:
+                            sboApplication.StatusBar.SetText(s, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
+                            break;
+
+                        case MDResources.MessageType.Success:
+                            sboApplication.StatusBar.SetText(s, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+                            break;
+
+                        case MDResources.MessageType.Error:
+                            sboApplication.StatusBar.SetText(s, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                            break;
+                    }
+                };
+
+                MDResources.loadMetaData(Assembly.GetExecutingAssembly().GetName().Version, sboApplication, "ADDPGMV");
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         private void setFiltersCustom()

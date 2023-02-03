@@ -303,6 +303,7 @@ namespace SMC_APM.Modelo
                              Escenario = Convert.ToInt32(q.Element("U_EXD_CODE").Value),
                              Banco = q.Element("U_EXD_BAES").Value,
                              BancoCode = q.Element("U_EXD_BKCD").Value,
+                             GLCuentaBanco = q.Element("U_EXD_CTAB").Value,
                              MedioPago = q.Element("U_EXD_MEDP").Value,
                              Proveedor = q.Element("U_EXD_PROV").Value,
                              TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
@@ -348,6 +349,7 @@ namespace SMC_APM.Modelo
                              Escenario = Convert.ToInt32(q.Element("U_EXD_CODE").Value),
                              Banco = q.Element("U_EXD_BAES").Value,
                              BancoCode = q.Element("U_EXD_BKCD").Value,
+                             GLCuentaBanco = q.Element("U_EXD_CTAB").Value,
                              MedioPago = q.Element("U_EXD_MEDP").Value,
                              Proveedor = q.Element("U_EXD_PROV").Value,
                              TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
@@ -528,6 +530,7 @@ namespace SMC_APM.Modelo
         public bool Pagar { get; set; }
         public int Escenario { get; set; }
         public string Banco { get; set; }
+        public string GLCuentaBanco { get; set; }
         public string BancoCode { get; set; }
         public string MedioPago { get; set; }
         public string MedioPagoSAP { get; set; }

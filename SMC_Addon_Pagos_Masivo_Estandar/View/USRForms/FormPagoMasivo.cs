@@ -372,7 +372,7 @@ namespace SMC_APM.View.USRForms
                     Matrix.FlushToDataSource();
                     var pgoDS = dbsPMP1.GetAsXML();
                     var lstBancos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS)
-                    .Select(s => new { CodBanco = s.MetodoPago.Banco, CodMoneda = s.Moneda }).Distinct().ToList();
+                    .Select(s => new { CodBanco = s.MetodoPago.Banco,  CodMoneda = s.Moneda }).Distinct().ToList();
                     var docEntry = Convert.ToInt32(dbsOPMP.GetValue("DocEntry", 0));
                     var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
                     try

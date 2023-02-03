@@ -247,8 +247,73 @@
     <Content Include="Resources\FrmPMP.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_CABECERA_NUEVO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_LISTAR_FACPENDIENTES_PP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_LISTAR_FACSELECT_PP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_SCOTIABANK_DETALLE_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_TERCERORETENEDOR.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_DETALLE_NUEVO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_INTERBANK_DETALLE_NUEVO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_SANTANDER_DETALLE.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_SCOTIABANK_DETALLE.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_LISTAR_BANCOS.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_LISTAR_BANCOS_2.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_REG_ESCENARIOCAB.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_REG_ESCENARIODET.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT_CREADO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\EXP_SP_PMP_ListarDocumentosPorFecha.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_CABECERA_NUEVO_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_DETALLE_NUEVO_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_INTERBANK_DETALLE_NUEVO_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_SANTANDER_DETALLE_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Scripts\SQL\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -375,6 +375,8 @@ namespace SMC_APM.View
             mtxFact.Columns.Item("Col_2").DataBind.Bind("dtaFact", "DetraccionPend");//DETRACCIÓN PENDIENTE
             mtxFact.Columns.Item("clmNroCuo").DataBind.Bind("dtaFact", "NroCuota");
             mtxFact.Columns.Item("clmNrLnAS").DataBind.Bind("dtaFact", "LineaAsiento");
+            mtxFact.Columns.Item("Col_3").DataBind.Bind("dtaFact", "Cuenta");
+
 
 
             //relaciona la columna del databable con la columna de la matrix para los selecionados
@@ -399,6 +401,7 @@ namespace SMC_APM.View
 
             mtxSelect.Columns.Item("clmNroCuo").DataBind.Bind("dtaSelect", "NroCuota");
             mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
+            mtxSelect.Columns.Item("Col_1").DataBind.Bind("dtaSelect", "Cuenta");
             
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
@@ -965,6 +968,8 @@ namespace SMC_APM.View
                 mtxSelect.LoadFromDataSource();
                 mtxSelect.AutoResizeColumns();
 
+                mtxSelect.Columns.Item("lblNum").TitleObject.Sortable = true;
+
                 tabDoc.Select();
 
                 oForm.Freeze(false);
@@ -991,6 +996,7 @@ namespace SMC_APM.View
             SAPbouiCOM.EditText oEdit2 = null;
             SAPbouiCOM.EditText oEdit3 = null;
             SAPbouiCOM.EditText oEdit4 = null;
+            SAPbouiCOM.EditText oEdit5 = null;
 
             ConexionDAO conexion = new ConexionDAO();
             string NombreBaseDatos = conexion.BaseDatos(sboApplication, ref mensaje);
@@ -1051,6 +1057,7 @@ namespace SMC_APM.View
                         oEdit2 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fDoc").Cells.Item(j).Specific;
                         oEdit3 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNroCuo").Cells.Item(j).Specific;
                         oEdit4 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNrLnAS").Cells.Item(j).Specific;
+                        oEdit5 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_3").Cells.Item(j).Specific;
 
                         //Debug.Print("Detalle: " + i + " Chequeado DocEntry: "+ oEdit.Value.ToString()+" Documento: "+ oEdit2.Value.ToString());
 
@@ -1059,7 +1066,7 @@ namespace SMC_APM.View
 
 
                         daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString()
-                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), ref mensaje);
+                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), oEdit5.Value ,ref mensaje);
                     }
                 }
 
@@ -1076,7 +1083,7 @@ namespace SMC_APM.View
             }
             catch (Exception ex)
             {
-
+                throw;
             }
             finally
             {
