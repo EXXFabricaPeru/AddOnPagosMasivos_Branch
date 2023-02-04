@@ -456,7 +456,7 @@ namespace SMC_APM.View.USRForms
                 if (Modelo.Filas.Count == 0)
                     throw new Exception("No hay datos para generar los archivos");
 
-                var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode, CodMoneda = s.Moneda }).Distinct().ToList();
+                var lstBancos = Modelo.Filas.Select(s => new { CodBanco = s.BancoCode, CuentaBanco = s.GLCuentaBanco , CodMoneda = s.Moneda }).Distinct().ToList();
 
                 foreach (var codigoBanco in lstBancos)
                 {
@@ -464,7 +464,9 @@ namespace SMC_APM.View.USRForms
                     {
                         string ruta = "C:\\PagosMasivos\\";
                         string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM");
-                        Controller.GenerarTXTBancos(Convert.ToInt32(docEntryPM), codigoBanco.CodBanco, codigoBanco.CodMoneda);
+
+
+                        Controller.GenerarTXTBancos(codigoBanco.CodBanco ,codigoBanco.CuentaBanco, Convert.ToInt32(docEntryPM), codigoBanco.CodMoneda);
 
                         Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     }

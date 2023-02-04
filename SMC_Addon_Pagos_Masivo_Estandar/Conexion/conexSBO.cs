@@ -111,9 +111,34 @@ namespace SMC_APM.Conexion
             //conexion company
             string sErrMsg = "";
             int iErrCode = 0;
+
+            string connectionString = string.Empty;
+            SAPbouiCOM.SboGuiApi sboGuiApi = null;
+
             try
             {
-                sboCompany = (SAPbobsCOM.Company)sboApplication.Company.GetDICompany();
+                sboGuiApi = new SAPbouiCOM.SboGuiApi();
+                connectionString = Environment.GetCommandLineArgs()
+                    .GetValue(Environment.GetCommandLineArgs().Length > 0 ? 1 : 0).ToString();
+                sboGuiApi.Connect(connectionString);
+                sboApplication = sboGuiApi.GetApplication(-1);
+                if (sboApplication is null) throw new NullReferenceException();
+                sboApplication.StatusBar.SetText("Iniciando add-on Devengados...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+
+                sboCompany = new SAPbobsCOM.Company();
+                string cookie = sboCompany.GetContextCookie();
+                string connStr = sboApplication.Company.GetConnectionContext(cookie);
+
+                if (sboCompany.Connected)
+                    sboCompany.Disconnect();
+
+                long ret;
+                ret = sboCompany.SetSboLoginContext(connStr);
+
+                if (ret != 0)
+                    throw new Exception("Login context failed");
+
+                ret = sboCompany.Connect();
 
             }
             catch (Exception ex)

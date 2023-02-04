@@ -187,7 +187,6 @@ namespace SMC_APM.Controller
                             matrix.CommonSetting.SetCellEditable(i, 21, true);
                         }
                     }
-
                 }
             }
             catch (Exception)
@@ -255,7 +254,7 @@ namespace SMC_APM.Controller
             }
         }
 
-        internal void GenerarTXTBancos(int docEntry, string codBanco, string codMoneda)
+        internal void GenerarTXTBancos(string codBanco, string GLCuentaBanco, int docEntry, string codMoneda)
         {
             try
             {
@@ -265,10 +264,13 @@ namespace SMC_APM.Controller
                 switch (codBanco)
                 {
                     //PODRÍA SER UNA INTERFAZ
-                    case "002": GenerarTXT_BCP(nombre, docEntry, codMoneda); break;
-                    case "003": GenerarTXT_Interbank(nombre, docEntry); break;
-                    case "009": GenerarTXT_Scotiabank(nombre, docEntry); break;
-                    case "022": GenerarTXT_Santander(nombre, docEntry); break;
+                    case "002": GenerarTXT_BCP(nombre, docEntry, GLCuentaBanco); break;
+                    case "003": GenerarTXT_Interbank(nombre, docEntry, GLCuentaBanco); break;
+                    case "009": GenerarTXT_Scotiabank(nombre, docEntry, GLCuentaBanco); break;
+                    case "022": GenerarTXT_Santander(nombre, docEntry, GLCuentaBanco); break;
+
+                    default:
+                        throw new Exception($"Código de banco {codBanco} no soportado");
                 }
             }
             catch (Exception)
@@ -277,203 +279,19 @@ namespace SMC_APM.Controller
             }
         }
 
-        private void GenerarTXT_Santander(string nombre, int docEntry)
-        {
-            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
-            dtoBancoBCP _dtoBancoSA = new dtoBancoBCP();
-            List<dtoBancoBCPDetalle> _listDetalleSA = new List<dtoBancoBCPDetalle>();
-
-            string LineaCabeceraSA = "";
-            string LineaDetalleSA = "";
-
-            //_dtoBanco = _daoBCP.getBCP(escenario[1], sboApplication, ref mensajeErr);
-            _listDetalleSA = ObtenerDatosDetArchivoTXTSantander(docEntry).ToList();
-
-            for (int i = 0; i < _listDetalleSA.Count; i++)
-            {
-                string FormaPago = "";
-                if (_listDetalleSA[i].TipoCuenta == "I")
-                {
-                    FormaPago = "03";
-
-                    LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
-                           _listDetalleSA[i].TipoDocumentoPagar +
-                           _listDetalleSA[i].NumeroDocumento +
-                           _listDetalleSA[i].Moneda +
-                            _listDetalleSA[i].ImporteParcial +
-                           _listDetalleSA[i].FechaVencimiento + "Confirming" +
-                           "                    " + FormaPago + "          " + _listDetalleSA[i].CuentaAbonoCCI +
-                           _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
-                            "CONFIRMING";
-                }
-                else
-                { //normal
-                    FormaPago = "01";
-
-                    LineaDetalleSA = _listDetalleSA[i].TipoDocumentoIdentidad + _listDetalleSA[i].NumeroDocumentoIdentidad +
-                           _listDetalleSA[i].TipoDocumentoPagar +
-                           _listDetalleSA[i].NumeroDocumento +
-                           _listDetalleSA[i].Moneda +
-                            _listDetalleSA[i].ImporteParcial +
-                           _listDetalleSA[i].FechaVencimiento + "Confirming" +
-                           "                    " + FormaPago + _listDetalleSA[i].CuentaAbono +
-                            _listDetalleSA[i].TipoPersona + _listDetalleSA[i].NombreProveedor +
-                            "CONFIRMING";
-                }
-                archivo.WriteLine(LineaDetalleSA);
-            }
-            archivo.Close();
-            archivo.Dispose();
-
-            Process.Start(nombre);
-        }
-
-        private void GenerarTXT_Scotiabank(string nombre, int docEntry)
-        {
-            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
-            dtoBancoBCP _dtoBancoSC = new dtoBancoBCP();
-            List<dtoBancoBCPDetalle> _listDetalleSC = new List<dtoBancoBCPDetalle>();
-
-            string LineaCabeceraSC = "";
-            string LineaDetalleSC = "";
-
-            _listDetalleSC = ObtenerDatosDetArchivoTXTScotiaBank(docEntry).ToList();
-
-            for (int i = 0; i < _listDetalleSC.Count; i++)
-            {
-                string FormaPago = "";
-                if (_listDetalleSC[i].TipoCuenta == "I")
-                {
-                    FormaPago = "4";
-
-                    LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
-                                _listDetalleSC[i].NombreProveedor +
-                                _listDetalleSC[i].NumeroDocumento +
-                                _listDetalleSC[i].FechaVencimiento +
-                                (_listDetalleSC[i].Importetotal).Replace(".", "") +
-                                FormaPago +
-                               "                                                             "
-                               + _listDetalleSC[i].CuentaAbonoCCI + _listDetalleSC[i].Moneda + "01";
-                }
-                else //nomral
-                {
-                    FormaPago = "2";
-
-                    LineaDetalleSC = _listDetalleSC[i].NumeroDocumentoIdentidad +
-                               _listDetalleSC[i].NombreProveedor +
-                               _listDetalleSC[i].NumeroDocumento +
-                               _listDetalleSC[i].FechaVencimiento +
-                               (_listDetalleSC[i].Importetotal).Replace(".", "") +
-                               FormaPago +
-                               _listDetalleSC[i].CuentaAbono + "                                                                       " + _listDetalleSC[i].Moneda + "01";
-                }
-
-                archivo.WriteLine(LineaDetalleSC);
-            }
-            archivo.Close();
-            archivo.Dispose();
-
-            Process.Start(nombre);
-        }
-
-        private void GenerarTXT_Interbank(string nombre, int docEntry)
+        private void GenerarTXT_Santander(string nombre, int docEntry, string GLCuentaBanco)
         {
             StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
 
-            dtoBancoBCP _dtoBanco = new dtoBancoBCP();
-            List<dtoBancoBCPDetalle> _listDetalle = new List<dtoBancoBCPDetalle>();
+            Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = $"CALL SBO_EXX_PM_SANTANDER_RETENCION({docEntry},'{GLCuentaBanco}')";
 
-            string LineaCabecera = "";
-            string LineaDetalle = "";
+            recordset.DoQuery(query);
 
-            _listDetalle = ObtenerDatosDetArchivoTXTInterBank(docEntry).ToList();
-
-            /*Detalles*/
-
-            for (int i = 0; i < _listDetalle.Count; i++)
+            while (!recordset.EoF)
             {
-                string tipo = "";
-                if (_listDetalle[i].TipoCuenta == "I") //cuenta interbancara
-                {
-                    tipo = "109";
-                    LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
-                                _listDetalle[i].TipoDocumentoPagar +
-                                _listDetalle[i].NumeroDocumento +
-                                "          " + _listDetalle[i].FechaVencimiento +
-                                _listDetalle[i].Moneda +
-                                (_listDetalle[i].ImporteParcial).Replace(".", "") +
-                                " " + "99" +
-                                "   " + //espaco de tipo de cuenta
-                                "  " + //espacio de moneda cuando es interbancario
-                                "   " + //espacio de ofinia a la que pertenece
-                                _listDetalle[i].CuentaAbono +
-                                _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad +
-                                _listDetalle[i].NumeroDocumentoIdentidad +
-                                _listDetalle[i].NombreProveedor + "000000000000000";
-                    ;
-                }
-                else  //cuenta normla
-                {
-                    tipo = "009";
-                    LineaDetalle = "02" + _listDetalle[i].NumeroDocumentoIdentidad2 +
-                                _listDetalle[i].TipoDocumentoPagar +
-                                _listDetalle[i].NumeroDocumento +
-                                "          " + _listDetalle[i].FechaVencimiento +
-                                _listDetalle[i].Moneda +
-                                (_listDetalle[i].ImporteParcial).Replace(".", "") +
-                                " " + "09" +
-                                "001" +
-                                _listDetalle[i].Moneda + "200" +
-                                _listDetalle[i].CuentaAbono +
-                                _listDetalle[i].TipoPersona + _listDetalle[i].TipoDocumentoIdentidad + _listDetalle[i].NumeroDocumentoIdentidad +
-                                _listDetalle[i].NombreProveedor + "000000000000000";
-                }
-                archivo.WriteLine(LineaDetalle);
-            }
-            archivo.Close();
-            archivo.Dispose();
-
-            Process.Start(nombre);
-        }
-
-        private void GenerarTXT_BCP(string nombre, int docEntry, string codMoneda)
-        {
-            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
-            dtoBancoBCP _dtoBancoBCP = new dtoBancoBCP();
-            List<dtoBancoBCPDetalle> _listDetalleBCP = new List<dtoBancoBCPDetalle>();
-
-            string LineaCabeceraBCP = "";
-            string LineaDetalleBCP = "";
-
-            _dtoBancoBCP = ObtenerDatosCabArchivoTXTBCP_Retencion(docEntry, codMoneda).FirstOrDefault();
-            _listDetalleBCP = ObtenerDatosDetArchivoTXTBCP(docEntry).ToList();
-
-            LineaCabeceraBCP = "#1P" + _dtoBancoBCP.TipoCuenta + _dtoBancoBCP.CuentaCargo +
-                _dtoBancoBCP.Moneda +
-                (_dtoBancoBCP.Montototal).Replace(".", "") +
-                _dtoBancoBCP.FechaProceso +
-                "                    " + _dtoBancoBCP.Cadena + (_listDetalleBCP.Count()).ToString("D6") +
-                "                0";
-
-            archivo.WriteLine(LineaCabeceraBCP);
-
-            for (int i = 0; i < _listDetalleBCP.Count; i++)
-            {
-                LineaDetalleBCP = " " + _listDetalleBCP[i].TipoRegistro +
-                        _listDetalleBCP[i].TipoCuenta +
-                        _listDetalleBCP[i].CuentaAbono +
-
-                        _listDetalleBCP[i].NombreProveedor +
-
-                        _listDetalleBCP[i].Moneda +
-                        (_listDetalleBCP[i].Importetotal).Replace(".", "") +
-                        _listDetalleBCP[i].TipoDocumentoIdentidad +
-                        _listDetalleBCP[i].NumeroDocumentoIdentidad +
-                        _listDetalleBCP[i].TipoDocumentoPagar +
-                        _listDetalleBCP[i].NumeroDocumento +
-                        "00" + _listDetalleBCP[i].ValidacionIDC;
-
-                archivo.WriteLine(LineaDetalleBCP);
+                archivo.WriteLine(recordset.Fields.Item(0).Value);
+                recordset.MoveNext();
             }
 
             archivo.Close();
@@ -482,148 +300,67 @@ namespace SMC_APM.Controller
             Process.Start(nombre);
         }
 
-        private static IEnumerable<dtoBancoBCPDetalle> ObtenerDatosDetArchivoTXTInterBank(int docEntry)
+        private void GenerarTXT_Scotiabank(string nombre, int docEntry, string GLCuentaBanco)
         {
-            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_APM_ARCHIVOBANCO_INTERBANK_DETALLE_NUEVO_RETENCION('{docEntry}')";
-            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+
+            Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = $"CALL SBO_EXX_PM_SCOTIABANK_RETENCION({docEntry},'{GLCuentaBanco}')";
+
+            recordset.DoQuery(query);
+
+            while (!recordset.EoF)
             {
-                return new dtoBancoBCPDetalle
-                {
-                    TipoRegistro = dc["TipoRegistro"].ToString(),
-                    TipoCuenta = dc["TipoCuenta"].ToString(),
-                    CuentaAbono = dc["CuentaAbono"].ToString(),
-                    TipoDocumentoIdentidad = dc["TipoDocumentoIdentidad"].ToString(),
-                    NumeroDocumentoIdentidad = dc["NumeroDocumentoIdentidad"].ToString(),
-                    NumeroDocumentoIdentidad2 = dc["NumeroDocumentoIdentidad1"].ToString(),
-                    NombreProveedor = dc["NombreProveedor"].ToString(),
-                    ReferenciaBeneficiario = dc["ReferenciaBeneficiario"].ToString(),
-                    Referencia = dc["Referencia"].ToString(),
-                    ImporteParcial = dc["ImporteParcial"].ToString(),
-                    Importetotal = dc["Importetotal"].ToString(),
-                    ValidacionIDC = dc["ValidacionIDC"].ToString(),
-                    TipoDocumentoPagar = dc["TipoDocumentoPagar"].ToString(),
-                    NumeroDocumento = dc["NumeroDocumento"].ToString(),
-                    Caracter = dc["Caracter"].ToString(),
-                    Moneda = dc["Moneda"].ToString(),
-                    FechaVencimiento = dc["FechaVencimiento"].ToString(),
-                    TipoPersona = dc["TipoPersona"].ToString()
-                };
-            });
-            return rslt;
+                archivo.WriteLine(recordset.Fields.Item(0).Value);
+                recordset.MoveNext();
+            }
+
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
         }
 
-        private static IEnumerable<dtoBancoBCPDetalle> ObtenerDatosDetArchivoTXTScotiaBank(int docEntry)
+        private void GenerarTXT_Interbank(string nombre, int docEntry, string GLCuentaBanco)
         {
-            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_APM_ARCHIVOBANCO_SCOTIABANK_DETALLE_RETENCION('{docEntry}')";
-            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+
+            Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = $"CALL SBO_EXX_PM_INTERBANK_RETENCION({docEntry},'{GLCuentaBanco}')";
+
+            recordset.DoQuery(query);
+
+            while (!recordset.EoF)
             {
-                return new dtoBancoBCPDetalle
-                {
-                    TipoRegistro = dc["TipoRegistro"].ToString(),
-                    TipoCuenta = dc["TipoCuenta"].ToString(),
-                    CuentaAbono = dc["CuentaAbono"].ToString(),
-                    TipoDocumentoIdentidad = dc["TipoDocumentoIdentidad"].ToString(),
-                    NumeroDocumentoIdentidad = dc["NumeroDocumentoIdentidad"].ToString(),
-                    NombreProveedor = dc["NombreProveedor"].ToString(),
-                    ReferenciaBeneficiario = dc["ReferenciaBeneficiario"].ToString(),
-                    Referencia = dc["Referencia"].ToString(),
-                    ImporteParcial = dc["ImporteParcial"].ToString(),
-                    Importetotal = dc["Importetotal"].ToString(),
-                    ValidacionIDC = dc["ValidacionIDC"].ToString(),
-                    TipoDocumentoPagar = dc["TipoDocumentoPagar"].ToString(),
-                    NumeroDocumento = dc["NumeroDocumento"].ToString(),
-                    Caracter = dc["Caracter"].ToString(),
-                    Moneda = dc["Moneda"].ToString(),
-                    FechaVencimiento = dc["FechaVencimiento"].ToString(),
-                    FormaPago = dc["FormaPago"].ToString(),
-                    CuentaAbonoCCI = dc["CuentaAbonoCCI"].ToString()
-                };
-            });
-            return rslt;
+                archivo.WriteLine(recordset.Fields.Item(0).Value);
+                recordset.MoveNext();
+            }
+
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
         }
 
-        private static IEnumerable<dtoBancoBCPDetalle> ObtenerDatosDetArchivoTXTSantander(int docEntry)
+        private void GenerarTXT_BCP(string nombre, int docEntry, string GLCuentaBanco)
         {
-            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_APM_ARCHIVOBANCO_SANTANDER_DETALLE_RETENCION('{docEntry}')";
-            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
-            {
-                return new dtoBancoBCPDetalle
-                {
-                    TipoRegistro = dc["TipoRegistro"].ToString(),
-                    TipoCuenta = dc["TipoCuenta"].ToString(),
-                    CuentaAbono = dc["CuentaAbono"].ToString(),
-                    TipoDocumentoIdentidad = dc["TipoDocumentoIdentidad"].ToString(),
-                    NumeroDocumentoIdentidad = dc["NumeroDocumentoIdentidad"].ToString(),
-                    NombreProveedor = dc["NombreProveedor"].ToString(),
-                    ReferenciaBeneficiario = dc["ReferenciaBeneficiario"].ToString(),
-                    Referencia = dc["Referencia"].ToString(),
-                    ImporteParcial = dc["ImporteParcial"].ToString(),
-                    Importetotal = dc["Importetotal"].ToString(),
-                    ValidacionIDC = dc["ValidacionIDC"].ToString(),
-                    TipoDocumentoPagar = dc["TipoDocumentoPagar"].ToString(),
-                    NumeroDocumento = dc["NumeroDocumento"].ToString(),
-                    Caracter = dc["Caracter"].ToString(),
-                    Moneda = dc["Moneda"].ToString(),
-                    FechaVencimiento = dc["FechaVencimiento"].ToString(),
-                    TipoPersona = dc["TipoPersona"].ToString(),
-                    CuentaAbonoCCI = dc["CuentaAbonoCCI"].ToString()
-                };
-            });
-            return rslt;
-        }
+            StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
 
-        private static IEnumerable<dtoBancoBCPDetalle> ObtenerDatosDetArchivoTXTBCP(int docEntry)
-        {
-            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_APM_ARCHIVOBANCO_BCP_DETALLE_NUEVO_RETENCION('{docEntry}')";
-            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
-            {
-                return new dtoBancoBCPDetalle
-                {
-                    TipoRegistro = dc["TipoRegistro"].ToString(),
-                    TipoCuenta = dc["TipoCuenta"].ToString(),
-                    CuentaAbono = dc["CuentaAbono"].ToString(),
-                    TipoDocumentoIdentidad = dc["TipoDocumentoIdentidad"].ToString(),
-                    NumeroDocumentoIdentidad = dc["NumeroDocumentoIdentidad"].ToString(),
-                    NombreProveedor = dc["NombreProveedor"].ToString(),
-                    ReferenciaBeneficiario = dc["ReferenciaBeneficiario"].ToString(),
-                    Referencia = dc["Referencia"].ToString(),
-                    ImporteParcial = dc["ImporteParcial"].ToString(),
-                    Importetotal = dc["Importetotal"].ToString(),
-                    ValidacionIDC = dc["ValidarIDC"].ToString(),
-                    TipoDocumentoPagar = dc["TipoDocumentoPagar"].ToString(),
-                    NumeroDocumento = dc["NumeroDocumento"].ToString(),
-                    Caracter = dc["Caracter"].ToString(),
-                    Moneda = dc["Moneda"].ToString()
-                };
-            });
-            return rslt;
-        }
+            Recordset recordset = Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            string query = $"CALL SBO_EXX_PM_BCP_RETENCION({docEntry},'{GLCuentaBanco}')";
 
-        private static IEnumerable<dtoBancoBCP> ObtenerDatosCabArchivoTXTBCP_Retencion(int docEntry, string moneda)
-        {
-            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_APM_ARCHIVOBANCO_BCP_CABECERA_NUEVO_RETENCION({docEntry}, '{moneda}')";
-            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
+            recordset.DoQuery(query);
+
+            while (!recordset.EoF)
             {
-                return new dtoBancoBCP
-                {
-                    TipoRegistro = dc["TipoRegistro"].ToString(),
-                    CantidadAbonos = dc["CantidadAbonos"].ToString(),
-                    FechaProceso = dc["FechaProceso"].ToString(),
-                    TipoCuenta = dc["TipoCuenta"].ToString(),
-                    CuentaCargo = dc["CuentaCargo"].ToString(),
-                    Montototal = dc["Montototal"].ToString(),
-                    Referencia = dc["Referencia"].ToString(),
-                    Validacion = dc["Validacion"].ToString(),
-                    Cadena = dc["Cadena"].ToString(),
-                    Moneda = dc["Moneda"].ToString()
-                };
-            });
-            return rslt;
+                archivo.WriteLine(recordset.Fields.Item(0).Value);
+                recordset.MoveNext();
+            }
+
+            archivo.Close();
+            archivo.Dispose();
+
+            Process.Start(nombre);
         }
     }
 }
