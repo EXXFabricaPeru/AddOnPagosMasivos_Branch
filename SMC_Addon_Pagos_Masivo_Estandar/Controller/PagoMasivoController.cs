@@ -92,7 +92,10 @@ namespace SMC_APM.Controller
                     NroCuota = dc["NroCuota"].Trim(),
                     NroLineaAsiento = dc["NroLineaAsiento"].Trim(),
                     NroDocumentoSN = dc["NroDocumentoSN"].Trim(),
-                    AplSreRetencion = dc["AplSerieRetencion"].Trim()
+                    AplSreRetencion = dc["AplSerieRetencion"].Trim(),
+                    NroCtaProveedor = dc["NroCtaProveedor"].Trim(),
+                    CodRetencion = dc["CodRetencion"].Trim(),
+                    ImporteRetencion = Convert.ToDouble(dc["MontoRetencion"])
                 };
             });
             return rslt;
@@ -159,7 +162,7 @@ namespace SMC_APM.Controller
         {
             if (File.Exists(filePath))
             {
-                var fileName = Path.GetFileNameWithoutExtension(filePath);             
+                var fileName = Path.GetFileNameWithoutExtension(filePath);
                 var sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntry}')";
                 var lstTerReten = QueryResultManager.executeQueryAsType(sqlQry, dc =>
                 {
@@ -334,7 +337,8 @@ namespace SMC_APM.Controller
                     FechaContabilizacion = fechaPago,
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
-                    Monto = s.Sum(sm => Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)),
+                    Monto = s.Sum(sm => (Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+                    - Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value))),
                     //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
                     MetodoPago = new SBOMetodoPago
                     {
@@ -351,8 +355,9 @@ namespace SMC_APM.Controller
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_ASNROLINEA")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
 
-                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value),
-                        LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value),
+                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+                        - Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value),
+                        LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
 
                         //MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
 

@@ -136,6 +136,9 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_NRODOCUMENTOSN", lineNum, doc.NroDocumentoSN);
                         dbsPMP1.SetValue("U_EXP_APLSRERTN", lineNum, doc.AplSreRetencion);
                         dbsPMP1.SetValue("U_EXP_ESTADO", lineNum, string.Empty);
+                        dbsPMP1.SetValue("U_EXP_NROCTAPROV", lineNum, doc.NroCtaProveedor);
+                        dbsPMP1.SetValue("U_EXP_CODRETENCION", lineNum, doc.CodRetencion);
+                        dbsPMP1.SetValue("U_EXP_IMPRETENCION", lineNum, doc.ImporteRetencion.ToString());
                     }
                     Matrix.LoadFromDataSource();
                 }
