@@ -123,7 +123,7 @@ namespace SMC_APM.Conexion
                 sboGuiApi.Connect(connectionString);
                 sboApplication = sboGuiApi.GetApplication(-1);
                 if (sboApplication is null) throw new NullReferenceException();
-                sboApplication.StatusBar.SetText("Iniciando add-on Devengados...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                sboApplication.StatusBar.SetText("Iniciando add-on Pagos Masivos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
 
                 sboCompany = new SAPbobsCOM.Company();
                 string cookie = sboCompany.GetContextCookie();
