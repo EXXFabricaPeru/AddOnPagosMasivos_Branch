@@ -66,36 +66,43 @@ namespace SMC_APM.Conexion
                 string[] strArgumentos = new string[4];
                 SAPbouiCOM.SboGuiApi oSboGuiApi = null;
 
+                //oSboGuiApi = new SAPbouiCOM.SboGuiApi();
+                ////strArgumentos = System.Environment.GetCommandLineArgs();
+                ////strArgumentos[0] = "0030002C0030002C00530041005000420044005F00440061007400650076002C0050004C006F006D0056004900490056";
+                //strArgumentos[0] = System.Convert.ToString(Environment.GetCommandLineArgs().GetValue(1));
+
+                //if (strArgumentos.Length > 0)
+                //{
+                //    if (strArgumentos.Length > 1)
+                //    {
+                //        if (strArgumentos[0].LastIndexOf("\\") > 0) strConexion = strArgumentos[1];
+                //        else strConexion = strArgumentos[0];
+                //    }
+                //    else
+                //    {
+                //        if (strArgumentos[0].LastIndexOf("\\") > -1) strConexion = strArgumentos[0];
+                //        else
+                //        {
+                //            MessageBox.Show(SMC_APM.Properties.Resources.nombreAddon + " Error en: Conexion_SBO.cs > ObtenerAplicacion(): SAP Business One no esta en ejecucion", "Aceptar",
+                //            MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                //        }
+                //    }
+                //}
+                //else
+                //{
+                //    MessageBox.Show(SMC_APM.Properties.Resources.nombreAddon + " Error en: Conexion_SBO.cs > ObtenerAplicacion(): SAP Business One no esta en ejecucion", "Aceptar",
+                //    MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                //}
+
                 oSboGuiApi = new SAPbouiCOM.SboGuiApi();
-                //strArgumentos = System.Environment.GetCommandLineArgs();
-                //strArgumentos[0] = "0030002C0030002C00530041005000420044005F00440061007400650076002C0050004C006F006D0056004900490056";
-                strArgumentos[0] = System.Convert.ToString(Environment.GetCommandLineArgs().GetValue(1));
-
-                if (strArgumentos.Length > 0)
-                {
-                    if (strArgumentos.Length > 1)
-                    {
-                        if (strArgumentos[0].LastIndexOf("\\") > 0) strConexion = strArgumentos[1];
-                        else strConexion = strArgumentos[0];
-                    }
-                    else
-                    {
-                        if (strArgumentos[0].LastIndexOf("\\") > -1) strConexion = strArgumentos[0];
-                        else
-                        {
-                            MessageBox.Show(SMC_APM.Properties.Resources.nombreAddon + " Error en: Conexion_SBO.cs > ObtenerAplicacion(): SAP Business One no esta en ejecucion", "Aceptar",
-                            MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
-                    }
-                }
-                else
-                {
-                    MessageBox.Show(SMC_APM.Properties.Resources.nombreAddon + " Error en: Conexion_SBO.cs > ObtenerAplicacion(): SAP Business One no esta en ejecucion", "Aceptar",
-                    MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                }
-
+                strConexion = Environment.GetCommandLineArgs()
+                    .GetValue(Environment.GetCommandLineArgs().Length > 0 ? 1 : 0).ToString();
                 oSboGuiApi.Connect(strConexion);
                 sboApplication = oSboGuiApi.GetApplication(-1);
+
+
+                //oSboGuiApi.Connect(strConexion);
+                //sboApplication = oSboGuiApi.GetApplication(-1);
             }
             catch (Exception ex)
             {
@@ -112,18 +119,18 @@ namespace SMC_APM.Conexion
             string sErrMsg = "";
             int iErrCode = 0;
 
-            string connectionString = string.Empty;
-            SAPbouiCOM.SboGuiApi sboGuiApi = null;
+            //string connectionString = string.Empty;
+            //SAPbouiCOM.SboGuiApi sboGuiApi = null;
 
             try
             {
-                sboGuiApi = new SAPbouiCOM.SboGuiApi();
-                connectionString = Environment.GetCommandLineArgs()
-                    .GetValue(Environment.GetCommandLineArgs().Length > 0 ? 1 : 0).ToString();
-                sboGuiApi.Connect(connectionString);
-                sboApplication = sboGuiApi.GetApplication(-1);
-                if (sboApplication is null) throw new NullReferenceException();
-                sboApplication.StatusBar.SetText("Iniciando add-on Pagos Masivos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                //sboGuiApi = new SAPbouiCOM.SboGuiApi();
+                //connectionString = Environment.GetCommandLineArgs()
+                //    .GetValue(Environment.GetCommandLineArgs().Length > 0 ? 1 : 0).ToString();
+                //sboGuiApi.Connect(connectionString);
+                //sboApplication = sboGuiApi.GetApplication(-1);
+                //if (sboApplication is null) throw new NullReferenceException();
+                //sboApplication.StatusBar.SetText("Iniciando add-on Pagos Masivos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
 
                 sboCompany = new SAPbobsCOM.Company();
                 string cookie = sboCompany.GetContextCookie();
