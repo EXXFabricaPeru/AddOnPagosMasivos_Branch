@@ -136,6 +136,9 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_NRODOCUMENTOSN", lineNum, doc.NroDocumentoSN);
                         dbsPMP1.SetValue("U_EXP_APLSRERTN", lineNum, doc.AplSreRetencion);
                         dbsPMP1.SetValue("U_EXP_ESTADO", lineNum, string.Empty);
+                        dbsPMP1.SetValue("U_EXP_NROCTAPROV", lineNum, doc.NroCtaProveedor);
+                        dbsPMP1.SetValue("U_EXP_CODRETENCION", lineNum, doc.CodRetencion);
+                        dbsPMP1.SetValue("U_EXP_IMPRETENCION", lineNum, doc.ImporteRetencion.ToString());
                     }
                     Matrix.LoadFromDataSource();
                 }
@@ -373,7 +376,7 @@ namespace SMC_APM.View.USRForms
                     Matrix.FlushToDataSource();
                     var pgoDS = dbsPMP1.GetAsXML();
                     var lstBancos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS)
-                    .Select(s => new { CodBanco = s.MetodoPago.Banco,  CodMoneda = s.Moneda }).Distinct().ToList();
+                    .Select(s => new { CodBanco = s.MetodoPago.Banco, CodMoneda = s.Moneda }).Distinct().ToList();
                     var docEntry = Convert.ToInt32(dbsOPMP.GetValue("DocEntry", 0));
                     var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
                     try
