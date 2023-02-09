@@ -26,6 +26,7 @@ namespace SMC_APM.Modelo
         public string NroDocumentoSN { get; set; }
         public string AplSreRetencion { get; set; }
         public string NroCtaProveedor { get; set; }
+        public string CodBncProveedor { get; set; }
         public string CodRetencion { get; set; }
         public double ImporteRetencion { get; set; }
     }

@@ -95,6 +95,7 @@ namespace SMC_APM.Controller
                     NroDocumentoSN = dc["NroDocumentoSN"].Trim(),
                     AplSreRetencion = dc["AplSerieRetencion"].Trim(),
                     NroCtaProveedor = dc["NroCtaProveedor"].Trim(),
+                    CodBncProveedor = dc["CodBncProveedor"].Trim(),
                     CodRetencion = dc["CodRetencion"].Trim(),
                     ImporteRetencion = Convert.ToDouble(dc["MontoRetencion"])
                 };
@@ -339,7 +340,7 @@ namespace SMC_APM.Controller
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
                     Monto = s.Sum(sm => (Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
-                    - Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value))),
+                    /*- Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/)),
                     //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
                     MetodoPago = new SBOMetodoPago
                     {
@@ -357,12 +358,9 @@ namespace SMC_APM.Controller
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
 
                         MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
-                        - Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value),
+                        /*- Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/,
                         LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
-
                         //MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
-
-
                     })
                 });
             }
@@ -371,23 +369,68 @@ namespace SMC_APM.Controller
 
         public static void GenerarTXTBancos(int docEntry, string codBanco, string codMoneda, string GLAccount)
         {
-            var nombre = @"C:\PagosMasivos\";
-            nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
-            //var archivo = new System.IO.StreamWriter(nombre, false, Encoding.GetEncoding(1252));
-
-            switch (codBanco)
+            try
             {
-                //PODRÍA SER UNA INTERFAZ
-                case "002": GenerarTXT_BCP(nombre, docEntry, GLAccount); break;
-                case "003": GenerarTXT_Interbank(nombre, docEntry, GLAccount); break;
-                case "009": GenerarTXT_Scotiabank(nombre, docEntry, GLAccount); break;
-                case "022": GenerarTXT_Santander(nombre, docEntry, GLAccount); break;
-
-                default:
-                    throw new Exception($"Código de banco {codBanco} no soportado");
+                var nombre = @"C:\PagosMasivos\";
+                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
+                //var archivo = new System.IO.StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+                var qry = string.Empty;
+                switch (codBanco)
+                {
+                    //PODRÍA SER UNA INTERFAZ
+                    case "002":
+                        qry = $"CALL SBO_EXX_PM_BCP({docEntry},'{GLAccount}')";
+                        break;
+                    case "003":
+                        qry = $"CALL SBO_EXX_PM_INTERBANK({docEntry},'{GLAccount}')";
+                        break;
+                    case "009":
+                        qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},'{GLAccount}')";
+                        break;
+                    case "022":
+                        qry = $"CALL SBO_EXX_PM_SANTANDER({docEntry},'{GLAccount}')";
+                        break;
+                    default:
+                        throw new Exception($"Código de banco {codBanco} no soportado");
+                }
+                var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+                recordset.DoQuery(qry);
+                using (StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252)))
+                {
+                    while (!recordset.EoF)
+                    {
+                        archivo.WriteLine(recordset.Fields.Item(0).Value);
+                        recordset.MoveNext();
+                    }
+                    archivo.Close();
+                    archivo.Dispose();
+                }
+                Process.Start(nombre);
             }
+            catch { throw; }
         }
 
+        public static IEnumerable<dynamic> ObtenerListaBancoPorPago(object obj)
+        {
+            XDocument xDoc = null;
+
+            try
+            {
+                xDoc = XDocument.Parse((string)obj);
+                var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
+               .Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_PAGO") && a.Element("value").Value.Equals("Y"))
+               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_RETENCION") && a.Element("value").Value.Equals("N")));
+                return xElements.Descendants("cells").GroupBy(g => new
+                {
+                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("MONEDA")).FirstOrDefault()?.Element("value").Value,
+                    Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
+                    CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value
+                }).Select(s => new { Banco = s.Key.Banco, CtaBanco = s.Key.CtaBanco, Moneda = s.Key.Moneda });
+            }
+            finally { }
+        }
+
+        #region Obseleto
         private static void GenerarTXT_Santander(string nombre, int docEntry, string gLAccount)
         {
             StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252));
@@ -471,5 +514,7 @@ namespace SMC_APM.Controller
 
             Process.Start(nombre);
         }
+
+        #endregion
     }
 }

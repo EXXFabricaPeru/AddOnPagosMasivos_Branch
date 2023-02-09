@@ -51,12 +51,15 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
-                var cmbClm = Matrix.Columns.Item("Col_5");
-                while (cmbClm.ValidValues.Count > 0) cmbClm.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                var cmbClmBncEsc = Matrix.Columns.Item("Col_5");
+                var cmbClmBncPrv = Matrix.Columns.Item("Col_23");
+                while (cmbClmBncEsc.ValidValues.Count > 0) cmbClmBncEsc.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                while (cmbClmBncPrv.ValidValues.Count > 0) cmbClmBncPrv.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
                 recSet = PagoMasivoController.ObtenerInfoBancos();
                 while (!recSet.EoF)
                 {
-                    cmbClm.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    cmbClmBncEsc.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    cmbClmBncPrv.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                     recSet.MoveNext();
                 }
 
@@ -137,8 +140,10 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_APLSRERTN", lineNum, doc.AplSreRetencion);
                         dbsPMP1.SetValue("U_EXP_ESTADO", lineNum, string.Empty);
                         dbsPMP1.SetValue("U_EXP_NROCTAPROV", lineNum, doc.NroCtaProveedor);
+                        dbsPMP1.SetValue("U_EXP_CODBANCOPROV", lineNum, doc.CodBncProveedor.ToString());
                         dbsPMP1.SetValue("U_EXP_CODRETENCION", lineNum, doc.CodRetencion);
                         dbsPMP1.SetValue("U_EXP_IMPRETENCION", lineNum, doc.ImporteRetencion.ToString());
+
                     }
                     Matrix.LoadFromDataSource();
                 }
@@ -375,8 +380,8 @@ namespace SMC_APM.View.USRForms
                     Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                     Matrix.FlushToDataSource();
                     var pgoDS = dbsPMP1.GetAsXML();
-                    var lstBancos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS)
-                    .Select(s => new { CodBanco = s.MetodoPago.Banco,  CodMoneda = s.Moneda, GLCuenta = s.MetodoPago.Cuenta }).Distinct().ToList();
+                    var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS);
+                    //.Select(s => new { CodBanco = s.Banco, CodMoneda = s.Moneda, GLCuenta = s.MetodoPago.Cuenta }).Distinct().ToList();
                     var docEntry = Convert.ToInt32(dbsOPMP.GetValue("DocEntry", 0));
                     var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
                     try
@@ -385,14 +390,15 @@ namespace SMC_APM.View.USRForms
                         {
                             try
                             {
-                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.CodBanco, banc.CodMoneda, banc.GLCuenta);
+                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Moneda, banc.CtaBanco);
+                                Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                             }
                             catch (Exception ex)
                             {
                                 Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                         }
-                        Globales.Aplication.MessageBox("Archivos para bancos generados correctamente en la ruta \n C:\\PagosMasivos\\");
+                        //Globales.Aplication.MessageBox("Archivos para bancos generados correctamente en la ruta \n C:\\PagosMasivos\\");
                     }
                     finally
                     {
