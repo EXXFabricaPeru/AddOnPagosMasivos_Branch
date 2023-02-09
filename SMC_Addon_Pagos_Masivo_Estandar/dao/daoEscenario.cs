@@ -192,7 +192,7 @@ namespace SMC_APM.dao
         }
 
         //registra detalle de escenario documentos seleccionados 
-        public void registrarDetalle(string NombreBD, string UsuarioConectado, string codigo, string docEntry, string total, string tipodocumento, int nroCuota, int lineaAsiento, string cuentaProveedor ,ref string mensaje)
+        public void registrarDetalle(string NombreBD, string UsuarioConectado, string codigo, string docEntry, string total, string tipodocumento, int nroCuota, int lineaAsiento, string cuentaProveedor ,string codigoBanco,ref string mensaje)
         {
             DbCommand CommandEmpresa = null;
             mensaje = "";
@@ -256,6 +256,13 @@ namespace SMC_APM.dao
                 param7.Direction = ParameterDirection.Input;
                 param7.Value = cuentaProveedor;
                 CommandEmpresa.Parameters.Add(param7);
+
+                DbParameter param8;
+                param8 = CommandEmpresa.CreateParameter();
+                param8.DbType = DbType.String;
+                param8.Direction = ParameterDirection.Input;
+                param8.Value = codigoBanco;
+                CommandEmpresa.Parameters.Add(param8);
 
                 db.ExecuteNonQuery(CommandEmpresa);
             }

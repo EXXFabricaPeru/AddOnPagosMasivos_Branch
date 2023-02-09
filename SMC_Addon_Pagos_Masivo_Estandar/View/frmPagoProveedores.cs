@@ -373,9 +373,11 @@ namespace SMC_APM.View
 
             mtxFact.Columns.Item("Col_1").DataBind.Bind("dtaFact", "BloqueoPago");//BLOQUEO PAGO
             mtxFact.Columns.Item("Col_2").DataBind.Bind("dtaFact", "DetraccionPend");//DETRACCIÓN PENDIENTE
+            mtxFact.Columns.Item("Col_3").DataBind.Bind("dtaFact", "Cuenta");//DETRACCIÓN PENDIENTE
+
             mtxFact.Columns.Item("clmNroCuo").DataBind.Bind("dtaFact", "NroCuota");
             mtxFact.Columns.Item("clmNrLnAS").DataBind.Bind("dtaFact", "LineaAsiento");
-            mtxFact.Columns.Item("Col_3").DataBind.Bind("dtaFact", "Cuenta");
+            mtxFact.Columns.Item("Col_4").DataBind.Bind("dtaFact", "BankCode"); //BANCO PROVEEDOR
 
 
 
@@ -402,7 +404,7 @@ namespace SMC_APM.View
             mtxSelect.Columns.Item("clmNroCuo").DataBind.Bind("dtaSelect", "NroCuota");
             mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
             mtxSelect.Columns.Item("Col_1").DataBind.Bind("dtaSelect", "Cuenta");
-            
+            mtxSelect.Columns.Item("Col_2").DataBind.Bind("dtaSelect", "BankCode");
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
             SAPbouiCOM.Column oColumn2 = mtxSelect.Columns.Item("fReten");
@@ -997,6 +999,7 @@ namespace SMC_APM.View
             SAPbouiCOM.EditText oEdit3 = null;
             SAPbouiCOM.EditText oEdit4 = null;
             SAPbouiCOM.EditText oEdit5 = null;
+            SAPbouiCOM.EditText oEdit6 = null;
 
             ConexionDAO conexion = new ConexionDAO();
             string NombreBaseDatos = conexion.BaseDatos(sboApplication, ref mensaje);
@@ -1058,7 +1061,7 @@ namespace SMC_APM.View
                         oEdit3 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNroCuo").Cells.Item(j).Specific;
                         oEdit4 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNrLnAS").Cells.Item(j).Specific;
                         oEdit5 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_3").Cells.Item(j).Specific;
-
+                        oEdit6 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_4").Cells.Item(j).Specific;
                         //Debug.Print("Detalle: " + i + " Chequeado DocEntry: "+ oEdit.Value.ToString()+" Documento: "+ oEdit2.Value.ToString());
 
                         sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " Evaluando fila " + j + " DocEntry: " + oEdit.Value.ToString()
@@ -1066,7 +1069,7 @@ namespace SMC_APM.View
 
 
                         daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString()
-                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), oEdit5.Value ,ref mensaje);
+                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), oEdit5.Value , oEdit6.Value, ref mensaje);
                     }
                 }
 
