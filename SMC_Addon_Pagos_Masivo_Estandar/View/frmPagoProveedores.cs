@@ -488,6 +488,7 @@ namespace SMC_APM.View
                                         break;
                                 }
                                 break;
+
                             case SAPbouiCOM.BoEventTypes.et_CLICK:
                                 switch (pVal.ItemUID)
                                 {
@@ -609,79 +610,6 @@ namespace SMC_APM.View
                                         if (rpta == 1)
                                             EnviarAAutorizacion();
 
-                                        //valida las autorizaciones
-                                        //var ValidaAutorizacion = daoBanco.ObtenerAccion(codEscenario, sboApplication, ref mensaje);
-
-                                        ////valida que tenga las dos Y para que continue
-                                        //if ((ValidaAutorizacion[0] == "N" && ValidaAutorizacion[1] == "N")
-                                        //    || (ValidaAutorizacion[0] == "Y" && ValidaAutorizacion[1] == "N")
-                                        //    || (ValidaAutorizacion[0] == "N" && ValidaAutorizacion[1] == "Y"))
-                                        //{
-                                        //    sboApplication.MessageBox("Requiere Autorizacion");
-                                        //    return;
-                                        //}
-
-
-                                        //consulta banco del escenario
-                                        //dtoBanco = daoBanco.consultarBanco(codEscenario,sboApplication, ref mensaje);
-
-                                        ////obtiene total del escenario
-                                        //decimal TotalEscenario = obtenerTotalEscenario(codEscenario);
-
-                                        //List<decimal> listatopes = new List<decimal>();
-                                        ////consulta el monto tope 
-                                        //listatopes = daoBanco.MontosTopes(sboApplication, ref mensaje);
-
-                                        ////valida montos topes
-                                        //if (dtoBanco.Moneda == "SOL")
-                                        //{
-                                        //    if (TotalEscenario > listatopes[0])
-                                        //    {
-                                        //        sboApplication.MessageBox("Se excedio el monto total");
-                                        //        return;
-                                        //    }
-                                        //}
-                                        //else
-                                        //{
-                                        //    if (TotalEscenario > listatopes[1])
-                                        //    {
-                                        //        sboApplication.MessageBox("Se excedio el monto total");
-                                        //        return;
-                                        //    }
-                                        //}
-
-
-                                        ;
-
-                                        ////inicia formulario
-                                        //if (tipoEscenario.Equals("PRO"))
-                                        //{
-                                        //    ctrFrmDatosCuenta ctrFrmDatos = new ctrFrmDatosCuenta(sboApplication, sboCompany);
-                                        //    try
-                                        //    {
-                                        //        sboApplication.Forms.Item("frmSMC2").Select();
-                                        //        ctrFrmDatos.iniciarFormulario("frmSMC2", dtaSelect, txtMoneda.Value.ToString(), dtoBanco.CuentaBank, tipoEscenario,codEscenario, tipoBanco);
-                                        //    }
-                                        //    catch
-                                        //    {
-                                        //        ctrFrmDatos.cargarFormulario(dtaSelect, txtMoneda.Value.ToString(), dtoBanco.CuentaBank, tipoEscenario, "frmSMC2", codEscenario, tipoBanco);
-                                        //    }
-                                        //}
-                                        //else
-                                        //{
-                                        //    ctrFrmDatosCuenta ctrFrmDatos = new ctrFrmDatosCuenta(sboApplication, sboCompany);
-                                        //    try
-                                        //    {
-                                        //        sboApplication.Forms.Item("frmSMC4").Select();
-                                        //        ctrFrmDatos.iniciarFormulario("frmSMC4", dtaSelect, txtMoneda.Value.ToString(), dtoBanco.CuentaBank, tipoEscenario, codEscenario, tipoBanco);
-                                        //    }
-                                        //    catch
-                                        //    {
-                                        //        ctrFrmDatos.cargarFormulario(dtaSelect, txtMoneda.Value.ToString(), dtoBanco.CuentaBank, tipoEscenario, "frmSMC4", codEscenario, tipoBanco);
-                                        //    }
-
-                                        //}
-
                                         break;
 
                                     case "btnLib":
@@ -709,18 +637,6 @@ namespace SMC_APM.View
                                     case "tabDoc":
                                         oForm.PaneLevel = 1;
                                         break;
-
-
-                                        //case "Item_10"://TEST LIBERACIÓN TERCERO
-
-                                        //    var formUID = string.Concat(FormLiberarTercero.TYPE, new Random().Next(0, 1000));
-
-                                        //    if (!UIFormFactory.FormUIDExists(formUID))
-                                        //        UIFormFactory.AddUSRForm(formUID, new FormLiberarTercero(formUID));
-
-                                        //    break;
-
-
                                 }
                                 break;
 
@@ -933,9 +849,6 @@ namespace SMC_APM.View
             string consulta1 = "";
 
 
-
-
-
             try
             {
                 btnBuscar.Item.Enabled = false;
@@ -980,7 +893,7 @@ namespace SMC_APM.View
             }
             catch (Exception ex)
             {
-
+                throw;
             }
         }
 
@@ -1155,7 +1068,7 @@ namespace SMC_APM.View
             }
             catch (Exception ex)
             {
-
+                throw;
             }
             finally
             {

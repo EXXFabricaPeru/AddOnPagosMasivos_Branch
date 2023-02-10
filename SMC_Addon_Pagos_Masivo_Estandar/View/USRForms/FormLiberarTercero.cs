@@ -141,6 +141,8 @@ namespace SMC_APM.View.USRForms
 
                 Form.Freeze(true);
 
+                Modelo.Filas = Modelo.Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0 && x.TotalRetencionML > 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO
+
                 Modelo.ValidarDatos();
                 //Modelo = new LiberarTerceroModelView(Form);
 

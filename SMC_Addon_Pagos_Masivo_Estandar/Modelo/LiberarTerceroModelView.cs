@@ -88,15 +88,27 @@ namespace SMC_APM.Modelo
             if (Filas.Where(x => x.Pagar).Count() == 0)
                 throw new Exception("Debe seleccionar al menos un documento para iniciar el proceso");
 
+            int redondeo = Util.utilNET.GetDecimalesConfigurado();
+
             if (PagarRetenciones)
             {
+                //VALIDAR QUE EL TOTAL DE RETENCIONES (DEL ARCHIVO)  NO SUPERE EL TOTAL DE DOCUMENTOS SELECCIONADOS
+
                 foreach (DatosSUNATRetencion lineaArchivo in RptaSUNAT)
                 {
                     LiberarTercero_Fila fila = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).FirstOrDefault();
 
                     if (fila != null) //SI ESTÁ PRESENTE EN EL ARCHIVO PERO NO EN LA GRILLA, SE IGNORA
                     {
-                        double totalRetencionProveedor = Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).Sum(y => y.TotalRetencionML);
+                        double totalRetencionProveedor = Math.Round(Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).Sum(y => y.TotalRetencionML), redondeo);
+                        double totalDocumentos_soles = Math.Round(Filas.Where(x => x.Proveedor == ("P" + lineaArchivo.RUC)).Sum(y => y.TotalML), redondeo);
+
+                        if (totalRetencionProveedor > totalDocumentos_soles)
+                        {
+                            RptaSUNAT = null;
+                            throw new Exception($"El total de retención {totalRetencionProveedor} supera al total de documentos seleccionados {totalDocumentos_soles} para el proveedor  P{lineaArchivo.RUC}, deberá elegir otro archivo de respuesta SUNAT");
+                        }
+                            
                         if (totalRetencionProveedor != lineaArchivo.MontoEmbargo)
                             throw new Exception($"El monto de retención para el proveedor P{lineaArchivo.RUC} no ha sido ingresado en su totalidad. Falta registrar {lineaArchivo.MontoEmbargo - totalRetencionProveedor} soles");
                     }

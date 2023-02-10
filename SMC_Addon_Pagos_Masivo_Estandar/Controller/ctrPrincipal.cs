@@ -398,32 +398,7 @@ namespace SMC_APM.Controladores
                             _ctrFrmAutorizacion.registrarItemEvent(FormUID, ref pVal, out BubbleEvent);
                         break;
                 }
-                /*switch (pVal.FormTypeEx)
-                {
-                    case "65306":
-                    case "141":
-                    case "65301":
-                    case "181":
-                        if (pVal.BeforeAction && pVal.EventType == SAPbouiCOM.BoEventTypes.et_FORM_DRAW && pVal.FormMode == 3)
-                        {
-                            SAPbouiCOM.Form oFormFather = sboApplication.Forms.Item(pVal.FormUID);
-                            SAPbouiCOM.Form oForm = sboApplication.Forms.Item(oFormFather.UDFFormUID);
-                            SAPbouiCOM.Item oItem;
-                            SAPbouiCOM.EditText oEditText;
 
-                            oItem = oForm.Items.Item("U_SMC_FEFECTIVO");
-                            oEditText = (SAPbouiCOM.EditText)oItem.Specific;
-
-                            if (oEditText.Value.ToString().Equals(""))
-                            {
-                                oEditText.Value = "Proveedores de Bienes y Servicios";
-                            }
-
-                            oItem = oFormFather.Items.Item("4");
-                            oItem.Click();
-                        }
-                        break;
-                }*/
             }
             catch (Exception ex)
             {

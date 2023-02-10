@@ -372,7 +372,7 @@ namespace SMC_APM.Controller
             {
                 var nombre = @"C:\PagosMasivos\";
                 nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
-                //var archivo = new System.IO.StreamWriter(nombre, false, Encoding.GetEncoding(1252));
+         
                 var qry = string.Empty;
                 switch (codBanco)
                 {
@@ -394,11 +394,15 @@ namespace SMC_APM.Controller
                 }
                 var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
                 recordset.DoQuery(qry);
+                string valorLinea = string.Empty;
+
                 using (StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252)))
                 {
                     while (!recordset.EoF)
                     {
-                        archivo.WriteLine(recordset.Fields.Item(0).Value);
+                        valorLinea = recordset.Fields.Item(0).Value;
+                        
+                        archivo.WriteLine(valorLinea.Remove(valorLinea.Length - 1));
                         recordset.MoveNext();
                     }
                     archivo.Close();
