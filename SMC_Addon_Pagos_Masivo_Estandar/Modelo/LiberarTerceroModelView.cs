@@ -78,9 +78,10 @@ namespace SMC_APM.Modelo
         {
             if (!PagarRetenciones && !PagarProveedores)
                 throw new Exception("Debe seleccionar al menos una opción de pago. Pago Proveedores / Retenciones");
-
+            /*
             if (string.IsNullOrEmpty(NroOperacion))
                 throw new Exception("Debe ingresar un número de operación");
+            */
 
             if (RptaSUNAT == null)
                 throw new Exception("Debe cargar una respuesta de SUNAT antes de procesar los pagos");
@@ -108,7 +109,7 @@ namespace SMC_APM.Modelo
                             RptaSUNAT = null;
                             throw new Exception($"El total de retención {totalRetencionProveedor} supera al total de documentos seleccionados {totalDocumentos_soles} para el proveedor  P{lineaArchivo.RUC}, deberá elegir otro archivo de respuesta SUNAT");
                         }
-                            
+
                         if (totalRetencionProveedor != lineaArchivo.MontoEmbargo)
                             throw new Exception($"El monto de retención para el proveedor P{lineaArchivo.RUC} no ha sido ingresado en su totalidad. Falta registrar {lineaArchivo.MontoEmbargo - totalRetencionProveedor} soles");
                     }
@@ -213,7 +214,8 @@ namespace SMC_APM.Modelo
 
                 var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
                .Any(a => a.Element("uid").Value.Equals("U_EXD_IPAG") && a.Element("value").Value.Equals("Y"))
-               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXD_GEPP") && a.Element("value").Value == "N"));
+               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXD_GEPP") && a.Element("value").Value == "N")
+               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXD_PAGP") && Convert.ToDouble(a.Element("value").Value) > 0));
 
                 return xElements.Descendants("cells").GroupBy(g => new
                 {
@@ -256,21 +258,37 @@ namespace SMC_APM.Modelo
 
         private void ProcesarRetenciones()
         {
+            DBDataSource HEADER = Form.GetDBDataSource("@EXD_OTRR");
+            DBDataSource PAGOMASIVO = Form.GetDBDataSource("@EXP_OPMP");
+            string docEntryPM = HEADER.GetValueExt("U_EXD_NRPM");
+
+            Conditions conditions = new Conditions();
+            Condition cnd = conditions.Add();
+            cnd.Alias = "DocEntry";
+
+            cnd.Operation = BoConditionOperation.co_EQUAL;
+            cnd.CondVal = docEntryPM;
+
+            PAGOMASIVO.Query(conditions);
+
+
             Filas = Filas.Where(x => x.Pagar && x.DocEntryPagoRet == 0 && x.TotalRetencionML > 0).ToList(); //SOLO ENTRAN AL PROCESO LOS QUE NO TIENEN PAGO ASOCIADO
 
             //if ((Filas == null || Filas.Count == 0) && (Form.Mode == BoFormMode.fm_ADD_MODE))
             //    throw new Exception("Debe seleccionar al menos un documento");
 
-            if(Filas != null && Filas.Count > 0) //HAY RETENCIONES POR PROCESAR
+            if (Filas != null && Filas.Count > 0) //HAY RETENCIONES POR PROCESAR
             {
                 List<Terceros_Retencion> agrupados = Filas
                                     .Where(x => x.TotalRetencionML > 0)
-                                    .GroupBy(u => u.Proveedor)
+                                    .GroupBy(u => new { u.Proveedor, u.IndSerieRtn })
                                     .Select(_ => new Terceros_Retencion
                                     {
-                                        Proveedor = _.Key,
-                                        MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
-                                        MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
+                                        Series = _.Key.IndSerieRtn == "Y" ? Convert.ToInt32(PAGOMASIVO.GetValueExt("U_EXP_SERIERETENCION")) : default,
+                                        Proveedor = _.Key.Proveedor,
+                                        //MontoTransferencia = _.Where(x => x.MedioPagoSAP == "T").Sum(y => y.TotalRetencionML),
+                                        //MontoCheques = _.Where(x => x.MedioPagoSAP == "C").Sum(y => y.TotalRetencionML),
+                                        MontoTransferencia = _.Sum(y => y.TotalRetencionML),
                                         Banco = _.Max(x => x.Banco),
                                         CuentaTransferencia = CuentaBanco,
                                         CuentaCheque = CuentaBanco,
@@ -285,8 +303,8 @@ namespace SMC_APM.Modelo
                     int docEntryPago = proveedor.CrearPagoRetencion();
                     if (docEntryPago != -1)
                     {
-                        Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
-                        Filas.Where(x => x.Proveedor == proveedor.Proveedor).All(c => { c.MensajeError = proveedor.MensajeError; return true; });
+                        Filas.Where(x => x.Proveedor == proveedor.Proveedor && x.IndSerieRtn == (proveedor.Series == 0 ? "N" : "Y")).All(c => { c.DocEntryPagoRet = docEntryPago; return true; });
+                        Filas.Where(x => x.Proveedor == proveedor.Proveedor && x.IndSerieRtn == (proveedor.Series == 0 ? "N" : "Y")).All(c => { c.MensajeError = proveedor.MensajeError; return true; });
                     }
                 }
             }
@@ -318,6 +336,7 @@ namespace SMC_APM.Modelo
                              GLCuentaBanco = q.Element("U_EXD_CTAB").Value,
                              MedioPago = q.Element("U_EXD_MEDP").Value,
                              Proveedor = q.Element("U_EXD_PROV").Value,
+                             IndSerieRtn = q.Element("U_EXD_INDR").Value,
                              TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
                              DocEntry = Convert.ToInt32(q.Element("U_EXD_NUMI").Value),
                              LineaAsiento = Convert.ToInt32(q.Element("U_EXD_LIAS").Value),
@@ -366,6 +385,7 @@ namespace SMC_APM.Modelo
                              Proveedor = q.Element("U_EXD_PROV").Value,
                              TipoDocumento = Convert.ToInt32(q.Element("U_EXD_TDOC").Value),
                              DocEntry = Convert.ToInt32(q.Element("U_EXD_NUMI").Value),
+                             IndSerieRtn = q.Element("U_EXD_INDR").Value,
                              LineaAsiento = Convert.ToInt32(q.Element("U_EXD_LIAS").Value),
                              NroCuota = Convert.ToInt32(q.Element("U_EXD_NCUO").Value),
                              MedioPagoSAP = GetMedioPagoSAP(q.Element("U_EXD_MEDP").Value),
@@ -402,6 +422,7 @@ namespace SMC_APM.Modelo
 
     public class Terceros_Retencion
     {
+        public int Series { get; set; }
         public string Proveedor { get; set; }
         public string NroOperacion { get; set; }
         public string CuentaTransferencia { get; set; }
@@ -421,6 +442,7 @@ namespace SMC_APM.Modelo
                 int decimales = utilNET.GetDecimalesConfigurado();
 
                 Payments oPagoEf = Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
+                if (Series != 0) oPagoEf.Series = Series;
                 oPagoEf.DocTypte = BoRcptTypes.rSupplier;
                 oPagoEf.CardCode = Proveedor;
                 oPagoEf.DocDate = FechaTransferencia;
@@ -450,7 +472,7 @@ namespace SMC_APM.Modelo
 
                     var sucursalBanco = PagoMasivoController.ObtenerSucursaCtaBanco(GetBankCode(Banco), CuentaCheque);
                     oPagoEf.Checks.AccounttNum = sucursalBanco.Item1;
-                    oPagoEf.Checks.BankCode = GetBankCode(Banco);
+                    oPagoEf.Checks.BankCode = sucursalBanco.Item3;//GetBankCode(Banco);
                     oPagoEf.Checks.Branch = sucursalBanco.Item2;
                     oPagoEf.Checks.CheckAccount = CuentaCheque;
 
@@ -560,5 +582,6 @@ namespace SMC_APM.Modelo
         public int DocEntryPagoRet { get; set; }
         public int DocEntryPagoProv { get; set; }
         public string MensajeError { get; set; }
+        public string IndSerieRtn { get; set; }
     }
 }

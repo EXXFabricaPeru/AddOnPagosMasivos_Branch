@@ -125,11 +125,12 @@ namespace SMC_APM.Controller
                     string idPago = matrix.GetCellSpecific("Col_14", i).Value;
                     string proveedor = matrix.GetCellSpecific("Col_4", i).Value;
                     double montoRentencion = Convert.ToDouble(matrix.GetCellSpecific("Col_12", i).Value);
+                    string indSerRtn = matrix.GetCellSpecific("Col_23", i).Value;
 
                     if (chk.Checked && string.IsNullOrEmpty(idPago) && montoRentencion > 0)
                     {
-                        int docEntryPagoRetencion = modelo.Filas.Where(x => x.Proveedor == proveedor).Max(y => y.DocEntryPagoRet);
-                        string mensajeError = modelo.Filas.Where(x => x.Proveedor == proveedor).Max(y => y.MensajeError);
+                        int docEntryPagoRetencion = modelo.Filas.Where(x => x.Proveedor == proveedor && x.IndSerieRtn == indSerRtn).Max(y => y.DocEntryPagoRet);
+                        string mensajeError = modelo.Filas.Where(x => x.Proveedor == proveedor && x.IndSerieRtn == indSerRtn).Max(y => y.MensajeError);
 
                         matrix.GetCellSpecific("Col_14", i).Value = docEntryPagoRetencion.ToString();
                         matrix.GetCellSpecific("Col_25", i).Value = mensajeError;

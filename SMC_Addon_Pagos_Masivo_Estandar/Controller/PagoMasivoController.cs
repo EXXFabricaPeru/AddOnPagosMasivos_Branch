@@ -57,15 +57,16 @@ namespace SMC_APM.Controller
             return !recordset.EoF;
         }
 
-        public static Tuple<string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
+        public static Tuple<string, string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"select top 1 \"Account\",\"Branch\" from DSC1 where \"BankCode\" = '{codBanco}' and \"GLAccount\" = '{codCta}';";
+            //var sqlQry = $"select top 1 \"Account\",\"Branch\" from DSC1 where \"BankCode\" = '{codBanco}' and \"GLAccount\" = '{codCta}';";
+            var sqlQry = $"select top 1 \"Account\",\"Branch\",\"BankCode\" from DSC1 where \"GLAccount\" = '{codCta}';";
             recordset.DoQuery(sqlQry);
             if (recordset.EoF)
                 return null;
             else
-                return Tuple.Create(recordset.Fields.Item(0).Value, recordset.Fields.Item(1).Value);
+                return Tuple.Create(recordset.Fields.Item(0).Value, recordset.Fields.Item(1).Value, recordset.Fields.Item(2).Value);
         }
 
         public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha)
@@ -96,7 +97,8 @@ namespace SMC_APM.Controller
                     NroCtaProveedor = dc["NroCtaProveedor"].Trim(),
                     CodBncProveedor = dc["CodBncProveedor"].Trim(),
                     CodRetencion = dc["CodRetencion"].Trim(),
-                    ImporteRetencion = Convert.ToDouble(dc["MontoRetencion"])
+                    ImporteRetencion = Convert.ToDouble(dc["MontoRetencion"]),
+                    TCDocumento = Convert.ToDouble(dc["TCDocumento"])
                 };
             });
             return rslt;
@@ -372,7 +374,7 @@ namespace SMC_APM.Controller
             {
                 var nombre = @"C:\PagosMasivos\";
                 nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
-         
+
                 var qry = string.Empty;
                 switch (codBanco)
                 {
@@ -401,7 +403,7 @@ namespace SMC_APM.Controller
                     while (!recordset.EoF)
                     {
                         valorLinea = recordset.Fields.Item(0).Value;
-                        
+
                         archivo.WriteLine(valorLinea.Remove(valorLinea.Length - 1));
                         recordset.MoveNext();
                     }

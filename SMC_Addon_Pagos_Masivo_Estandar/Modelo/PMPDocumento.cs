@@ -29,6 +29,7 @@ namespace SMC_APM.Modelo
         public string CodBncProveedor { get; set; }
         public string CodRetencion { get; set; }
         public double ImporteRetencion { get; set; }
+        public double TCDocumento { get; set; }
     }
 }
 
