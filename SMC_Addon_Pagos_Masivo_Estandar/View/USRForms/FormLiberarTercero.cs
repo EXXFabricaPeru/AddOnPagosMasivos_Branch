@@ -467,10 +467,11 @@ namespace SMC_APM.View.USRForms
                     try
                     {
                         string ruta = "C:\\PagosMasivos\\";
-                        string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM");
+                        //string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM");
+                        string docEntryTL = Form.GetDBDataSource(HEADER).GetValueExt("DocEntry");
 
 
-                        Controller.GenerarTXTBancos(codigoBanco.CodBanco, codigoBanco.CuentaBanco, Convert.ToInt32(docEntryPM), codigoBanco.CodMoneda);
+                        Controller.GenerarTXTBancos(codigoBanco.CodBanco, codigoBanco.CuentaBanco, Convert.ToInt32(docEntryTL), codigoBanco.CodMoneda);
 
                         Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     }

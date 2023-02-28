@@ -86,6 +86,7 @@ namespace SMC_APM.Controller
                     CodCtaBanco = dc["CodCtaBanco"],
                     DocEntryDocumento = Convert.ToInt32(dc["DocEntryDocumento"]),
                     TipoDocumento = dc["TipoDocumento"],
+                    NroDocumentoSUNAT = dc["NroDocSUNAT"],
                     CardCode = dc["CardCode"],
                     CardName = dc["CardName"],
                     Moneda = dc["Moneda"],
@@ -98,7 +99,8 @@ namespace SMC_APM.Controller
                     CodBncProveedor = dc["CodBncProveedor"].Trim(),
                     CodRetencion = dc["CodRetencion"].Trim(),
                     ImporteRetencion = Convert.ToDouble(dc["MontoRetencion"]),
-                    TCDocumento = Convert.ToDouble(dc["TCDocumento"])
+                    TCDocumento = Convert.ToDouble(dc["TCDocumento"]),
+                    GlosaAsiento = dc["GlosaAsiento"]
                 };
             });
             return rslt;
@@ -119,7 +121,15 @@ namespace SMC_APM.Controller
             return rslt;
         }
 
-        public static void generarTXT3Retenedor(int docEntryPMP)
+        public static int ObtenerCorrelativoTXT3Retenedor(string fechaPago)
+        {
+            var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            var sqlQry = $"select count('A') as \"CNT\" from \"@EXP_OPMP\" where \"U_EXP_FECHAPAGO\" = '{fechaPago}'";
+            var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc => { return Convert.ToInt32(dc["CNT"]); }).FirstOrDefault();
+            return rslt == 0 ? 1 : rslt;
+        }
+
+        public static void generarTXT3Retenedor(int docEntryPMP, string fechaPago)
         {
             List<TXT3Retenedor> olista = null;
             pagoDAO _pagoDAO = null;
@@ -133,11 +143,12 @@ namespace SMC_APM.Controller
             {
                 _pagoDAO = new pagoDAO();
                 var lstDocs3Reten = ObtenerDatosTerceroRetenedor(docEntryPMP);
+                var correlativoTXT = ObtenerCorrelativoTXT3Retenedor(fechaPago);
 
                 //Generando el archivo
                 //nombreArchivo = @"\\WIN-SOPORTESAP\DocSap\TerceroRetenedor\ArchivoSunat\";
                 nombreArchivo = @"D:\Pagos_Masivos\TerceroRetenedor\ArchivoSunat\";
-                nombreArchivo = nombreArchivo + "RCP20512857869_PM_" + docEntryPMP + ".txt";
+                nombreArchivo = nombreArchivo + $"RCP{fechaPago}{correlativoTXT.ToString().PadLeft(3, '0')}.txt";
                 archivo = new System.IO.StreamWriter(nombreArchivo, false, Encoding.GetEncoding(1252));
                 var lineaDetalle = string.Empty;
                 foreach (var doc in lstDocs3Reten)

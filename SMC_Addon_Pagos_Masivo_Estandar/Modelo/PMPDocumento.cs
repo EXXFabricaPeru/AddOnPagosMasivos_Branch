@@ -17,6 +17,7 @@ namespace SMC_APM.Modelo
         public string CodCtaBanco { get; set; }
         public int DocEntryDocumento { get; set; }
         public string TipoDocumento { get; set; }
+        public string NroDocumentoSUNAT { get; set; }
         public string CardCode { get; set; }
         public string CardName { get; set; }
         public string Moneda { get; set; }
@@ -30,6 +31,7 @@ namespace SMC_APM.Modelo
         public string CodRetencion { get; set; }
         public double ImporteRetencion { get; set; }
         public double TCDocumento { get; set; }
+        public string GlosaAsiento { get; set; }
     }
 }
 

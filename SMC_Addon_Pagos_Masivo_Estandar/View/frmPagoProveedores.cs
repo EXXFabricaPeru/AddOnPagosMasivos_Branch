@@ -10,6 +10,9 @@ using System.Threading;
 using System.Xml;
 using SAPbouiCOM;
 using SMC_APM.View.USRForms;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using System.Linq;
 
 namespace SMC_APM.View
 {
@@ -100,6 +103,9 @@ namespace SMC_APM.View
         string tipoEscenario = "";
         string tipoBanco = "";
         string filtrobanco = "";
+
+        int primerCheckNroFila = 0;
+
         List<dtoChlValues> lista;
         public const string PATH = "Resources/frmSMC_PM_PagoProveedores.srf";
         #endregion
@@ -187,6 +193,7 @@ namespace SMC_APM.View
             txtEsc = (SAPbouiCOM.EditText)oItemtxtEsc.Specific;
             oItemtxtTotEsc = oForm.Items.Item("txtTotEsc");
             txtTotEsc = (SAPbouiCOM.EditText)oItemtxtTotEsc.Specific;
+            txtTotEsc.Value = "0.00";
 
             oItemcmbBanco = oForm.Items.Item("cmbBanco");
             cmbBanco = (SAPbouiCOM.ComboBox)oItemcmbBanco.Specific;
@@ -279,6 +286,7 @@ namespace SMC_APM.View
 
             //inicializa las columnas del datatable de la matrix pendientes
             #region DataSources
+            dtaFact.Columns.Add("Slc", BoFieldsType.ft_AlphaNumeric, 1);
             dtaFact.Columns.Add("FILA", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaFact.Columns.Add("DocEntry", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaFact.Columns.Add("DocNum", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
@@ -305,11 +313,13 @@ namespace SMC_APM.View
             dtaFact.Columns.Add("Origen", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaFact.Columns.Add("BloqueoPago", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
             dtaFact.Columns.Add("DetraccionPend", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 1);
-          
+
             dtaFact.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaFact.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
+            dtaFact.Columns.Add("GlosaAsiento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
 
             //inicializa las columnas del datatable de la matrix seleccionados
+            dtaSelect.Columns.Add("Slc", BoFieldsType.ft_AlphaNumeric, 1);
             dtaSelect.Columns.Add("FILA", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("DocEntry", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("DocNum", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
@@ -334,9 +344,9 @@ namespace SMC_APM.View
             dtaSelect.Columns.Add("Documento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("NombreBanco", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
             dtaSelect.Columns.Add("Origen", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
-            
             dtaSelect.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaSelect.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
+            dtaSelect.Columns.Add("GlosaAsiento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
             #endregion
 
             #region Matrices
@@ -353,6 +363,7 @@ namespace SMC_APM.View
 
             //relaciona la columna del databable con la columna de la matrix para los pendinetes
             mtxFact.Columns.Item("#").DataBind.Bind("dtaFact", "FILA");
+            mtxFact.Columns.Item("lSelect").DataBind.Bind("dtaFact", "Slc");
             mtxFact.Columns.Item("fEntry").DataBind.Bind("dtaFact", "DocEntry");
             mtxFact.Columns.Item("fNumSap").DataBind.Bind("dtaFact", "DocNum");
             mtxFact.Columns.Item("fFecCon").DataBind.Bind("dtaFact", "FechaContable");
@@ -378,11 +389,12 @@ namespace SMC_APM.View
             mtxFact.Columns.Item("clmNroCuo").DataBind.Bind("dtaFact", "NroCuota");
             mtxFact.Columns.Item("clmNrLnAS").DataBind.Bind("dtaFact", "LineaAsiento");
             mtxFact.Columns.Item("Col_4").DataBind.Bind("dtaFact", "BankCode"); //BANCO PROVEEDOR
-
+            mtxFact.Columns.Item("Col_5").DataBind.Bind("dtaFact", "GlosaAsiento"); //GLOSA ASIENTO
 
 
             //relaciona la columna del databable con la columna de la matrix para los selecionados
             mtxSelect.Columns.Item("#").DataBind.Bind("dtaSelect", "FILA");
+            mtxSelect.Columns.Item("lSelect").DataBind.Bind("dtaSelect", "Slc");
             mtxSelect.Columns.Item("fEntry").DataBind.Bind("dtaSelect", "DocEntry");
             mtxSelect.Columns.Item("fNumSap").DataBind.Bind("dtaSelect", "DocNum");
             mtxSelect.Columns.Item("fFecCon").DataBind.Bind("dtaSelect", "FechaContable");
@@ -405,6 +417,7 @@ namespace SMC_APM.View
             mtxSelect.Columns.Item("clmNrLnAS").DataBind.Bind("dtaSelect", "LineaAsiento");
             mtxSelect.Columns.Item("Col_1").DataBind.Bind("dtaSelect", "Cuenta");
             mtxSelect.Columns.Item("Col_2").DataBind.Bind("dtaSelect", "BankCode");
+            mtxSelect.Columns.Item("Col_3").DataBind.Bind("dtaSelect", "GlosaAsiento");
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
             SAPbouiCOM.Column oColumn2 = mtxSelect.Columns.Item("fReten");
@@ -526,7 +539,6 @@ namespace SMC_APM.View
                                         this.consultarFact();
                                         break;
                                     case "btnAgregar":
-
                                         //agregar documentos
                                         if (txtFecha.Value.ToString().Equals(""))
                                         {
@@ -537,8 +549,6 @@ namespace SMC_APM.View
                                         //creacion de hilo del metodo agregar documentos
                                         Thread th = new Thread(new ThreadStart(agregarDoc));
                                         th.Start();
-
-
                                         break;
                                     case "btnQuitar":
 
@@ -604,6 +614,16 @@ namespace SMC_APM.View
                                         break;
 
                                     case "btnSig":
+                                        //Valido que el total del escenario no exceda el tope.
+                                        var utTopeMonto = sboCompany.UserTables.Item("SMC_APM_TOPEMONTO");
+                                        utTopeMonto.GetByKey("1");
+                                        var topeMN = Convert.ToDouble(utTopeMonto.UserFields.Fields.Item("U_SMC_MONTO_SOLES").Value);
+                                        var topeME = Convert.ToDouble(utTopeMonto.UserFields.Fields.Item("U_SMC_MONTO_DOLARES").Value);
+                                        var mndEsc = ((SAPbouiCOM.EditText)oForm.Items.Item("txtMoneda").Specific).Value;
+                                        var totEsc = Convert.ToDouble(((SAPbouiCOM.EditText)oForm.Items.Item("txtTotEsc").Specific).Value);
+
+                                        if (mndEsc == "SOL" && totEsc > topeMN) throw new InvalidOperationException($"El total del escenario excede el monto maximo permitido ({topeMN})");
+                                        if (mndEsc == "USD" && totEsc > topeME) throw new InvalidOperationException($"El total del escenario excede el monto maximo permitido ({topeME})");
 
                                         int rpta = sboApplication.MessageBox("Está a punto de enviar las facturas seleccionadas a aprobación. ¿Desea continuar?", 2, "Sí", "No");
 
@@ -611,10 +631,9 @@ namespace SMC_APM.View
                                             EnviarAAutorizacion();
 
                                         break;
-
                                     case "btnLib":
 
-                                        //se ejecura el formulario de tercero retendor
+                                        //se ejecuta el formulario de tercero retendor
                                         _ctrFrmLiberarTerceroRet = new ctrFrmLiberarTerceroRet(sboApplication, sboCompany);
                                         try
                                         {
@@ -678,8 +697,6 @@ namespace SMC_APM.View
                                             SAPbouiCOM.EditText campoDocEntry = null;
 
                                             int fila = pVal.Row;
-
-
 
                                             campoDocEntry = (SAPbouiCOM.EditText)mtxSelect.Columns.Item("fDoc").Cells.Item(fila).Specific;
 
@@ -800,7 +817,6 @@ namespace SMC_APM.View
                                                     sboApplication.MessageBox("No puede seleccionar facturas con bloqueo de pago o con cuota de detracción pendientes");
                                             }
                                         }
-
                                         break;
                                 }
 
@@ -873,6 +889,7 @@ namespace SMC_APM.View
                 //ejecuta consulta
                 dtaFact.ExecuteQuery(consulta);
                 dtaSelect.ExecuteQuery(consulta1);
+
 
                 //limpia carga y ordena columnas del matrix
                 mtxFact.Clear();
@@ -958,35 +975,88 @@ namespace SMC_APM.View
                     }
                 }
 
+                mtxFact.FlushToDataSource();
+                var dsSlcRows = dtaFact.SerializeAsXML(BoDataTableXmlSelect.dxs_DataOnly);
+                var xDoc = XDocument.Parse(dsSlcRows);
+                var xElements = xDoc.XPathSelectElements("DataTable/Rows/Row").Where(w => w.Descendants("Cell")
+                .Any(a => a.Element("ColumnUid").Value.Equals("Slc") && a.Element("Value").Value.Equals("Y")));
+                var lstDocumentosSlc = xElements.Descendants("Cells").Select(c => new
+                {
+                    Fila = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("FILA")).FirstOrDefault().Element("Value").Value,
+                    DocEntry = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("DocEntry")).FirstOrDefault().Element("Value").Value,
+                    TipoDoc = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("Documento")).FirstOrDefault().Element("Value").Value,
+                    Total = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("Total")).FirstOrDefault().Element("Value").Value,
+                    TotalPagar = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("TotalPagar")).FirstOrDefault().Element("Value").Value,
+                    NroCuota = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("NroCuota")).FirstOrDefault().Element("Value").Value,
+                    LineaAsiento = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("LineaAsiento")).FirstOrDefault().Element("Value").Value,
+                    CtaProveedor = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("Cuenta")).FirstOrDefault().Element("Value").Value,
+                    CodBanco = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("BankCode")).FirstOrDefault().Element("Value").Value,
+                    BloqueoPago = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("BloqueoPago")).FirstOrDefault().Element("Value").Value,
+                    DetraccionPend = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("DetraccionPend")).FirstOrDefault().Element("Value").Value
+                });
+
+                foreach (var doc in lstDocumentosSlc)
+                {
+                    if (doc.BloqueoPago == "Y")
+                    {
+                        sboApplication.StatusBar.SetText("Fila " + doc.Fila + " DocEntry: " + doc.DocEntry + ", tiene bloqueo de pago"
+                        , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                    }
+                    else if (doc.DetraccionPend == "Y")
+                    {
+                        sboApplication.StatusBar.SetText("Fila " + doc.Fila + " DocEntry: " + doc.DocEntry + ", tiene detracción pendiente"
+                        , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                    }
+                    else
+                    {
+                        sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " Evaluando fila " + doc.Fila + " DocEntry: " + doc.DocEntry
+                        , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                        daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, doc.DocEntry, doc.TotalPagar
+                        , doc.TipoDoc, Convert.ToInt32(doc.NroCuota), Convert.ToInt32(doc.LineaAsiento), doc.CtaProveedor, doc.CodBanco, ref mensaje);
+                    }
+                }
+                /*
 
                 //registra detalle
                 for (int j = 1; j <= rows; j++)
                 {
                     int i = j - 1;
 
-
+                    var bloqueoPago = mtxFact.GetCellSpecific("Col_1", j).Value == "Y";
+                    var detPendiente = mtxFact.GetCellSpecific("Col_2", j).Value == "Y";
+                    var fDocEntry = mtxFact.GetCellSpecific("fEntry", j).Value;
                     ocheckBox = (SAPbouiCOM.CheckBox)mtxFact.Columns.Item("lSelect").Cells.Item(j).Specific;
-                    if (ocheckBox.Checked == true)
+                    if (ocheckBox.Checked)
                     {
-                        oEdit = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fEntry").Cells.Item(j).Specific;
-                        oEdit1 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fTotalP").Cells.Item(j).Specific;
-                        oEdit2 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fDoc").Cells.Item(j).Specific;
-                        oEdit3 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNroCuo").Cells.Item(j).Specific;
-                        oEdit4 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNrLnAS").Cells.Item(j).Specific;
-                        oEdit5 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_3").Cells.Item(j).Specific;
-                        oEdit6 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_4").Cells.Item(j).Specific;
-                        //Debug.Print("Detalle: " + i + " Chequeado DocEntry: "+ oEdit.Value.ToString()+" Documento: "+ oEdit2.Value.ToString());
+                        if (bloqueoPago)
+                        {
+                            sboApplication.StatusBar.SetText("Fila " + j + " DocEntry: " + fDocEntry.ToString() + ", tiene bloqueo de pago"
+                            , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                        }
+                        else if (detPendiente)
+                        {
+                            sboApplication.StatusBar.SetText("Fila " + j + " DocEntry: " + fDocEntry.ToString() + ", tiene detracción pendiente"
+                            , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                        }
+                        else
+                        {
+                            oEdit = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fEntry").Cells.Item(j).Specific;
+                            oEdit1 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fTotalP").Cells.Item(j).Specific;
+                            oEdit2 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("fDoc").Cells.Item(j).Specific;
+                            oEdit3 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNroCuo").Cells.Item(j).Specific;
+                            oEdit4 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("clmNrLnAS").Cells.Item(j).Specific;
+                            oEdit5 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_3").Cells.Item(j).Specific;
+                            oEdit6 = (SAPbouiCOM.EditText)mtxFact.Columns.Item("Col_4").Cells.Item(j).Specific;
+                            //Debug.Print("Detalle: " + i + " Chequeado DocEntry: "+ oEdit.Value.ToString()+" Documento: "+ oEdit2.Value.ToString());
 
-                        sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " Evaluando fila " + j + " DocEntry: " + oEdit.Value.ToString()
-                    , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-
-
-                        daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString()
-                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), oEdit5.Value , oEdit6.Value, ref mensaje);
+                            sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " Evaluando fila " + j + " DocEntry: " + oEdit.Value.ToString()
+                            , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                            daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, oEdit.Value.ToString(), oEdit1.Value.ToString()
+                            , oEdit2.Value.ToString(), Convert.ToInt32(oEdit3.Value), Convert.ToInt32(oEdit4.Value), oEdit5.Value, oEdit6.Value, ref mensaje);
+                        }
                     }
                 }
-
-
+                */
                 txtEsc.Value = codEscenario;
                 //actualiza total escenario
                 cargarTotalEscenario(codEscenario);
