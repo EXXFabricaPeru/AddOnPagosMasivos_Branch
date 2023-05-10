@@ -9,9 +9,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SMC_Addon_Pagos_Masivo_Estandar")]
 [assembly: AssemblyDescription("AddOn de Pagos Masivos SAP B1")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SmartCode")]
+[assembly: AssemblyCompany("Exxis Perú")]
 [assembly: AssemblyProduct("AddOn de Pagos Masivos SAP B1")]
-[assembly: AssemblyCopyright("Copyright ©SmartCode  2019")]
+[assembly: AssemblyCopyright("Copyright @Exxis Perú 20")]
 [assembly: AssemblyTrademark("SmartCode")]
 [assembly: AssemblyCulture("")]
 
@@ -33,7 +33,7 @@ using System.Runtime.InteropServices;
 // Puede especificar todos los valores o usar los valores predeterminados de número de compilación y de revisión 
 // mediante el carácter '*', como se muestra a continuación:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.6.2.0")]
-[assembly: AssemblyFileVersion("1.6.2.0")]
+[assembly: AssemblyVersion("1.6.28.0")]
+[assembly: AssemblyFileVersion("1.6.28.0")]
 [assembly: NeutralResourcesLanguage("es")]
 

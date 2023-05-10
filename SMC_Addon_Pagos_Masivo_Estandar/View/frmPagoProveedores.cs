@@ -13,6 +13,9 @@ using SMC_APM.View.USRForms;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Linq;
+using System.Xml.Serialization;
+using SMC_APM.Modelo;
+using System.IO;
 
 namespace SMC_APM.View
 {
@@ -863,10 +866,12 @@ namespace SMC_APM.View
         {
             string consulta = "";
             string consulta1 = "";
+            XmlSerializer xmlSerializer = null;
 
 
             try
             {
+                xmlSerializer = new XmlSerializer(typeof(XMLDataTable));
                 btnBuscar.Item.Enabled = false;
                 btnBuscar.Caption = "Cargando...";
                 oForm.Freeze(true);
@@ -890,6 +895,10 @@ namespace SMC_APM.View
                 dtaFact.ExecuteQuery(consulta);
                 dtaSelect.ExecuteQuery(consulta1);
 
+                var strXmlDtaSlc = dtaSelect.SerializeAsXML(BoDataTableXmlSelect.dxs_DataOnly);
+                var dsrXmlDtaSlc = (XMLDataTable)xmlSerializer.Deserialize(new StringReader(strXmlDtaSlc));
+                var totalEscenario = dsrXmlDtaSlc.Rows.Select(r => double.TryParse(r.Cells.FirstOrDefault(c => c.ColumnUid == "TotalPagar").Value, out var totPag) ? totPag : 0.0).Sum();
+                txtTotEsc.Value = totalEscenario.ToString();
 
                 //limpia carga y ordena columnas del matrix
                 mtxFact.Clear();

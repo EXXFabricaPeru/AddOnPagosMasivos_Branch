@@ -116,7 +116,6 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("btnCrgRsp").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
             Form.Items.Item("Item_3").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
             Form.Items.Item("Item_5").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-
         }
 
         protected override void CargarEventos()
@@ -195,6 +194,7 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
+                    if (Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     var docEntryPMP = Convert.ToInt32(dbsOPMP.GetValue("DocEntry", 0));
                     var fechapago = dbsOPMP.GetValueExt("U_EXP_FECHAPAGO");
                     PagoMasivoController.generarTXT3Retenedor(docEntryPMP, fechapago);
@@ -211,6 +211,7 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
+                    if (Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     var rslt = Globales.Aplication.MessageBox("Se procederá a generar el pago de los documentos seleccionados \n ¿Desea continuar con esta acción?"
                     , Btn1Caption: "SI", Btn2Caption: "NO");
 
@@ -394,6 +395,7 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction && e.ActionSuccess)
                 {
+                    if (Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     Globales.Aplication.StatusBar.SetText("Iniciando generación de archivos para bancos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                     Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                     Matrix.FlushToDataSource();

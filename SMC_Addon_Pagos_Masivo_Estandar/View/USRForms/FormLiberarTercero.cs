@@ -99,20 +99,21 @@ namespace SMC_APM.View.USRForms
             //CUANDO YA FUE CREADO CONSULTAMOS LA TABLA DEL UDO
             Modelo.GetDatosLiberacionTerceroRetendor_Creado(docEntry);
             string filepath = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_ARRE");
-            Modelo.RptaSUNAT = Controller.GetRespuetaSUNAT(filepath);
+            if (!string.IsNullOrWhiteSpace(filepath))
+                Modelo.RptaSUNAT = Controller.GetRespuetaSUNAT(filepath);
         }
 
         private void Automanage()
         {
-            SetAutomanageAttribute("Item_5", BoAutoManagedAttr.ama_Editable, new bool[4] { false, true, true, false }); //FECHA DE PAGO
-            SetAutomanageAttribute("Item_14", BoAutoManagedAttr.ama_Editable, new bool[4] { false, true, true, false }); //BANCO
+            SetAutomanageAttribute("Item_5", BoAutoManagedAttr.ama_Editable, new bool[4] { true, true, true, false }); //FECHA DE PAGO
+            SetAutomanageAttribute("Item_14", BoAutoManagedAttr.ama_Editable, new bool[4] { true, true, true, false }); //BANCO
             //SetAutomanageAttribute("Item_16", BoAutoManagedAttr.ama_Editable, new bool[4] { false, true, false, false }); //RESPUESTA SUNAT
-            SetAutomanageAttribute("Item_17", BoAutoManagedAttr.ama_Visible, new bool[4] { false, true, false, false }); //BOTÓN RESPUESTA
+            SetAutomanageAttribute("Item_17", BoAutoManagedAttr.ama_Visible, new bool[4] { true, true, false, false }); //BOTÓN RESPUESTA
             SetAutomanageAttribute("Item_7", BoAutoManagedAttr.ama_Editable, new bool[4] { false, false, true, false }); //COMBO SERIE
             SetAutomanageAttribute("Item_8", BoAutoManagedAttr.ama_Editable, new bool[4] { false, false, true, false }); //DOCNUM
             SetAutomanageAttribute("Item_8", BoAutoManagedAttr.ama_Editable, new bool[4] { false, false, true, false }); //fecha registro
             SetAutomanageAttribute("Item_4", BoAutoManagedAttr.ama_Editable, new bool[4] { false, false, true, false }); //fecha PM
-            SetAutomanageAttribute("Item_5", BoAutoManagedAttr.ama_Editable, new bool[4] { false, true, true, false }); //fecha PAGO
+            //SetAutomanageAttribute("Item_5", BoAutoManagedAttr.ama_Editable, new bool[4] { false, true, true, false }); //fecha PAGO
 
             SetAutomanageAttribute("Item_12", BoAutoManagedAttr.ama_Editable, new bool[4] { false, false, true, false }); //# pm
         }
@@ -548,8 +549,8 @@ namespace SMC_APM.View.USRForms
                     if (!check.Checked)
                     {
                         //LIMPIAMOS LOS VALORES DE PAGO
-                        Matrix.GetCellSpecific("Col_12", e.Row).Value = "0.0";
-                        Matrix.GetCellSpecific("Col_13", e.Row).Value = "0.0";
+                        //Matrix.GetCellSpecific("Col_12", e.Row).Value = "0.0";
+                        //Matrix.GetCellSpecific("Col_13", e.Row).Value = "0.0";
                     }
 
                     //actualizamos el modelo
