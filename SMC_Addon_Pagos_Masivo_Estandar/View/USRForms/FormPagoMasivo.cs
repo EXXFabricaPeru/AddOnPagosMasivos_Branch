@@ -5,6 +5,8 @@ using SMC_APM.dao;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SMC_APM.View.USRForms
 {
@@ -224,13 +226,18 @@ namespace SMC_APM.View.USRForms
                         var estado = string.Empty;
                         var msjError = string.Empty;
                         var nroPago = 0;
-                        var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
-
+                        var cntDocXPgo = lstPagos.Count();
+                        var cntPgoEjec = 0;
+                        //var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, cntDocXPgo, false);
+                        var docEntryForm = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
                         try
                         {
-                            Globales.Aplication.StatusBar.SetSystemMessage("Iniciando generación de pagos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning); ;
+
+                            Globales.Aplication.StatusBar.SetText("Iniciando generación de pagos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning); ;
                             foreach (var pgo in lstPagos)
                             {
+                                cntPgoEjec++;
+                                Globales.Aplication.StatusBar.SetText($"Generando {cntPgoEjec} de {cntDocXPgo} pagos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                                 msjError = string.Empty;
                                 estado = "OK";
                                 nroPago = 0;
@@ -243,14 +250,20 @@ namespace SMC_APM.View.USRForms
                                         try
                                         {
                                             nroPago = PagoMasivoController.GenerarPagoEfectuadoSBODesdeDraft(pgoDet.IdDocumento, pgo);
+                                            /*
                                             dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 1, nroPago.ToString());
                                             dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, "OK");
+                                            */
+                                            ActualizarDatosCreacionPago(nroPago.ToString(), "OK", msjError, docEntryForm, pgoDet.LineaPgoMsv);
                                         }
                                         catch (Exception ex)
                                         {
+                                            /*
                                             dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
                                             dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, "ER");
                                             dbsPMP1.SetValue("U_EXP_MSJERROR", pgoDet.LineaPgoMsv - 1, ex.Message);
+                                            */
+                                            ActualizarDatosCreacionPago(nroPago == 0 ? string.Empty : nroPago.ToString(), "ER", ex.Message, docEntryForm, pgoDet.LineaPgoMsv);
                                         }
                                     };
                                 }
@@ -270,16 +283,28 @@ namespace SMC_APM.View.USRForms
                                     }
                                     foreach (var pgoDet in pgo.Detalle)
                                     {
+                                        /*
                                         dbsPMP1.SetValue("U_EXP_NROPGOEFEC", pgoDet.LineaPgoMsv - 1, nroPago == 0 ? string.Empty : nroPago.ToString());
                                         dbsPMP1.SetValue("U_EXP_ESTADO", pgoDet.LineaPgoMsv - 1, estado);
                                         dbsPMP1.SetValue("U_EXP_MSJERROR", pgoDet.LineaPgoMsv - 1, msjError);
+                                        */
+                                        ActualizarDatosCreacionPago(nroPago == 0 ? string.Empty : nroPago.ToString(), estado, msjError, docEntryForm, pgoDet.LineaPgoMsv);
                                     }
                                 }
                             }
-                            Matrix.LoadFromDataSource();
+                            Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                            //Matrix.LoadFromDataSource();
+                            Task.Factory.StartNew(() =>
+                            {
+                                Thread.Sleep(1000);
+                                Globales.Aplication.Menus.Item("1304").Activate();
+                            });
+
+                            /*
                             if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE)
                                 Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                             Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                            */
                         }
                         catch
                         {
@@ -287,7 +312,7 @@ namespace SMC_APM.View.USRForms
                         }
                         finally
                         {
-                            pgrssBar.Stop();
+                            //pgrssBar.Stop();
                         }
                     }
                 }
@@ -496,6 +521,14 @@ namespace SMC_APM.View.USRForms
                 //Matrix.Columns.Item("Col_0").Editable = false;
                 Matrix.Columns.Item("Col_2").Editable = false;
             }
+        }
+
+        private void ActualizarDatosCreacionPago(string nroPagoEfec, string estado, string msjError, int docEntry, int lineId)
+        {
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}', \"U_EXP_ESTADO\" = '{estado}', " +
+                $"\"U_EXP_MSJERROR\" = '{msjError}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+            recSet.DoQuery(sqlQry);
         }
     }
 }
