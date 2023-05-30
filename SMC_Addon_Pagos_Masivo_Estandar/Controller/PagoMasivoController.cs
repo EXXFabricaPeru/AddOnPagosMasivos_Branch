@@ -221,6 +221,8 @@ namespace SMC_APM.Controller
         {
             var row = 0;
             var sboPayments = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
+            var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
+            var mndLoc = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
             sboPayments.Series = pago.CodSerieSBO;
             sboPayments.CardCode = pago.CodigoSN;
             sboPayments.DocDate = pago.FechaContabilizacion;
@@ -273,8 +275,8 @@ namespace SMC_APM.Controller
                 sboPayments.Invoices.DocEntry = d.IdDocumento;
                 sboPayments.Invoices.DocLine = d.IdLinea;
                 sboPayments.Invoices.InstallmentId = d.NroCuota;
-                sboPayments.Invoices.SumApplied = pago.Moneda.Equals("SOL") ? d.MontoPagado : default(double);
-                sboPayments.Invoices.AppliedFC = !pago.Moneda.Equals("SOL") ? d.MontoPagado : default(double);
+                sboPayments.Invoices.SumApplied = pago.Moneda.Equals(mndLoc) ? d.MontoPagado : default(double);
+                sboPayments.Invoices.AppliedFC = !pago.Moneda.Equals(mndLoc) ? d.MontoPagado : default(double);
                 row++;
             });
 
