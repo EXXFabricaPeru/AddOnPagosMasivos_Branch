@@ -57,16 +57,17 @@ namespace SMC_APM.Controller
             return !recordset.EoF;
         }
 
-        public static Tuple<string, string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
+        public static Tuple<string, string, string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             //var sqlQry = $"select top 1 \"Account\",\"Branch\" from DSC1 where \"BankCode\" = '{codBanco}' and \"GLAccount\" = '{codCta}';";
-            var sqlQry = $"select top 1 \"Account\",\"Branch\",\"BankCode\" from DSC1 where \"GLAccount\" = '{codCta}';";
+            var sqlQry = $"select top 1 \"Account\",\"Branch\",\"BankCode\",\"Country\" from DSC1 where \"GLAccount\" = '{codCta}';";
             recordset.DoQuery(sqlQry);
             if (recordset.EoF)
                 return null;
             else
-                return Tuple.Create(recordset.Fields.Item(0).Value, recordset.Fields.Item(1).Value, recordset.Fields.Item(2).Value);
+                return Tuple.Create(recordset.Fields.Item(0).Value, recordset.Fields.Item(1).Value
+                    , recordset.Fields.Item(2).Value, recordset.Fields.Item(3).Value);
         }
 
         public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha)
@@ -249,7 +250,7 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.CheckAccount = pago.MetodoPago.Cuenta;
 
                     sboPayments.Checks.CheckSum = pago.Monto;
-                    sboPayments.Checks.CountryCode = "PE";
+                    sboPayments.Checks.CountryCode = sucursalBanco.Item4;
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
                     break;
                 case "CG":
@@ -320,7 +321,7 @@ namespace SMC_APM.Controller
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
 
-        public static IEnumerable<SBOPago> ObtenerListaPagos(SAPbouiCOM.DBDataSource dbsCab, object obj)
+        public static IEnumerable<SBOPago> ObtenerListaPagos(SAPbouiCOM.DBDataSource dbsCab, object obj, bool esAgenteRetenedor)
         {
             XDocument xDoc = null;
 
@@ -330,7 +331,7 @@ namespace SMC_APM.Controller
                 var rsltNroCuota = 0;
                 var fechaPago = DateTime.ParseExact(dbsCab.GetValue("U_EXP_FECHAPAGO", 0).Trim(), "yyyyMMdd", CultureInfo.InvariantCulture);
                 var codSeriePago = Convert.ToInt32(dbsCab.GetValue("U_EXP_SERIEPAGO", 0).Trim());
-                var codSerieRtcn = Convert.ToInt32(dbsCab.GetValue("U_EXP_SERIERETENCION", 0).Trim());
+                var codSerieRtcn = esAgenteRetenedor ? Convert.ToInt32(dbsCab.GetValue("U_EXP_SERIERETENCION", 0).Trim()) : 0;
                 var refTransf = dbsCab.GetValue("U_EXP_NMROREFTRANS", 0).Trim();
                 xDoc = XDocument.Parse((string)obj);
                 var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
@@ -347,7 +348,7 @@ namespace SMC_APM.Controller
                     AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLSRERTN")).FirstOrDefault()?.Element("value").Value
                 }).Select(s => new SBOPago
                 {
-                    CodSerieSBO = s.Key.AplSerieRetencion == "Y" ? codSerieRtcn : codSeriePago,
+                    CodSerieSBO = s.Key.AplSerieRetencion == "Y" && esAgenteRetenedor ? codSerieRtcn : codSeriePago,
                     CodigoSN = s.Key.CardCode,
                     Moneda = s.Key.Moneda,
                     FechaContabilizacion = fechaPago,
@@ -381,36 +382,64 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static void GenerarTXTBancos(int docEntry, string codBanco, string codMoneda, string GLAccount)
+        public static void GenerarTXTBancos(int docEntry, string codBanco, string codMoneda, string GLAccount, string codPais)
         {
             try
             {
-                var nombre = @"C:\PagosMasivos\";
+                var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+                var qry = "select top 1 \"AttachPath\" from OADP";
+                recordset.DoQuery(qry);
+                var attachPath = recordset.Fields.Item(0).Value;
+                if (string.IsNullOrWhiteSpace(attachPath)) throw new InvalidOperationException("No se ha definido ruta de anexos en SAP");
+                var nombre = attachPath + @"PagosMasivos\";
                 nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
 
-                var qry = string.Empty;
-                switch (codBanco)
+                switch (codPais)
                 {
-                    //PODRÍA SER UNA INTERFAZ
-                    case "002":
-                        qry = $"CALL SBO_EXX_PM_BCP({docEntry},'{GLAccount}')";
+                    case "PE":
+                        switch (codBanco)
+                        {
+                            //PODRÍA SER UNA INTERFAZ
+                            case "002":
+                                qry = $"CALL SBO_EXX_PM_BCP({docEntry},'{GLAccount}')";
+                                break;
+                            case "003":
+                                qry = $"CALL SBO_EXX_PM_INTERBANK({docEntry},'{GLAccount}')";
+                                break;
+                            case "009":
+                                qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},'{GLAccount}')";
+                                break;
+                            case "022":
+                                qry = $"CALL SBO_EXX_PM_SANTANDER({docEntry},'{GLAccount}')";
+                                break;
+                            default:
+                                throw new Exception($"Código de banco {codBanco} no soportado");
+                        }
                         break;
-                    case "003":
-                        qry = $"CALL SBO_EXX_PM_INTERBANK({docEntry},'{GLAccount}')";
-                        break;
-                    case "009":
-                        qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},'{GLAccount}')";
-                        break;
-                    case "022":
-                        qry = $"CALL SBO_EXX_PM_SANTANDER({docEntry},'{GLAccount}')";
+                    case "CL":
+                        switch (codBanco)
+                        {
+                            //PODRÍA SER UNA INTERFAZ
+                            case "001":
+                                qry = $"CALL SBO_EXX_PM_BANCO_CHILE_CH({docEntry},'{GLAccount}')";
+                                break;
+                            case "014":
+                                qry = $"CALL SBO_EXX_PM_SCOTIABANK_CH({docEntry},'{GLAccount}')";
+                                break;
+                            case "037":
+                                qry = $"CALL SBO_EXX_PM_SANTANDER_CH({docEntry},'{GLAccount}')";
+                                break;
+                            default:
+                                throw new Exception($"Código de banco {codBanco} no soportado");
+                        }
                         break;
                     default:
-                        throw new Exception($"Código de banco {codBanco} no soportado");
+                        throw new Exception($"Código de pais {codPais} no soportado");
                 }
-                var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-                recordset.DoQuery(qry);
-                string valorLinea = string.Empty;
 
+                string valorLinea = string.Empty;
+                recordset.DoQuery(qry);                
                 using (StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252)))
                 {
                     while (!recordset.EoF)

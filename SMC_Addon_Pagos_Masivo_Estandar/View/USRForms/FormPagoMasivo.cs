@@ -18,6 +18,9 @@ namespace SMC_APM.View.USRForms
         public const string PATH = "Resources/FrmPMP.srf";
         private SAPbouiCOM.DBDataSource dbsOPMP = null;
         private SAPbouiCOM.DBDataSource dbsPMP1 = null;
+        private SAPbobsCOM.UserTable utblConf = null;
+        private bool esAgenteRetenedor = true;
+        private bool esTerceroRetenedor = true;
 
         public FormPagoMasivo(string id) : base(TYPE, MENU, id, PATH)
         {
@@ -30,6 +33,17 @@ namespace SMC_APM.View.USRForms
             {
                 dbsOPMP = Form.DataSources.DBDataSources.Item("@EXP_OPMP");
                 dbsPMP1 = Form.DataSources.DBDataSources.Item("@EXP_PMP1");
+                utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
+
+                if (utblConf.GetByKey("2"))
+                {
+                    esAgenteRetenedor = utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
+                }
+
+                if (utblConf.GetByKey("3"))
+                {
+                    esTerceroRetenedor = utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
+                }
 
                 Matrix = Form.GetMatrix("Item_12");
 
@@ -45,13 +59,27 @@ namespace SMC_APM.View.USRForms
                 }
 
                 Combo = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_5").Specific;
-                while (Combo.ValidValues.Count > 0) Combo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
-                recSet = PagoMasivoController.ObtenerSeriesRetencion();
-                while (!recSet.EoF)
+                if (esAgenteRetenedor)
                 {
-                    Combo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
-                    recSet.MoveNext();
+                    while (Combo.ValidValues.Count > 0) Combo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                    recSet = PagoMasivoController.ObtenerSeriesRetencion();
+                    while (!recSet.EoF)
+                    {
+                        Combo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                        recSet.MoveNext();
+                    }
                 }
+                else
+                {
+                    Combo.Item.Visible = false;
+                    Form.Items.Item("Item_4").Visible = false;
+                }
+
+                Form.Items.Item("btnTrcRtn").Visible = esTerceroRetenedor;
+                Form.Items.Item("btnLibSNT").Visible = esTerceroRetenedor;
+                Form.Items.Item("Item_19").Visible = esTerceroRetenedor;
+                Form.Items.Item("Item_20").Visible = esTerceroRetenedor;
+                Form.Items.Item("btnCrgRsp").Visible = esTerceroRetenedor;
 
                 var cmbClmBncEsc = Matrix.Columns.Item("Col_5");
                 var cmbClmBncPrv = Matrix.Columns.Item("Col_23");
@@ -222,7 +250,7 @@ namespace SMC_APM.View.USRForms
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                         Matrix.FlushToDataSource();
                         var pgoDS = dbsPMP1.GetAsXML();
-                        var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS);
+                        var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS, esAgenteRetenedor);
                         var estado = string.Empty;
                         var msjError = string.Empty;
                         var nroPago = 0;
@@ -386,15 +414,32 @@ namespace SMC_APM.View.USRForms
 
                     Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                     Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                    switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
+
+                    if (esTerceroRetenedor)
                     {
-                        case "1":
-                            Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            break;
-                        case "2":
-                            Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            break;
+                        switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
+                        {
+                            case "1":
+                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                break;
+                            case "2":
+                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
+                        {
+                            case "0":
+                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                break;
+                            case "1":
+                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                                break;
+                        }
                     }
                 }
                 return true;
@@ -407,7 +452,7 @@ namespace SMC_APM.View.USRForms
                     var seriePago = dbsOPMP.GetValue("U_EXP_SERIEPAGO", 0).Trim();
                     var serieRetencion = dbsOPMP.GetValue("U_EXP_SERIERETENCION", 0).Trim();
                     if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(seriePago)) throw new InvalidOperationException("Seleccione una serie de pago");
-                    if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(serieRetencion)) throw new InvalidOperationException("Seleccione una serie de retención");
+                    if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(serieRetencion) && esAgenteRetenedor) throw new InvalidOperationException("Seleccione una serie de retención");
                     if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && (dbsPMP1.Size == 0 || (dbsPMP1.Size > 0 && string.IsNullOrWhiteSpace(dbsPMP1.GetValue("U_EXP_DOCENTRYDOC", 0)))))
                         throw new InvalidOperationException("Debe registrar al menos un documento para pagar");
                     var btnCrgEnv = (SAPbouiCOM.Button)Form.Items.Item("btnGrbEnv").Specific;
@@ -435,7 +480,8 @@ namespace SMC_APM.View.USRForms
                         {
                             try
                             {
-                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Moneda, banc.CtaBanco);
+                                var codPais = ObtenerPaisBanco(banc.Banco, banc.CtaBanco);
+                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Moneda, banc.CtaBanco, codPais);
                                 Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                             }
                             catch (Exception ex)
@@ -447,7 +493,7 @@ namespace SMC_APM.View.USRForms
                     }
                     finally
                     {
-                        dbsOPMP.SetValueExt("U_EXP_ESTADOEJEC", "2");
+                        dbsOPMP.SetValueExt("U_EXP_ESTADOEJEC", esTerceroRetenedor ? "2" : "1");
                         if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                         Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                         Form.GetItem("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -470,6 +516,16 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+        }
+
+        private string ObtenerPaisBanco(string banco, string ctaBanco)
+        {
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            var sqlQry = $"select max(\"Country\") as \"Pais\" from DSC1 where \"BankCode\" = '{banco}' and \"GLAccount\" = '{ctaBanco}'";
+
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF) return recSet.Fields.Item(0).Value;
+            throw new InvalidOperationException("No se pudo obtener código de pais del banco");
         }
 
         private bool AbrirLiberacionSUNAT(SAPbouiCOM.ItemEvent e)

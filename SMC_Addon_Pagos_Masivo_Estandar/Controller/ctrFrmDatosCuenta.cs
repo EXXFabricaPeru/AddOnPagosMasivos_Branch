@@ -228,7 +228,6 @@ namespace SMC_APM.Controladores
                     dtFact.Columns.Add("Registrado", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                     dtFact.Columns.Add("RCEmbargo", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                     dtFact.Columns.Add("FechaSUNAT", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
-
                     dtFact.Columns.Add("Documento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                 }
                 catch
@@ -254,7 +253,6 @@ namespace SMC_APM.Controladores
                     dtSelect.Columns.Add("Registrado", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                     dtSelect.Columns.Add("RCEmbargo", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                     dtSelect.Columns.Add("FechaSUNAT", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
-
                     dtSelect.Columns.Add("Documento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 254);
                 }
                 catch
