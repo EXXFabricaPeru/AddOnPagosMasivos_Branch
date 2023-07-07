@@ -25,7 +25,7 @@ namespace SMC_APM.Controladores
         private ctrFrmReporteRCArchivo _ctrFrmReporteRCArchivo = null;
         private ctrFrmAutorizacion _ctrFrmAutorizacion = null;
         private FormPagoMasivo formPagoMasivo = null;
-
+        private FormAutorizacion formAutorizacion = null;
 
         #endregion Atributos
 
@@ -261,8 +261,11 @@ namespace SMC_APM.Controladores
 
                         case "SMC0007":
                             //sboApplication.Forms.Item("frmSMC7").Select();
+                            /*
                             _ctrFrmAutorizacion = new ctrFrmAutorizacion(sboApplication, sboCompany);
                             _ctrFrmAutorizacion.cargarFormulario("frmSMC7");
+                            */
+                            formAutorizacion = new FormAutorizacion("FRMAUT" + DateTime.Now.ToString("hhmmss"));
                             break;
                         case "SMC0008":
                             //sboApplication.Forms.Item("frmSMC7").Select();
@@ -344,7 +347,7 @@ namespace SMC_APM.Controladores
             try
             {
 
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP")
+                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT")
                 {
                     IUSAP uiForm = null;
 

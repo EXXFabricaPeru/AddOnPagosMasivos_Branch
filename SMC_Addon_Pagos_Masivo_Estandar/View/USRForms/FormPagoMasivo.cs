@@ -93,6 +93,7 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
+                /*
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Find, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -103,7 +104,7 @@ namespace SMC_APM.View.USRForms
 
                 Form.Items.Item("btnLstDocs").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("btnLstDocs").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-
+                */
 
                 LoadDataOnFormAddMode();
             }
@@ -128,24 +129,26 @@ namespace SMC_APM.View.USRForms
             dbsOPMP.SetValue("U_EXP_ESTADOEJEC", 0, "0");
             dbsOPMP.SetValue("U_EXP_TIPODECAMBIO", 0, sboBOB.GetCurrencyRate("USD", DateTime.Today).Fields.Item(0).Value.ToString());
             dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValue("Series", 0).Trim(), Form.BusinessObject.Type).ToString());
+            HabilitarControlesPorEstado("P");
             //Button.Caption = "Grabar";
             //Matrix.Columns.Item("Col_0").Editable = true;
-            Matrix.Columns.Item("Col_2").Editable = true;
+            //Matrix.Columns.Item("Col_2").Editable = true;
             //Form.Items.Item("btnGenTXT").Enabled = false;
-            Form.Items.Item("Item_20").Enabled = false;
-            Form.Items.Item("Item_3").Enabled = true;
-            Form.Items.Item("Item_5").Enabled = true;
-            Form.Items.Item("btnCrgRsp").Enabled = false;
-            Form.Items.Item("btnTrcRtn").Enabled = false;
+            //Form.Items.Item("Item_20").Enabled = false;
+            //Form.Items.Item("Item_3").Enabled = true;
+            //Form.Items.Item("Item_5").Enabled = true;
+            //Form.Items.Item("btnCrgRsp").Enabled = false;
+            //Form.Items.Item("btnTrcRtn").Enabled = false;
             //Form.Items.Item("btnGenPag").Enabled = false;
-            Form.Items.Item("btnLibSNT").Enabled = false;
-
+            //Form.Items.Item("btnLibSNT").Enabled = false;
+            /*
             Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
             Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
             Form.Items.Item("Item_20").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
             Form.Items.Item("btnCrgRsp").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
             Form.Items.Item("Item_3").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
             Form.Items.Item("Item_5").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+            */
         }
 
         protected override void CargarEventos()
@@ -204,12 +207,15 @@ namespace SMC_APM.View.USRForms
                 {
                     if (!e.BeforeAction)
                     {
+                        dbsOPMP.SetValue("U_EXP_ESTADO", 0, "E");
 
                         //Validaciones
 
                         /*if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && PagoMasivoController.ValidarRegistroUnicoPorFecha(dbsOPMP.GetValueExt("U_EXP_FECHA").Trim())) 
                             throw new InvalidOperationException("Ya existe un registro para la fecha seleccionada como filtro");*/
-                        //Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                        if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                        Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                        HabilitarControlesPorEstado("E");
                     }
                 }
                 catch (Exception ex)
@@ -232,7 +238,9 @@ namespace SMC_APM.View.USRForms
                     if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                     Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                     Globales.Aplication.MessageBox("Archivo TXT de terceros generado con éxito en la ruta\n D:\\Pagos_Masivos\\TerceroRetenedor\\ArchivoSunat\\");
-                    Form.GetItem("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                    var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
+                    HabilitarControlesPorEstado(estadoDoc);
+                    /*Form.GetItem("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);*/
                 }
                 return true;
             }));
@@ -256,6 +264,7 @@ namespace SMC_APM.View.USRForms
                         var nroPago = 0;
                         var cntDocXPgo = lstPagos.Count();
                         var cntPgoEjec = 0;
+                        var cntErrores = 0;
                         //var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, cntDocXPgo, false);
                         var docEntryForm = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
                         try
@@ -292,6 +301,7 @@ namespace SMC_APM.View.USRForms
                                             dbsPMP1.SetValue("U_EXP_MSJERROR", pgoDet.LineaPgoMsv - 1, ex.Message);
                                             */
                                             ActualizarDatosCreacionPago(nroPago == 0 ? string.Empty : nroPago.ToString(), "ER", ex.Message, docEntryForm, pgoDet.LineaPgoMsv);
+                                            cntErrores++;
                                         }
                                     };
                                 }
@@ -308,6 +318,7 @@ namespace SMC_APM.View.USRForms
                                     {
                                         msjError = ex.Message;
                                         estado = "ER";
+                                        cntErrores++;
                                     }
                                     foreach (var pgoDet in pgo.Detalle)
                                     {
@@ -321,11 +332,14 @@ namespace SMC_APM.View.USRForms
                                 }
                             }
                             Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                            if (cntErrores == 0) ActualizarEstadoCerrado(docEntryForm);
+
                             //Matrix.LoadFromDataSource();
                             Task.Factory.StartNew(() =>
                             {
                                 Thread.Sleep(1000);
                                 Globales.Aplication.Menus.Item("1304").Activate();
+                                if (cntErrores == 0) HabilitarControlesPorEstado("C");
                             });
 
                             /*
@@ -384,63 +398,8 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
-                    var btnCrgEnv = (SAPbouiCOM.Button)Form.Items.Item("btnGrbEnv").Specific;
                     var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
-                    Form.Items.Item("Item_20").Enabled = false;
-                    if (estadoDoc == "P" || estadoDoc == "R")
-                    {
-                        //btnCrgEnv.Caption = "Enviar";
-                        if (estadoDoc == "P")
-                        {
-                            //Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
-                            Form.Items.Item("Item_3").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.Items.Item("Item_5").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.Items.Item("Item_20").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.Items.Item("Item_17").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.Items.Item("btnCrgRsp").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                            Form.GetMatrix("Item_12").Columns.Item("Col_2").Editable = true;
-                        }
-                        //DesactivarItemsEnEstadoAprobado(estadoDoc);
-                    }
-                    else if (estadoDoc == "A")
-                    {
-                        DesactivarItemsEnEstadoAprobado(estadoDoc);
-                        //Form.Items.Item("btnGenTXT").Enabled = true;
-                        //Form.Items.Item("btnGenPag").Enabled = true;
-
-                    }
-                    //else
-                    //btnCrgEnv.Caption = "OK";
-
-                    Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                    Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-
-                    if (esTerceroRetenedor)
-                    {
-                        switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
-                        {
-                            case "1":
-                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                break;
-                            case "2":
-                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
-                        {
-                            case "0":
-                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                break;
-                            case "1":
-                                Form.Items.Item("btnGenTXT").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                Form.Items.Item("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
-                                break;
-                        }
-                    }
+                    HabilitarControlesPorEstado(estadoDoc);
                 }
                 return true;
             }));
@@ -496,7 +455,9 @@ namespace SMC_APM.View.USRForms
                         dbsOPMP.SetValueExt("U_EXP_ESTADOEJEC", esTerceroRetenedor ? "2" : "1");
                         if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                         Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                        Form.GetItem("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
+                        var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
+                        HabilitarControlesPorEstado(estadoDoc);
+                        //Form.GetItem("btnGenPag").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
                         pgrssBar.Stop();
                     }
                 }
@@ -551,31 +512,70 @@ namespace SMC_APM.View.USRForms
             return true;
         }
 
-        private void DesactivarItemsEnEstadoAprobado(string codEstado)
+        private void HabilitarControlesPorEstado(string codEstado)
         {
-            Matrix = Form.GetMatrix("Item_12");
-            Form.Items.Item("Item_3").Enabled = true;
-            Form.Items.Item("Item_5").Enabled = true;
-            Form.Items.Item("Item_31").Enabled = true;
-            Form.Items.Item("Item_33").Enabled = true;
-            Form.Items.Item("Item_20").Enabled = true;
-            Form.Items.Item("Item_17").Enabled = true;
-            Form.Items.Item("btnCrgRsp").Enabled = true;
-            //Matrix.Columns.Item("Col_0").Editable = true;
-            Matrix.Columns.Item("Col_2").Editable = true;
-            if (codEstado == "A")
+            Form.Items.Item("edtFocus").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+            Form.Items.Item("btnGrbEnv").Enabled = false;
+            Form.Items.Item("Item_1").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.Items.Item("btnLstDocs").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.Items.Item("Item_3").Enabled = false;
+            Form.Items.Item("Item_5").Enabled = false;
+            Form.Items.Item("Item_12").Enabled = false;
+            Form.Items.Item("Item_17").Enabled = false;
+            Form.Items.Item("Item_20").Enabled = false;
+            Form.Items.Item("Item_26").Enabled = false;
+            Form.Items.Item("Item_31").Enabled = false;
+            Form.Items.Item("Item_33").Enabled = false;
+            Form.Items.Item("btnCrgRsp").Enabled = false;
+            Form.Items.Item("btnGenTXT").Enabled = false;
+            Form.Items.Item("btnGenPag").Enabled = false;
+            Form.Items.Item("btnTrcRtn").Enabled = false;
+            Form.Items.Item("btnLibSNT").Enabled = false;
+            if (codEstado == "P" || codEstado == "R")
             {
-                Form.GetItem("Item_10").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                Matrix = Form.GetMatrix("Item_12");
-                Form.Items.Item("Item_3").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_5").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_31").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_33").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_20").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("Item_17").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                Form.Items.Item("btnCrgRsp").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
-                //Matrix.Columns.Item("Col_0").Editable = false;
-                Matrix.Columns.Item("Col_2").Editable = false;
+                Form.Items.Item("btnGrbEnv").Enabled = (Form.Mode != SAPbouiCOM.BoFormMode.fm_ADD_MODE && true);
+                Form.Items.Item("Item_3").Enabled = true;
+                Form.Items.Item("Item_5").Enabled = true;
+                Form.Items.Item("Item_12").Enabled = true;
+                Form.Items.Item("Item_17").Enabled = true;
+                Form.Items.Item("Item_26").Enabled = true;
+                Form.Items.Item("Item_31").Enabled = true;
+                Form.Items.Item("Item_33").Enabled = true;
+            }
+            else if (codEstado == "A")
+            {
+                Form.Items.Item("Item_12").Enabled = true;
+                Form.Items.Item("Item_17").Enabled = true;
+                Form.Items.Item("Item_20").Enabled = true;
+                Form.Items.Item("btnTrcRtn").Enabled = true;
+                Form.Items.Item("btnLibSNT").Enabled = true;
+                Form.Items.Item("btnCrgRsp").Enabled = true;
+                if (esTerceroRetenedor)
+                {
+                    switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
+                    {
+                        case "1":
+                            Form.Items.Item("btnGenTXT").Enabled = true;
+                            break;
+                        case "2":
+                            Form.Items.Item("btnGenTXT").Enabled = true;
+                            Form.Items.Item("btnGenPag").Enabled = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
+                    {
+                        case "0":
+                            Form.Items.Item("btnGenTXT").Enabled = true;
+                            break;
+                        case "1":
+                            Form.Items.Item("btnGenTXT").Enabled = true;
+                            Form.Items.Item("btnGenPag").Enabled = true;
+                            break;
+                    }
+                }
             }
         }
 
@@ -584,6 +584,13 @@ namespace SMC_APM.View.USRForms
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
             var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}', \"U_EXP_ESTADO\" = '{estado}', " +
                 $"\"U_EXP_MSJERROR\" = '{msjError}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+            recSet.DoQuery(sqlQry);
+        }
+
+        private void ActualizarEstadoCerrado(int docEntry)
+        {
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            var sqlQry = $"update \"@EXP_OPMP\" set \"U_EXP_ESTADO\" = 'C' where \"DocEntry\" = '{docEntry}'";
             recSet.DoQuery(sqlQry);
         }
     }

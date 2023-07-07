@@ -847,7 +847,7 @@ namespace SMC_APM.View
                 if (string.IsNullOrEmpty(codigoEscenario))
                     throw new Exception("Debe enviar a autorización un código de escenario de pago");
 
-                daoEscenario.ActualizarEstadoAutorizacion(sboCompany, codigoEscenario, "A"); //AUTORIZAMOS AUTOMÁTICAMENTE PARA ANTES DE LA IMPLEMENTACIÓN DEL MÓDULO DE APROBACIONES
+                daoEscenario.ActualizarEstadoAutorizacion(sboCompany, codigoEscenario, "E"); //AUTORIZAMOS AUTOMÁTICAMENTE PARA ANTES DE LA IMPLEMENTACIÓN DEL MÓDULO DE APROBACIONES
                 oForm.Items.Item("btnCar").Click(BoCellClickType.ct_Regular); //VOLVEMOS A CARGAR LOS DATOS
 
                 sboApplication.StatusBar.SetText("Escenario de pago enviado a autorización", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);

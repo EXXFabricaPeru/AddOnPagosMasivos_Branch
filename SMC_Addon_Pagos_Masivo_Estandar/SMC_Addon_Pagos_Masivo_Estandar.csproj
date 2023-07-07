@@ -174,6 +174,7 @@
     <Compile Include="View\UIFormFactory.cs" />
     <Compile Include="Util\utilNET.cs" />
     <Compile Include="View\frmPagoProveedores.cs" />
+    <Compile Include="View\USRForms\FormAutorizacion.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
   </ItemGroup>
@@ -245,7 +246,9 @@
     <Content Include="Resources\FrmModal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Resources\FrmAutorizacion.srf" />
+    <Content Include="Resources\FrmAutorizacion.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\FrmPMP.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

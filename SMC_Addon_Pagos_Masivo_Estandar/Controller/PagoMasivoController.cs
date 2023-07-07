@@ -255,6 +255,7 @@ namespace SMC_APM.Controller
                     break;
                 case "CG":
                 case "PV":
+                case "VV":
                 case "TB"://Pago con Transferencia
                     sboPayments.TransferAccount = pago.MetodoPago.Cuenta;
                     sboPayments.TransferDate = pago.FechaContabilizacion;
@@ -439,7 +440,7 @@ namespace SMC_APM.Controller
                 }
 
                 string valorLinea = string.Empty;
-                recordset.DoQuery(qry);                
+                recordset.DoQuery(qry);
                 using (StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252)))
                 {
                     while (!recordset.EoF)
