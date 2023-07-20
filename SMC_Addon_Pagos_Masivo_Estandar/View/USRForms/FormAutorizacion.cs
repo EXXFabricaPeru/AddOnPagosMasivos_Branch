@@ -101,7 +101,7 @@ namespace SMC_APM.View.USRForms
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF) cntAutori = Convert.ToInt32(recSet.Fields.Item(0).Value);
 
-            sqlQry = $"CALL EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION('{codAutori}','{fechaDsd.ToString("yyyyMMdd")}','{fechaHst.ToString("yyyyMMdd")}','{cntAutori}')";
+            sqlQry = $"CALL EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION('{codAutori}','{fechaDsd.ToString("yyyyMMdd")}','{fechaHst.ToString("yyyyMMdd")}','{cntAutori}','{ventana}')";
             dtblDocs.ExecuteQuery(sqlQry);
             Form.GetMatrix("mtxDocs").LoadFromDataSource();
             Form.GetMatrix("mtxDocs").AutoResizeColumns();
