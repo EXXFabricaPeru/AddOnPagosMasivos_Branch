@@ -32,6 +32,8 @@ namespace SMC_APM.Modelo
         public double ImporteRetencion { get; set; }
         public double TCDocumento { get; set; }
         public string GlosaAsiento { get; set; }
+        public string CardCodeFactoring { get; set; }
+        public string CardNameFactoring { get; set; }
     }
 }
 

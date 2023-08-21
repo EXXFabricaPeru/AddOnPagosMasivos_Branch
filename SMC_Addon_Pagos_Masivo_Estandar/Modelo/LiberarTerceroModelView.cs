@@ -224,7 +224,8 @@ namespace SMC_APM.Modelo
                     Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MONE")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_BKCD")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_CTAB")).FirstOrDefault()?.Element("value").Value,
-                    AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_INDR")).FirstOrDefault()?.Element("value").Value
+                    AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_INDR")).FirstOrDefault()?.Element("value").Value,
+                    CardCodeFacto = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_CCFC")).FirstOrDefault()?.Element("value").Value,
                 }).Select(s => new SBOPago
                 {
                     CodSerieSBO = s.Key.AplSerieRetencion == "Y" ? codSerieRtcn : codSeriePago,
@@ -281,7 +282,7 @@ namespace SMC_APM.Modelo
             {
                 List<Terceros_Retencion> agrupados = Filas
                                     .Where(x => x.TotalRetencionML > 0)
-                                    .GroupBy(u => new { u.Proveedor, u.IndSerieRtn })
+                                    .GroupBy(u => new { u.Proveedor, u.IndSerieRtn, u.CardCodeFacto })
                                     .Select(_ => new Terceros_Retencion
                                     {
                                         Series = _.Key.IndSerieRtn == "Y" ? Convert.ToInt32(PAGOMASIVO.GetValueExt("U_EXP_SERIERETENCION")) : default,
@@ -345,6 +346,7 @@ namespace SMC_APM.Modelo
                              Moneda = q.Element("U_EXD_MONE").Value,
                              TotalDocumento = Convert.ToDouble(q.Element("U_EXD_TOTD").Value),
                              TotalML = Convert.ToDouble(q.Element("U_EXD_TOTP").Value),
+                             CardCodeFacto = q.Element("U_EXD_CCFC").Value,
                              TotalProveedorML = 0.0,
                              TotalRetencionML = 0.0
                          }).ToList();
@@ -583,5 +585,6 @@ namespace SMC_APM.Modelo
         public int DocEntryPagoProv { get; set; }
         public string MensajeError { get; set; }
         public string IndSerieRtn { get; set; }
+        public string CardCodeFacto { get; set; }
     }
 }

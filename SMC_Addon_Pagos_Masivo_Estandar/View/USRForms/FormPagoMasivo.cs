@@ -188,6 +188,8 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_IMPRETENCION", lineNum, doc.ImporteRetencion.ToString());
                         dbsPMP1.SetValue("U_EXP_TCDOCUMENTO", lineNum, doc.TCDocumento.ToString());
                         dbsPMP1.SetValue("U_EXP_GLOSAASIENTO", lineNum, doc.GlosaAsiento);
+                        dbsPMP1.SetValue("U_EXP_CRDCODEFACTO", lineNum, doc.CardCodeFactoring);
+                        dbsPMP1.SetValue("U_EXP_CRDNAMEFACTO", lineNum, doc.CardNameFactoring);
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
