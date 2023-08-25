@@ -348,7 +348,7 @@ namespace SMC_APM.Controller
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value,
                     AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLSRERTN")).FirstOrDefault()?.Element("value").Value,
-                    CardCodeFactoring = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CRDCODEFACTO")).FirstOrDefault()?.Element("value").Value,
+                    CardCodeFactoring = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CARDCODE_FACTO")).FirstOrDefault()?.Element("value").Value,
                 }).Select(s => new SBOPago
                 {
                     CodSerieSBO = s.Key.AplSerieRetencion == "Y" && esAgenteRetenedor ? codSerieRtcn : codSeriePago,
