@@ -320,6 +320,9 @@ namespace SMC_APM.View
             dtaFact.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaFact.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaFact.Columns.Add("GlosaAsiento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
+            dtaFact.Columns.Add("CardCodeFacto", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 50);
+            dtaFact.Columns.Add("CardNameFacto", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
+
 
             //inicializa las columnas del datatable de la matrix seleccionados
             dtaSelect.Columns.Add("Slc", BoFieldsType.ft_AlphaNumeric, 1);
@@ -350,6 +353,9 @@ namespace SMC_APM.View
             dtaSelect.Columns.Add("NroCuota", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaSelect.Columns.Add("LineaAsiento", SAPbouiCOM.BoFieldsType.ft_ShortNumber, 4);
             dtaSelect.Columns.Add("GlosaAsiento", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
+            dtaSelect.Columns.Add("CardCodeFacto", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 50);
+            dtaSelect.Columns.Add("CardNameFacto", SAPbouiCOM.BoFieldsType.ft_AlphaNumeric, 250);
+
             #endregion
 
             #region Matrices
@@ -393,6 +399,8 @@ namespace SMC_APM.View
             mtxFact.Columns.Item("clmNrLnAS").DataBind.Bind("dtaFact", "LineaAsiento");
             mtxFact.Columns.Item("Col_4").DataBind.Bind("dtaFact", "BankCode"); //BANCO PROVEEDOR
             mtxFact.Columns.Item("Col_5").DataBind.Bind("dtaFact", "GlosaAsiento"); //GLOSA ASIENTO
+            mtxFact.Columns.Item("Col_6").DataBind.Bind("dtaFact", "CardCodeFacto"); //GLOSA ASIENTO
+            mtxFact.Columns.Item("Col_7").DataBind.Bind("dtaFact", "CardNameFacto"); //GLOSA ASIENTO
 
 
             //relaciona la columna del databable con la columna de la matrix para los selecionados
@@ -421,6 +429,8 @@ namespace SMC_APM.View
             mtxSelect.Columns.Item("Col_1").DataBind.Bind("dtaSelect", "Cuenta");
             mtxSelect.Columns.Item("Col_2").DataBind.Bind("dtaSelect", "BankCode");
             mtxSelect.Columns.Item("Col_3").DataBind.Bind("dtaSelect", "GlosaAsiento");
+            mtxSelect.Columns.Item("Col_4").DataBind.Bind("dtaSelect", "CardCodeFacto");
+            mtxSelect.Columns.Item("Col_5").DataBind.Bind("dtaSelect", "CardNameFacto");
 
             SAPbouiCOM.Column oColumn1 = mtxSelect.Columns.Item("fTotal");
             SAPbouiCOM.Column oColumn2 = mtxSelect.Columns.Item("fReten");
@@ -1001,7 +1011,9 @@ namespace SMC_APM.View
                     CtaProveedor = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("Cuenta")).FirstOrDefault().Element("Value").Value,
                     CodBanco = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("BankCode")).FirstOrDefault().Element("Value").Value,
                     BloqueoPago = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("BloqueoPago")).FirstOrDefault().Element("Value").Value,
-                    DetraccionPend = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("DetraccionPend")).FirstOrDefault().Element("Value").Value
+                    DetraccionPend = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("DetraccionPend")).FirstOrDefault().Element("Value").Value,
+                    CardCodeFacto = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("CardCodeFacto")).FirstOrDefault().Element("Value").Value,
+                    CardNameFacto = c.Descendants("Cell").Where(w => w.Element("ColumnUid").Value.Contains("CardNameFacto")).FirstOrDefault().Element("Value").Value
                 });
 
                 foreach (var doc in lstDocumentosSlc)
@@ -1021,7 +1033,8 @@ namespace SMC_APM.View
                         sboApplication.StatusBar.SetText(SMC_APM.Properties.Resources.nombreAddon + " Evaluando fila " + doc.Fila + " DocEntry: " + doc.DocEntry
                         , SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                         daoEscenario.registrarDetalle(NombreBaseDatos, UserNameConectado, codEscenario, doc.DocEntry, doc.TotalPagar
-                        , doc.TipoDoc, Convert.ToInt32(doc.NroCuota), Convert.ToInt32(doc.LineaAsiento), doc.CtaProveedor, doc.CodBanco, ref mensaje);
+                        , doc.TipoDoc, Convert.ToInt32(doc.NroCuota), Convert.ToInt32(doc.LineaAsiento), doc.CtaProveedor, doc.CodBanco
+                        , doc.CardCodeFacto, doc.CardNameFacto, ref mensaje);
                     }
                 }
                 /*
