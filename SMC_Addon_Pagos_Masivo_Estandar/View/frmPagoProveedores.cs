@@ -612,7 +612,7 @@ namespace SMC_APM.View
                                             consultarFact();
 
                                             oForm.Items.Item("Item_5").Enabled = dtoBanco.Estado == "P" || dtoBanco.Estado == "R";
-                                            oForm.Items.Item("btnSig").Enabled = dtoBanco.Estado == "P";
+                                            oForm.Items.Item("btnSig").Enabled = dtoBanco.Estado == "P" || dtoBanco.Estado == "R";
 
 
                                             oForm.Mode = estado == "E" || estado == "A" ? BoFormMode.fm_VIEW_MODE : BoFormMode.fm_OK_MODE;
@@ -627,6 +627,7 @@ namespace SMC_APM.View
                                         break;
 
                                     case "btnSig":
+                                        if (oForm.DataSources.UserDataSources.Item("UD_EST").ValueEx == "E") return;
                                         //Valido que el total del escenario no exceda el tope.
                                         var utTopeMonto = sboCompany.UserTables.Item("SMC_APM_TOPEMONTO");
                                         utTopeMonto.GetByKey("1");

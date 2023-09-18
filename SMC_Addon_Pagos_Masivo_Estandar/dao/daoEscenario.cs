@@ -664,7 +664,9 @@ namespace SMC_APM.dao
             {
                 rs = company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                 string query = $"UPDATE \"@SMC_APM_ESCCAB\" SET \"U_EXD_ESTE\" = '{estado}' WHERE \"Code\" = '{codigoEscenario}'";
+                rs.DoQuery(query);
 
+                query = $"update \"@SMC_APM_AUTORIZAR\" set \"U_SMC_ESTAT\" = 'PE' where \"Code\" = '{codigoEscenario}'";
                 rs.DoQuery(query);
             }
             catch (Exception)
