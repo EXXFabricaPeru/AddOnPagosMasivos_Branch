@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<BOM>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_ESCCAB</TableName>
+				<TableDescription>SMC-Escenario Pago CAB</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_AUTORIZAR</TableName>
+				<TableDescription>SMC: Autorizacion Pagos Masiv.</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_ESCDET</TableName>
+				<TableDescription>SMC-Escenario Pago DET</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_CONFIAPM</TableName>
+				<TableDescription>SMC: Conf. PagosMasivos</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXP_OPMP</TableName>
+				<TableDescription>EXP - Pago masivo proveedores</TableDescription>
+				<TableType>bott_Document</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXP_PMP1</TableName>
+				<TableDescription>EXP - Pago masivo prov detalle</TableDescription>
+				<TableType>bott_DocumentLines</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_OTRR</TableName>
+				<TableDescription>PM: Tercero retenedor</TableDescription>
+				<TableType>bott_Document</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_TRR1</TableName>
+				<TableDescription>PM: Tercero retenedor filas</TableDescription>
+				<TableType>bott_DocumentLines</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_TOPEMONTO</TableName>
+				<TableDescription>SMC: Conf. Tope Monto</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>SMC_APM_3RETCONF</TableName>
+				<TableDescription>SMC - Conf. Tercero Retenedor</TableDescription>
+				<TableType>bott_MasterData</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+</BOM>

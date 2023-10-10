@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<BOM>
+	<BO>
+		<AdmInfo>
+			<Object>206</Object>
+		</AdmInfo>
+		<OUDO>
+			<row>
+				<Code>EXP_OPMP</Code>
+				<Name>EXP_OPMP</Name>
+				<TableName>EXP_OPMP</TableName>
+				<TYPE>3</TYPE>
+				<MngSeries>Y</MngSeries>
+				<CanFind>Y</CanFind>
+				<CanYrTrnsf>N</CanYrTrnsf>
+				<CanDefForm>Y</CanDefForm>
+				<CanLog>N</CanLog>
+				<CanDelete>N</CanDelete>
+				<CanCancel>Y</CanCancel>
+				<CanClose>Y</CanClose>
+			</row>
+		</OUDO>
+		<UDO1>
+			<row>
+				<TableName>EXP_PMP1</TableName>
+			</row>
+		</UDO1>
+		<UDO2>
+			<row>
+				<ColAlias>DocNum</ColAlias>
+				<ColumnDesc>DocNum</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>CreateDate</ColAlias>
+				<ColumnDesc>CreateDate</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>UpdateDate</ColAlias>
+				<ColumnDesc>UpdateDate</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_EXP_FECHA</ColAlias>
+				<ColumnDesc>U_EXP_FECHA</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_EXP_SERIEPAGO</ColAlias>
+				<ColumnDesc>U_EXP_SERIEPAGO</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_EXP_SERIERETENCION</ColAlias>
+				<ColumnDesc>U_EXP_SERIERETENCION</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_EXP_ESTADO</ColAlias>
+				<ColumnDesc>U_EXP_ESTADO</ColumnDesc>
+			</row>
+		</UDO2>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>206</Object>
+		</AdmInfo>
+		<OUDO>
+			<row>
+				<Code>EXD_OTRR</Code>
+				<Name>PM: Tercero retenedor</Name>
+				<TableName>EXD_OTRR</TableName>
+				<TYPE>3</TYPE>
+				<MngSeries>Y</MngSeries>
+				<CanFind>Y</CanFind>
+				<CanYrTrnsf>N</CanYrTrnsf>
+				<CanDefForm>N</CanDefForm>
+				<CanLog>Y</CanLog>
+				<CanDelete>Y</CanDelete>
+				<CanCancel>N</CanCancel>
+				<CanClose>N</CanClose>
+			</row>
+		</OUDO>
+		<UDO1>
+			<row>
+				<TableName>EXD_TRR1</TableName>
+			</row>
+		</UDO1>
+		<UDO2>
+			<row>
+				<ColAlias>DocNum</ColAlias>
+				<ColumnDesc>DocNum</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>CreateDate</ColAlias>
+				<ColumnDesc>CreateDate</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>UpdateDate</ColAlias>
+				<ColumnDesc>UpdateDate</ColumnDesc>
+			</row>
+		</UDO2>
+	</BO>
+</BOM>

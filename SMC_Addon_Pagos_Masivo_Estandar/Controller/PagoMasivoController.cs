@@ -41,7 +41,7 @@ namespace SMC_APM.Controller
         public static SAPbobsCOM.Recordset ObtenerInfoBancos()
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"select \"BankCode\",\"BankName\" from ODSC";
+            var sqlQry = $"select top 1 \"BankCode\",\"BankName\" from ODSC";
             recordset.DoQuery(sqlQry);
             if (recordset.RecordCount == 0)
                 throw new Exception("No se ha definido información de bancos");

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SMC_APM</RootNamespace>
     <AssemblyName>SMC_APM</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -74,6 +74,10 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EXX_Metadata.BL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\EXX_Metadata.BL.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Practices.EnterpriseLibrary.Caching.Database">
       <HintPath>..\..\librerias\Microsoft.Practices.EnterpriseLibrary.Caching.Database.dll</HintPath>
     </Reference>
@@ -242,11 +246,80 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\BO\UF.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\BO\UO.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\BO\UT.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\FrmModal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\FrmAutorizacion.srf" />
     <Content Include="Resources\FrmPMP.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\gif.gif">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\gif.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Gif\Wait.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\REPLICATE.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_BCP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_INTERBANK.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_SANTANDER.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_SCOTIABANK.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_CONSULTAR_BANCO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_ESCENARIOS_AUTORIZADOS.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_LISTAR_BANCOS.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_LISTAR_FACPENDIENTES_PP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_LISTAR_FACSELECT_PP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_OBTENERCONFIG.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_REG_ESCENARIOCAB.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_APM_REG_ESCENARIODET.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SMC_TERCERORETENEDOR.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT_CREADO.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_CABECERA_NUEVO.sql">
@@ -311,6 +384,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Resources\Scripts\SQL\" />
     <Folder Include="Scripts\SQL\" />
   </ItemGroup>
   <ItemGroup>
