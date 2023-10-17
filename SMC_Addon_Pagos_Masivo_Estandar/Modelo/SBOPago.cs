@@ -35,7 +35,7 @@ namespace SMC_APM.Modelo
         public int IdDocumento { get; set; }
         public int IdLinea { get; set; }
         public int NroCuota { get; set; }
-        public string Moneda { get; set; }
+        public string MonedaDoc { get; set; }
         public string CodigoCuenta { get; set; }
         public string NumeroCuenta { get; set; }
         public double Monto { get; set; }

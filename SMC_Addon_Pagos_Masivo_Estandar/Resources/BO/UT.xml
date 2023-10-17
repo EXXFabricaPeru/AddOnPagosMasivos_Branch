@@ -59,6 +59,32 @@
 		</AdmInfo>
 		<UserTablesMD>
 			<row>
+				<TableName>EXD_OEPG</TableName>
+				<TableDescription>PM: Escenario de pago</TableDescription>
+				<TableType>bott_Document</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_EPG1</TableName>
+				<TableDescription>PM: Escenario de pago detalle</TableDescription>
+				<TableType>bott_DocumentLines</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
 				<TableName>EXP_OPMP</TableName>
 				<TableDescription>EXP - Pago masivo proveedores</TableDescription>
 				<TableType>bott_Document</TableType>

@@ -1,4 +1,7 @@
-CREATE PROCEDURE "SMC_APM_LISTAR_BANCOS"
+CREATE PROCEDURE SMC_APM_LISTAR_BANCOS
+(
+	codBanco varchar(10)
+)
 AS
 BEGIN
 	SELECT 
@@ -21,6 +24,7 @@ BEGIN
 		LEFT JOIN OACT T1 ON T0."GLAccount" = T1."AcctCode"
 		INNER JOIN ODSC T2 ON T0."BankCode"=T2."BankCode"
 	WHERE
-		IFNULL(T0."U_EXM_PMASIVO",'N') = 'Y'
+		T2."BankCode" = :codBanco 
+		and IfNULL(T0."U_EXM_PMASIVO",'N') = 'Y'
 		ORDER BY T1."AcctName";
-END;
+END

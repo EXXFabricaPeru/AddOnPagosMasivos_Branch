@@ -1,10 +1,12 @@
-CREATE PROCEDURE "SMC_APM_LISTAR_FACPENDIENTES_PP"
-	(fechaVenc DATE,
+CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
+(
+	fechaVenc DATE,
 	moneda VARCHAR(3),
 	CardCode VARCHAR(20),
 	escenario varchar(15),
 	tipoBanco varchar(3),
-	filtroBanco varchar(3))
+	filtroBanco varchar(3)
+)
 AS
 BEGIN
 	SELECT 
@@ -17,6 +19,7 @@ BEGIN
 		T0."CardCode",
 		T0."CardName",
 		T0."NumAtCard",
+		T0."DocCur" as "MonedaPago",
 		T0."DocCur",
 		T0."Total",
 		T0."CodigoRetencion",
@@ -182,7 +185,7 @@ BEGIN
 		T0."Comments" AS "Comentario",
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T1."DueDate"
-		,ifnull(T0."U_EXC_ORIGEN",'') as "Origen"
+		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
 		,(SELECT CASE WHEN "InsTotal" <> "PaidToDate" THEN 'Y' ELSE 'N' END FROM PCH6 WHERE "DocEntry" = T0."DocEntry" AND UPPER(IFNULL("U_EXX_CONFTIPODET", 'No'))  = 'SI' ) AS "DetraccionPend"
 		,T1."InstlmntID" AS "NroCuota"
@@ -206,12 +209,14 @@ BEGIN
 		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') ='No'
 		AND T1."DueDate" <= :fechaVenc
 		AND T0."DocCur" = UPPER(:moneda)
-		AND T0."CardCode" like '%' || :CardCode || '%'
+		AND T0."CardCode" like '%' || :CardCode ||'%'
 		
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FT-P' AND "U_EXP_NROCUOTA"=T1."InstlmntID")
+									/*
 		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
 									WHERE "U_SMC_TIPO_DOCUMENTO" = 'FT-P') OR T0."U_CP_VARESC"='Y')
+									*/
 
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		AND IFNULL(T0."U_EXX_NUMEREND",'')=''
@@ -332,7 +337,7 @@ BEGIN
 		T0."Comments" AS "Comentario",
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T1."DueDate"
-		,ifnull(T0."U_EXC_ORIGEN",'') as "Origen"
+		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
 		,'N' AS "DetraccionPend"
 	    ,T1."InstlmntID" AS "NroCuota"
@@ -357,7 +362,7 @@ BEGIN
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
 		AND T0."DocCur" = UPPER(:moneda)
-		AND T0."CardCode" like '%' || :CardCode || '%'
+		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'NC-C')
 		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
@@ -479,7 +484,7 @@ BEGIN
 		T0."Comments" AS "Comentario",
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T1."DueDate"
-		,ifnull(T0."U_EXC_ORIGEN",'') as "Origen"
+		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
 		,'N' AS "DetraccionPend"
 		,T1."InstlmntID" AS "NroCuota"
@@ -504,7 +509,7 @@ BEGIN
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
 		AND T0."DocCur" = UPPER(:moneda)
-		AND T0."CardCode" like '%' || :CardCode || '%'
+		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'Y'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FA-P')
@@ -629,7 +634,7 @@ BEGIN
 		T0."Comments" AS "Comentario",
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T1."DueDate"
-		,ifnull(T0."U_EXC_ORIGEN",'') as "Origen"
+		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
 		,'N' AS "DetraccionPend"
 		,T1."InstlmntID" AS "NroCuota"
@@ -654,7 +659,7 @@ BEGIN
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
 		AND T0."DocCur" = UPPER(:moneda)
-		AND T0."CardCode" like '%' || :CardCode || '%'
+		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'N'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SA-P')
@@ -742,7 +747,7 @@ SELECT
 		T0."DocDueDate" <= :fechaVenc
 		AND T0."Canceled" = 'N'
 		AND T0."DocCurr" = UPPER(:moneda)
-		AND T0."CardCode" like '%' || :CardCode || '%'
+		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SP')
 		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
@@ -768,19 +773,19 @@ DISTINCT
 		T3."CardName",
 		'' as "NumAtCard",
 		--T0."TransCurr"
-		ifnull(T1."FCCurrency",'SOL')
+		IFNULL(T1."FCCurrency",'SOL')
 		,
 		CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
 			
-				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
+				THEN (T1."FCCredit" - IFNULL((select sum(TT0."ReconSumFC") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId"= T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),2)) 
 		
 			ELSE 
 			
-				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
+				(T1."Credit" - IFNULL((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId"= T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0))
 		
@@ -790,15 +795,15 @@ DISTINCT
 		0 AS "Retencion",
 		CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
 			
-				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
+				THEN (T1."FCCredit" - IFNULL((select sum(TT0."ReconSumFC") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId"= T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
 		
 			ELSE 
 			
-				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
+				(T1."Credit" - IFNULL((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId"= T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0))
 		
@@ -853,17 +858,17 @@ DISTINCT
 	 	T0."TransType" = 24
 
 		/*
-		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
+		AND IFNULL((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
 		and (T1."Credit" - 
-		ifnull((select sum(TT0."ReconSum") from 
+		IFNULL((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId"= T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0)) > 0
 		
 
 		AND T1."DueDate" <= :fechaVenc
-		AND ifnull(T1."FCCurrency",'SOL') = UPPER(:moneda)
-		AND T3."CardCode" like '%' || :CardCode || '%'
+		AND IFNULL(T1."FCCurrency",'SOL') = UPPER(:moneda)
+		AND T3."CardCode" like '%' || :CardCode ||'%'
 		and T1."Credit">0
 		--AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'PR')
@@ -875,11 +880,11 @@ DISTINCT
 
 
 -------pagos recibidos-------
+/*
 
+		UNION ALL
+		
 
-		UNION
-		
-		
 		---------AS-------------------------
 		SELECT
 DISTINCT
@@ -891,19 +896,19 @@ DISTINCT
 		T3."CardName",
 		'AS'||'-'||T0."Number" as "NumAtCard",
 		--T0."TransCurr"
-		ifnull(T1."FCCurrency",'SOL')
+		IFNULL(T1."FCCurrency",'SOL')
 		,
 		CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
 			
-				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
+				THEN (T1."FCCredit" - IFNULL((select sum(TT0."ReconSumFC") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
 		
 			ELSE 
 			
-				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
+				(T1."Credit" - IFNULL((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0))
 				
@@ -913,7 +918,7 @@ DISTINCT
 		
 		IFNULL(CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
 				THEN (T2."WTAmntFC") 
 			ELSE 
 				(T2."WTAmnt")
@@ -923,26 +928,26 @@ DISTINCT
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
-				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
+				THEN 	(IFNULL(T1."FCCredit",0) - IFNULL((select sum(TT0."ReconSumFC") 
 												 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 												 GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
 												 
 						(
-							(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
+							(IFNULL(T1."FCCredit",0) - IFNULL((select sum(TT0."ReconSumFC") 
 													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * IFNULL((T2."WTAmntFC" - T2."ApplAmntFC"),0)
 												 
 						)						 
 												 
 			ELSE 
-						(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") from 
+						(IFNULL(T1."Credit",0) - IFNULL((select sum(TT0."ReconSum") from 
 						"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 						GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
 						
 						(
-							(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") 
+							(IFNULL(T1."Credit",0) - IFNULL((select sum(TT0."ReconSum") 
 													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * IFNULL((T2."WTAmnt" - T2."ApplAmnt"),0)
 												 
 						)	
 				
@@ -998,32 +1003,33 @@ DISTINCT
 	 	T0."TransType" = 30
 	
 		/*
-		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
+		AND IFNULL((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
 			and (T1."Credit" - 
-		ifnull((select sum(TT0."ReconSum") from 
+		IFNULL((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0
 		
 		AND T1."DueDate" <= :fechaVenc
-		AND ifnull(T1."FCCurrency",'SOL') = UPPER(:moneda)
-		AND T3."CardCode" like '%' || :CardCode || '%'
+		AND IFNULL(T1."FCCurrency",'SOL') = UPPER(:moneda)
+		AND T3."CardCode" like '%' || :CardCode ||'%'
 		and T1."Credit">0
 		/*AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'AS')*/
-		--AND ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
+		--AND IFNULL((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario 
 		--and "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'
-		AND (ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
+		/*AND (IFNULL((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
 									WHERE "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'		
 		OR T0."U_CP_VARESC"='Y')
-		
+		*/
 		) T0
 	WHERE
 		T0."Total" > 0 
-		--and T0."BankCode" like '%'||:filtroBanco||'%' --se agrego nuevo
+		--and T0."BankCode" like '%'+:filtroBanco+'%' --se agrego nuevo
 
 	ORDER BY 
 		T0."FechaVencimiento" desc;  
-		
+
+	
 END;

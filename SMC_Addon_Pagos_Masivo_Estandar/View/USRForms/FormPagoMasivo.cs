@@ -2,11 +2,13 @@
 using SAP_AddonFramework;
 using SMC_APM.Controller;
 using SMC_APM.dao;
+using SMC_APM.Modelo;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace SMC_APM.View.USRForms
 {
@@ -168,6 +170,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_SLC_RETENCION", lineNum, doc.SlcRetencion);
                         dbsPMP1.SetValue("U_EXP_COD_ESCENARIOPAGO", lineNum, doc.CodigoEscenarioPago);
                         dbsPMP1.SetValue("U_EXP_MEDIODEPAGO", lineNum, doc.MedioDePago);
+                        dbsPMP1.SetValue("U_EXP_MONEDA_PAGO", lineNum, doc.MonedaDePago);
                         dbsPMP1.SetValue("U_EXP_CODBANCO", lineNum, doc.CodBanco);
                         dbsPMP1.SetValue("U_EXP_CODCTABANCO", lineNum, doc.CodCtaBanco);
                         dbsPMP1.SetValue("U_EXP_DOCENTRYDOC", lineNum, doc.DocEntryDocumento.ToString());
@@ -193,6 +196,7 @@ namespace SMC_APM.View.USRForms
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
+                    Form.DataSources.UserDataSources.Item("UD_TOTAL").ValueEx = lstDocumentos.Sum(d => d.Importe).ToString();
                 }
                 return true;
             }));
@@ -258,6 +262,7 @@ namespace SMC_APM.View.USRForms
                         var nroPago = 0;
                         var cntDocXPgo = lstPagos.Count();
                         var cntPgoEjec = 0;
+                        var tipoDeCambio = Convert.ToDouble(dbsOPMP.GetValueExt("U_EXP_TIPODECAMBIO"));
                         //var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, cntDocXPgo, false);
                         var docEntryForm = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
                         try
@@ -303,7 +308,7 @@ namespace SMC_APM.View.USRForms
                                 {
                                     try
                                     {
-                                        pgo.Monto = pgo.Detalle.Sum(d => d.MontoPagado);
+                                        pgo.Monto = pgo.Detalle.Sum(d => d.MonedaDoc != pgo.Moneda ? d.MontoPagado / tipoDeCambio : d.MontoPagado);
                                         nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
                                     }
                                     catch (Exception ex)
@@ -515,6 +520,20 @@ namespace SMC_APM.View.USRForms
                     objType = objType == "24" ? "30" : objType;
                     var linkedButton = (SAPbouiCOM.LinkedButton)Form.GetMatrix(e.ItemUID).Columns.Item("Col_6").ExtendedObject;
                     linkedButton.LinkedObjectType = objType;
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "Item_12", e =>
+            {
+                if (!e.BeforeAction)
+                {
+                    Form.GetMatrix(e.ItemUID).FlushToDataSource();
+                    var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
+                    var strXMLDTDocs = dbsPMP1.GetAsXML();
+                    var _dsrXmlDBDataSource = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
+                    var total = _dsrXmlDBDataSource.Rows.Where(r => r.Cells.FirstOrDefault(c => c.Uid == "U_EXP_SLC_PAGO").Value == "Y").Sum(r => Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value));
+                    Form.DataSources.UserDataSources.Item("UD_TOTAL").ValueEx = total.ToString();
                 }
                 return true;
             }));

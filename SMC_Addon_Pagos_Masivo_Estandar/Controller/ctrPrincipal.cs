@@ -25,7 +25,7 @@ namespace SMC_APM.Controladores
         private ctrFrmReporteRCArchivo _ctrFrmReporteRCArchivo = null;
         private ctrFrmAutorizacion _ctrFrmAutorizacion = null;
         private FormPagoMasivo formPagoMasivo = null;
-
+        private FormEscenarioPago formEscenarioPago = null;
 
         #endregion Atributos
 
@@ -50,7 +50,7 @@ namespace SMC_APM.Controladores
 
         public void iniciarAddon()
         {
-            
+
             //CrearEstructuraDeDatos();
 
             //carga los menus
@@ -244,7 +244,8 @@ namespace SMC_APM.Controladores
                     switch (pVal.MenuUID)
                     {
                         case "SMCPAGMASPRO":
-                            sboApplication.Forms.Item("frmSMC1").Select();
+                            //sboApplication.Forms.Item("frmSMC1").Select();
+                            formEscenarioPago = new FormEscenarioPago("FRMEP" + DateTime.Now.ToString("hhmmss"));
                             break;
 
                         case "SMC0004":
@@ -299,7 +300,19 @@ namespace SMC_APM.Controladores
                     switch (pVal.MenuUID)
                     {
                         case "1282":
-                            ((FormPagoMasivo)UIFormFactory.GetFormByUID(Globales.Aplication.Forms.ActiveForm.UniqueID)).LoadDataOnFormAddMode();
+                            var activeForm = sboApplication.Forms.ActiveForm;
+                            switch (activeForm.TypeEx)
+                            {
+                                case "FrmPMP":
+                                    ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).LoadDataOnFormAddMode();
+                                    break;
+                                case "FrmEP":
+                                    ((FormEscenarioPago)UIFormFactory.GetFormByUID(activeForm.UniqueID)).LoadDataOnFormAddMode();
+                                    break;
+                                default:
+                                    break;
+                            }
+                       
                             break;
                     }
                 }
@@ -311,7 +324,7 @@ namespace SMC_APM.Controladores
                     switch (pVal.MenuUID)
                     {
                         case "SMCPAGMASPRO":
-                            frmPagoPrvoveedores = new frmPagoProveedores(sboApplication, sboCompany, "frmSMC1", "PRO");
+                            //frmPagoPrvoveedores = new frmPagoProveedores(sboApplication, sboCompany, "frmSMC1", "PRO");
                             break;
 
                         case "SMC0004":
@@ -344,7 +357,7 @@ namespace SMC_APM.Controladores
             try
             {
 
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP")
+                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV")
                 {
                     IUSAP uiForm = null;
 

@@ -19,7 +19,7 @@ namespace SMC_APM.Controller
         public static SAPbobsCOM.Recordset ObtenerSeriesDocumentoPago()
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and ifnull(\"U_EXC_CR\",'') = 'N'";
+            var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and coalesce(\"U_EXC_CR\",'') = 'N'";
             recordset.DoQuery(sqlQry);
             if (recordset.EoF)
                 return null;
@@ -73,7 +73,9 @@ namespace SMC_APM.Controller
         public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL EXP_SP_PMP_ListarDocumentosPorFecha('{fecha}')";
+            var sqlQry = $"EXEC EXP_SP_PMP_ListarDocumentosPorFecha '{fecha}'";
+            if(Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                sqlQry = $"CALL EXP_SP_PMP_ListarDocumentosPorFecha('{fecha}')";
             var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
             {
                 return new PMPDocumento
@@ -83,6 +85,7 @@ namespace SMC_APM.Controller
                     CodigoEscenarioPago = dc["CodEscenarioPago"],
                     DescripcionEscenarioPago = dc["DscEscenarioPago"],
                     MedioDePago = dc["MedioDePago"],
+                    MonedaDePago = dc["MonedaDePago"],
                     CodBanco = dc["CodBanco"],
                     CodCtaBanco = dc["CodCtaBanco"],
                     DocEntryDocumento = Convert.ToInt32(dc["DocEntryDocumento"]),
@@ -112,7 +115,7 @@ namespace SMC_APM.Controller
         private static IEnumerable<TXT3Retenedor> ObtenerDatosTerceroRetenedor(int docEntryPMP)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntryPMP}')";
+            var sqlQry = $"EXEC SMC_TERCERORETENEDOR '{docEntryPMP}'";
             var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
             {
                 return new TXT3Retenedor
@@ -232,7 +235,7 @@ namespace SMC_APM.Controller
             sboPayments.DueDate = pago.FechaVencimiento;
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
-            sboPayments.DocType = pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
+            sboPayments.DocType = BoRcptTypes.rSupplier; //pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
             //if (pago.ObjType == 24) sboPayments.CheckAccount = ((EL.Pago)documento).CuentaCheque;
             sboPayments.Remarks = "";
             sboPayments.JournalRemarks = "";
@@ -278,8 +281,8 @@ namespace SMC_APM.Controller
                 sboPayments.Invoices.DocEntry = d.IdDocumento;
                 sboPayments.Invoices.DocLine = d.IdLinea;
                 sboPayments.Invoices.InstallmentId = d.NroCuota;
-                sboPayments.Invoices.SumApplied = pago.Moneda.Equals(mndLoc) ? d.MontoPagado : default(double);
-                sboPayments.Invoices.AppliedFC = !pago.Moneda.Equals(mndLoc) ? d.MontoPagado : default(double);
+                sboPayments.Invoices.SumApplied = d.MonedaDoc.Equals(mndLoc) ? d.MontoPagado : default(double);
+                sboPayments.Invoices.AppliedFC = !d.MonedaDoc.Equals(mndLoc) ? d.MontoPagado : default(double);
                 row++;
             });
 
@@ -344,7 +347,7 @@ namespace SMC_APM.Controller
                 {
                     CardCode = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("CARDCODE")).FirstOrDefault().Element("value").Value,
                     MedioDePago = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("MEDIODEPAGO")).FirstOrDefault()?.Element("value").Value,
-                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("MONEDA")).FirstOrDefault()?.Element("value").Value,
+                    MonedaPago = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_MONEDA_PAGO")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value,
                     AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLSRERTN")).FirstOrDefault()?.Element("value").Value,
@@ -353,7 +356,7 @@ namespace SMC_APM.Controller
                 {
                     CodSerieSBO = s.Key.AplSerieRetencion == "Y" && esAgenteRetenedor ? codSerieRtcn : codSeriePago,
                     CodigoSN = s.Key.CardCode,
-                    Moneda = s.Key.Moneda,
+                    Moneda = s.Key.MonedaPago,
                     FechaContabilizacion = fechaPago,
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
@@ -374,7 +377,7 @@ namespace SMC_APM.Controller
                         IdDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_DOCENTRYDOC")).FirstOrDefault()?.Element("value").Value),
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_ASNROLINEA")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
-
+                        MonedaDoc = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_MONEDA")).FirstOrDefault()?.Element("value").Value,
                         MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
                         /*- Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/,
                         LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
@@ -405,7 +408,10 @@ namespace SMC_APM.Controller
                         {
                             //PODRÍA SER UNA INTERFAZ
                             case "002":
-                                qry = $"CALL SBO_EXX_PM_BCP({docEntry},'{GLAccount}')";
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL SBO_EXX_PM_BCP({docEntry},'{GLAccount}')";
+                                else
+                                    qry = $"EXEC SBO_EXX_PM_BCP {docEntry},'{GLAccount}'";
                                 break;
                             case "003":
                                 qry = $"CALL SBO_EXX_PM_INTERBANK({docEntry},'{GLAccount}')";
@@ -442,7 +448,7 @@ namespace SMC_APM.Controller
                 }
 
                 string valorLinea = string.Empty;
-                recordset.DoQuery(qry);                
+                recordset.DoQuery(qry);
                 using (StreamWriter archivo = new StreamWriter(nombre, false, Encoding.GetEncoding(1252)))
                 {
                     while (!recordset.EoF)
@@ -472,7 +478,7 @@ namespace SMC_APM.Controller
                && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_RETENCION") && a.Element("value").Value.Equals("N")));
                 return xElements.Descendants("cells").GroupBy(g => new
                 {
-                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("MONEDA")).FirstOrDefault()?.Element("value").Value,
+                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_MONEDA_PAGO")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value
                 }).Select(s => new { Banco = s.Key.Banco, CtaBanco = s.Key.CtaBanco, Moneda = s.Key.Moneda });

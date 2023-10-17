@@ -41,7 +41,7 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                         }
                     };
 
-                    if(true)//if (MDResources.loadMetaData(Assembly.GetExecutingAssembly().GetName().Version, conexSBO.sboApplication, "EXX", "PGOMSV"))
+                    if (MDResources.loadMetaData(Assembly.GetExecutingAssembly().GetName().Version, conexSBO.sboApplication, "EXX", "PGOMSV"))
                     {
                         //inicia el addon
                         ctrPrincipal = new ctrPrincipal(conexSBO.sboApplication, conexSBO.sboCompany);
