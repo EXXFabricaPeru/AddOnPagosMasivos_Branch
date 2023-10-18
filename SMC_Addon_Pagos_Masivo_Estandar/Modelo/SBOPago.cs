@@ -39,7 +39,7 @@ namespace SMC_APM.Modelo
         public string CodigoCuenta { get; set; }
         public string NumeroCuenta { get; set; }
         public double Monto { get; set; }
-        public double MontoPagado { get; set; }
+        public double MontoAPagar{ get; set; }
         public string Comentarios { get; set; }
         public string CodProyecto { get; set; }
         public string CentroCosto { get; set; }

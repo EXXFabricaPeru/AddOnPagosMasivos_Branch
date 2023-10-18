@@ -132,18 +132,27 @@ namespace SMC_APM.View.USRForms
                     while (cmbCtaMonedaLoc.ValidValues.Count > 0) cmbCtaMonedaLoc.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
                     while (cmbCtaMonedaExt.ValidValues.Count > 0) cmbCtaMonedaExt.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
 
+                    dbsEXD_OEPG.SetValueExt("U_CTA_BANCO_ML", null);
+                    dbsEXD_OEPG.SetValueExt("U_CTA_BANCO_ME", null);
+                    dbsEXD_OEPG.SetValueExt("U_COD_MONEDA_LOC", null);
+                    dbsEXD_OEPG.SetValueExt("U_COD_MONEDA_EXT", null);
                     var qry = $"EXEC SMC_APM_LISTAR_BANCOS '{codBanco}'";
                     if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
                         qry = $"CALL SMC_APM_LISTAR_BANCOS('{codBanco}')";
                     recSet.DoQuery(qry);
-                    while (!recSet.EoF)
+                    if (!recSet.EoF)
                     {
-                        dctMonedasPorCuenta[recSet.Fields.Item(0).Value] = recSet.Fields.Item("Moneda").Value;
-                        if (recSet.Fields.Item("Moneda").Value == codMndLoc)
-                            cmbCtaMonedaLoc.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
-                        else
-                            cmbCtaMonedaExt.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
-                        recSet.MoveNext();
+                        cmbCtaMonedaLoc.ValidValues.Add("", "");
+                        cmbCtaMonedaExt.ValidValues.Add("", "");
+                        while (!recSet.EoF)
+                        {
+                            dctMonedasPorCuenta[recSet.Fields.Item(0).Value] = recSet.Fields.Item("Moneda").Value;
+                            if (recSet.Fields.Item("Moneda").Value == codMndLoc)
+                                cmbCtaMonedaLoc.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                            else
+                                cmbCtaMonedaExt.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                            recSet.MoveNext();
+                        }
                     }
                 }
                 return true;
@@ -152,18 +161,34 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
+                    var codMonLoc = ((SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge))
+                    .GetLocalCurrency().Fields.Item(0).Value.ToString();
                     var codCta = dbsEXD_OEPG.GetValueExt("U_CTA_BANCO_ML");
-                    if (dctMonedasPorCuenta != null && dctMonedasPorCuenta.Count > 0)
+                    dbsEXD_OEPG.SetValueExt("U_COD_MONEDA_LOC", null);
+
+                    for (int i = 0; i < mtxFact.Columns.Item("Col_8").ValidValues.Count; i++)
+                    {
+                        if (mtxFact.Columns.Item("Col_8").ValidValues.Item(i).Value == codMonLoc)
+                        {
+                            mtxFact.Columns.Item("Col_8").ValidValues.Remove(codMonLoc, SAPbouiCOM.BoSearchKey.psk_ByValue);
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < mtxSelc.Columns.Item("Col_6").ValidValues.Count; i++)
+                    {
+                        if (mtxSelc.Columns.Item("Col_6").ValidValues.Item(i).Value == codMonLoc)
+                        {
+                            mtxSelc.Columns.Item("Col_6").ValidValues.Remove(codMonLoc, SAPbouiCOM.BoSearchKey.psk_ByValue);
+                            break;
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(codCta) && dctMonedasPorCuenta != null && dctMonedasPorCuenta.Count > 0)
                     {
                         cmbMonedaLoc.Select(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                        try
-                        {
-                            mtxFact.Columns.Item("Col_8").ValidValues.Remove(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                            mtxSelc.Columns.Item("Col_6").ValidValues.Remove(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                        }
-                        catch (Exception ex) { }
-                        mtxFact.Columns.Item("Col_8").ValidValues.Add(dctMonedasPorCuenta[codCta], dctMonedasPorCuenta[codCta]);
-                        mtxSelc.Columns.Item("Col_6").ValidValues.Add(dctMonedasPorCuenta[codCta], dctMonedasPorCuenta[codCta]);
+                        mtxFact.Columns.Item("Col_8").ValidValues.Add(codMonLoc, codMonLoc);
+                        mtxSelc.Columns.Item("Col_6").ValidValues.Add(codMonLoc, codMonLoc);
                     }
                 }
                 return true;
@@ -172,16 +197,31 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
+                    var codMonLoc = ((SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge))
+                    .GetLocalCurrency().Fields.Item(0).Value.ToString();
                     var codCta = dbsEXD_OEPG.GetValueExt("U_CTA_BANCO_ME");
-                    if (dctMonedasPorCuenta != null && dctMonedasPorCuenta.Count > 0)
+                    dbsEXD_OEPG.SetValueExt("U_COD_MONEDA_EXT", null);
+
+                    for (int i = 0; i < mtxFact.Columns.Item("Col_8").ValidValues.Count; i++)
+                    {
+                        if (mtxFact.Columns.Item("Col_8").ValidValues.Item(i).Value != codMonLoc)
+                        {
+                            mtxFact.Columns.Item("Col_8").ValidValues.Remove(mtxFact.Columns.Item("Col_8").ValidValues.Item(i).Value, SAPbouiCOM.BoSearchKey.psk_ByValue);
+                            break;
+                        }
+                    }
+
+                    for (int i = 0; i < mtxSelc.Columns.Item("Col_6").ValidValues.Count; i++)
+                    {
+                        if (mtxSelc.Columns.Item("Col_6").ValidValues.Item(i).Value != codMonLoc)
+                        {
+                            mtxSelc.Columns.Item("Col_6").ValidValues.Remove(mtxSelc.Columns.Item("Col_6").ValidValues.Item(i).Value, SAPbouiCOM.BoSearchKey.psk_ByValue);
+                            break;
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(codCta) && dctMonedasPorCuenta != null && dctMonedasPorCuenta.Count > 0)
                     {
                         cmbMonedaExt.Select(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                        try
-                        {
-                            mtxFact.Columns.Item("Col_8").ValidValues.Remove(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                            mtxSelc.Columns.Item("Col_6").ValidValues.Remove(dctMonedasPorCuenta[codCta], SAPbouiCOM.BoSearchKey.psk_ByValue);
-                        }
-                        catch (Exception ex) { }
                         mtxFact.Columns.Item("Col_8").ValidValues.Add(dctMonedasPorCuenta[codCta], dctMonedasPorCuenta[codCta]);
                         mtxSelc.Columns.Item("Col_6").ValidValues.Add(dctMonedasPorCuenta[codCta], dctMonedasPorCuenta[codCta]);
                     }
@@ -197,18 +237,26 @@ namespace SMC_APM.View.USRForms
                     {
                         var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                         var fechaVenc = dbsEXD_OEPG.GetValueExt("U_FECHA_VENC");
-                        var monedaLoc = dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_LOC");
-                        var monedaExt = dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_EXT");
+                        var monedaLoc = string.IsNullOrWhiteSpace(dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_LOC")) ? "XZY" : dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_LOC");
+                        var monedaExt = string.IsNullOrWhiteSpace(dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_EXT")) ? "XZY" : dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_EXT");
                         var codBanco = dbsEXD_OEPG.GetValueExt("U_COD_BANCO");
-                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVenc}','{monedaLoc}','','','{codBanco}',''";
-                        if(Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
-                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVenc}','{monedaLoc}','','','{codBanco}','')";
+
+                        if (monedaLoc.Equals("XZY") && monedaExt.Equals("XZY"))
+                        {
+                            Globales.Aplication.StatusBar.SetText("Seleccione al menos una cuenta de banco", SAPbouiCOM.BoMessageTime.bmt_Short,
+                                SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            return false;
+                        }
+                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVenc}','{monedaLoc}','{monedaExt}','','','{codBanco}',''";
+                        if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVenc}','{monedaLoc}','{monedaExt}','','','{codBanco}','')";
                         dttFac.ExecuteQuery(qry);
                         _xmlSerializer = new XmlSerializer(typeof(XMLDataTable));
                         var strXMLDTDocs = dttFac.SerializeAsXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly);
                         _dsrXmlDTDocs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
                         lstDocumentos = _dsrXmlDTDocs.Rows.Select(r => new EPDocumento
                         {
+                            FILA = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("FILA"))?.Value),
                             DocEntry = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("DocEntry"))?.Value),
                             DocNum = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("DocNum"))?.Value,
                             FechaContable = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("FechaContable"))?.Value,
@@ -285,7 +333,9 @@ namespace SMC_APM.View.USRForms
                     _xmlSerializer = new XmlSerializer(typeof(XMLDataTable));
                     var strXMLDTDocs = dttFac.SerializeAsXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly);
                     _dsrXmlDTDocs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
-                    _dsrXmlDTDocs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value == "Y").All(r =>
+                    _dsrXmlDTDocs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value == "Y"
+                    && r.Cells.FirstOrDefault(c => c.ColumnUid == "BloqueoPago").Value == "N"
+                    && r.Cells.FirstOrDefault(c => c.ColumnUid == "DetraccionPend").Value == "N").All(r =>
                     {
                         var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid == "DocEntry").Value));
                         doc.EstadoExt = "S";
@@ -337,6 +387,25 @@ namespace SMC_APM.View.USRForms
                     if (dbsEXD_OEPG.GetValueExt("U_ESTADO").Equals("P"))
                     {
                         btnEnvApr.Item.Enabled = true;
+                    }
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_CLICK, mtxFact.Item.UniqueID, e =>
+            {
+                if (e.BeforeAction)
+                {
+                    if (e.Row > 0 && e.ColUID.Equals("lSelect"))
+                    {
+                        var bloqueoPgo = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_1", e.Row)).Value;
+                        var detracPend = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_2", e.Row)).Value;
+
+                        if (bloqueoPgo == "Y" || detracPend == "Y")
+                        {
+                            Globales.Aplication.MessageBox("No se puede seleccionar facturas con bloqueo de pago o con cuora de detracción pendientes");
+                            return false;
+                        }
                     }
                 }
                 return true;
@@ -431,6 +500,7 @@ namespace SMC_APM.View.USRForms
             {
                 Cells = new List<CellDBS>
                         {
+                            new CellDBS{ Uid = "U_ID_LINEA", Value = d.FILA.ToString()},
                             new CellDBS{ Uid = "U_DOCENTRY", Value = d.DocEntry.ToString()},
                             new CellDBS{ Uid = "U_NUM_SAP", Value = d.DocNum},
                             new CellDBS{ Uid = "U_FECHA_DOCUMENTO", Value = d.FechaContable },

@@ -467,12 +467,18 @@ namespace SMC_APM.View.USRForms
                 {
                     try
                     {
-                        string ruta = "C:\\PagosMasivos\\";
+                        var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+
+                        var qry = "select top 1 \"AttachPath\" from OADP";
+                        recordset.DoQuery(qry);
+                        var attachPath = recordset.Fields.Item(0).Value;
+                        if (string.IsNullOrWhiteSpace(attachPath)) throw new InvalidOperationException("No se ha definido ruta de anexos en SAP");
+                        string ruta = attachPath + @"PagosMasivos\";
                         //string docEntryPM = Form.GetDBDataSource(HEADER).GetValueExt("U_EXD_NRPM");
                         string docEntryTL = Form.GetDBDataSource(HEADER).GetValueExt("DocEntry");
 
 
-                        Controller.GenerarTXTBancos(codigoBanco.CodBanco, codigoBanco.CuentaBanco, Convert.ToInt32(docEntryTL), codigoBanco.CodMoneda);
+                        Controller.GenerarTXTBancos(codigoBanco.CodBanco, codigoBanco.CuentaBanco, Convert.ToInt32(docEntryTL), codigoBanco.CodMoneda, ruta);
 
                         Globales.Aplication.StatusBar.SetText($"Se han generado los TXT exitosamente, estos se encuentran en la ruta por defecto: {ruta}", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                     }

@@ -255,11 +255,11 @@ namespace SMC_APM.Controller
             }
         }
 
-        internal void GenerarTXTBancos(string codBanco, string GLCuentaBanco, int docEntry, string codMoneda)
+        internal void GenerarTXTBancos(string codBanco, string GLCuentaBanco, int docEntry, string codMoneda,string rutaTXT)
         {
             try
             {
-                var nombre = @"C:\PagosMasivos\";
+                var nombre = rutaTXT;
                 nombre = nombre + "ArchivoBancoLiberacion-" + codBanco + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
 
                 switch (codBanco)

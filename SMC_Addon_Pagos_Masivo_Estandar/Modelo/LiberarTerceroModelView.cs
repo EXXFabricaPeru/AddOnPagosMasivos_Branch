@@ -168,6 +168,7 @@ namespace SMC_APM.Modelo
                     nroPago = 0;
                     try
                     {
+
                         nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
                     }
                     catch (Exception ex)
@@ -221,7 +222,7 @@ namespace SMC_APM.Modelo
                 {
                     CardCode = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_PROV")).FirstOrDefault().Element("value").Value,
                     MedioDePago = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MEDP")).FirstOrDefault()?.Element("value").Value,
-                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MONE")).FirstOrDefault()?.Element("value").Value,
+                    Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_MDPG")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_BKCD")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_CTAB")).FirstOrDefault()?.Element("value").Value,
                     AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXD_INDR")).FirstOrDefault()?.Element("value").Value,
@@ -250,7 +251,8 @@ namespace SMC_APM.Modelo
                         IdDocumento = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_NUMI")).FirstOrDefault()?.Element("value").Value),
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_LIAS")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_NCUO")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
-                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_PAGP")).FirstOrDefault()?.Element("value").Value)
+                        MontoAPagar = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_PAGP")).FirstOrDefault()?.Element("value").Value),
+                        MonedaDoc = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXD_MONE")).FirstOrDefault()?.Element("value").Value
                     })
                 });
             }
@@ -392,6 +394,7 @@ namespace SMC_APM.Modelo
                              NroCuota = Convert.ToInt32(q.Element("U_EXD_NCUO").Value),
                              MedioPagoSAP = GetMedioPagoSAP(q.Element("U_EXD_MEDP").Value),
                              Moneda = q.Element("U_EXD_MONE").Value,
+                             MonedaPago = q.Element("U_EXD_MDPG").Value,
                              TotalDocumento = Convert.ToDouble(q.Element("U_EXD_TOTD").Value),
                              TotalML = Convert.ToDouble(q.Element("U_EXD_TOTP").Value),
                              TotalProveedorML = Convert.ToDouble(q.Element("U_EXD_PAGP").Value),
@@ -586,5 +589,7 @@ namespace SMC_APM.Modelo
         public string MensajeError { get; set; }
         public string IndSerieRtn { get; set; }
         public string CardCodeFacto { get; set; }
+
+        public string MonedaPago { get; set; }
     }
 }

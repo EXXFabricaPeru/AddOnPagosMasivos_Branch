@@ -74,7 +74,7 @@ namespace SMC_APM.Controller
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             var sqlQry = $"EXEC EXP_SP_PMP_ListarDocumentosPorFecha '{fecha}'";
-            if(Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+            if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
                 sqlQry = $"CALL EXP_SP_PMP_ListarDocumentosPorFecha('{fecha}')";
             var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
             {
@@ -116,6 +116,8 @@ namespace SMC_APM.Controller
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             var sqlQry = $"EXEC SMC_TERCERORETENEDOR '{docEntryPMP}'";
+            if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                sqlQry = $"CALL SMC_TERCERORETENEDOR('{docEntryPMP}')";
             var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
             {
                 return new TXT3Retenedor
@@ -151,9 +153,16 @@ namespace SMC_APM.Controller
                 var lstDocs3Reten = ObtenerDatosTerceroRetenedor(docEntryPMP);
                 var correlativoTXT = ObtenerCorrelativoTXT3Retenedor(fechaPago);
 
+                var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+                var qry = "select top 1 \"AttachPath\" from OADP";
+                recordset.DoQuery(qry);
+                var attachPath = recordset.Fields.Item(0).Value;
+                if (string.IsNullOrWhiteSpace(attachPath)) throw new InvalidOperationException("No se ha definido ruta de anexos en SAP");
+
                 //Generando el archivo
                 //nombreArchivo = @"\\WIN-SOPORTESAP\DocSap\TerceroRetenedor\ArchivoSunat\";
-                nombreArchivo = @"D:\Pagos_Masivos\TerceroRetenedor\ArchivoSunat\";
+                nombreArchivo = attachPath + @"TerceroRetenedor\ArchivoSunat\";
                 nombreArchivo = nombreArchivo + $"RCP{fechaPago}{correlativoTXT.ToString().PadLeft(3, '0')}.txt";
                 archivo = new System.IO.StreamWriter(nombreArchivo, false, Encoding.GetEncoding(1252));
                 var lineaDetalle = string.Empty;
@@ -235,7 +244,7 @@ namespace SMC_APM.Controller
             sboPayments.DueDate = pago.FechaVencimiento;
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
-            sboPayments.DocType = BoRcptTypes.rSupplier; //pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
+            sboPayments.DocType = pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
             //if (pago.ObjType == 24) sboPayments.CheckAccount = ((EL.Pago)documento).CuentaCheque;
             sboPayments.Remarks = "";
             sboPayments.JournalRemarks = "";
@@ -260,7 +269,8 @@ namespace SMC_APM.Controller
                     break;
                 case "CG":
                 case "PV":
-                case "TB"://Pago con Transferencia
+                case "TB":
+                case "VV"://Pago con Transferencia
                     sboPayments.TransferAccount = pago.MetodoPago.Cuenta;
                     sboPayments.TransferDate = pago.FechaContabilizacion;
                     sboPayments.TransferReference = pago.MetodoPago.Referencia;
@@ -281,8 +291,8 @@ namespace SMC_APM.Controller
                 sboPayments.Invoices.DocEntry = d.IdDocumento;
                 sboPayments.Invoices.DocLine = d.IdLinea;
                 sboPayments.Invoices.InstallmentId = d.NroCuota;
-                sboPayments.Invoices.SumApplied = d.MonedaDoc.Equals(mndLoc) ? d.MontoPagado : default(double);
-                sboPayments.Invoices.AppliedFC = !d.MonedaDoc.Equals(mndLoc) ? d.MontoPagado : default(double);
+                sboPayments.Invoices.SumApplied = d.MonedaDoc.Equals(mndLoc) ? d.MontoAPagar : default(double);
+                sboPayments.Invoices.AppliedFC = !d.MonedaDoc.Equals(mndLoc) ? d.MontoAPagar : default(double);
                 row++;
             });
 
@@ -378,7 +388,7 @@ namespace SMC_APM.Controller
                         IdLinea = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_ASNROLINEA")).FirstOrDefault()?.Element("value").Value, out rsltNroLinea) ? rsltNroLinea : 0,
                         NroCuota = int.TryParse(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_NMROCUOTA")).FirstOrDefault()?.Element("value").Value, out rsltNroCuota) ? rsltNroCuota : 0,
                         MonedaDoc = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_MONEDA")).FirstOrDefault()?.Element("value").Value,
-                        MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+                        MontoAPagar = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
                         /*- Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/,
                         LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
                         //MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
