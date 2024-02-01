@@ -84,7 +84,7 @@ namespace SMC_APM.Controladores
         public void cargarFormulario(string frmUID)
         {
             sapObjetos sapObj = new sapObjetos();
-            var folder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "FrmAutorizacion.srf");
+            var folder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources\\FrmAutorizacion.srf");
             var xml = System.IO.File.ReadAllText(folder);
             sapObj.sapCargarFormulario(sboApplication, frmUID, xml, "");
 
@@ -98,7 +98,7 @@ namespace SMC_APM.Controladores
             //inicia formulario con sus componentes
             try
             {
-
+                /*
                 oForm = sboApplication.Forms.Item(FormUID);
 
                 txtFInicio = (SAPbouiCOM.EditText)oForm.Items.Item("FInicio").Specific;
@@ -133,6 +133,7 @@ namespace SMC_APM.Controladores
 
                 oForm.Visible = true;
                 oForm.Freeze(false);
+                */
             }
             catch(Exception ex)
             {
