@@ -113,6 +113,20 @@
 		</AdmInfo>
 		<UserTablesMD>
 			<row>
+				<TableName>EXP_PMP2</TableName>
+				<TableDescription>PM: Serie suc. pago - ret.</TableDescription>
+				<TableType>bott_DocumentLines</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
 				<TableName>EXD_OTRR</TableName>
 				<TableDescription>PM: Tercero retenedor</TableDescription>
 				<TableType>bott_Document</TableType>
@@ -157,6 +171,35 @@
 				<TableName>SMC_APM_3RETCONF</TableName>
 				<TableDescription>SMC - Conf. Tercero Retenedor</TableDescription>
 				<TableType>bott_MasterData</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_PM_CONFAUT</TableName>
+				<TableDescription>PM: Autorizaciones</TableDescription>
+				<TableType>bott_MasterData</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_PM_CONFAUT1</TableName>
+				<TableDescription>PM: Autorizaciones detalle</TableDescription>
+				<TableType>bott_MasterDataLines</TableType>
 			</row>
 		</UserTablesMD>
 	</BO>

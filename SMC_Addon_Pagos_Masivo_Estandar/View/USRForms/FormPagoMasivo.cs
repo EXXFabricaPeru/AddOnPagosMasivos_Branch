@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace SMC_APM.View.USRForms
 {
@@ -20,9 +21,11 @@ namespace SMC_APM.View.USRForms
         public const string PATH = "Resources/FrmPMP.srf";
         private SAPbouiCOM.DBDataSource dbsOPMP = null;
         private SAPbouiCOM.DBDataSource dbsPMP1 = null;
+        private SAPbouiCOM.DBDataSource dbsPMP2 = null;
         private SAPbobsCOM.UserTable utblConf = null;
         private bool esAgenteRetenedor = true;
         private bool esTerceroRetenedor = true;
+        private bool tieneAutorizaciones = false;
 
         public FormPagoMasivo(string id) : base(TYPE, MENU, id, PATH)
         {
@@ -35,6 +38,7 @@ namespace SMC_APM.View.USRForms
             {
                 dbsOPMP = Form.DataSources.DBDataSources.Item("@EXP_OPMP");
                 dbsPMP1 = Form.DataSources.DBDataSources.Item("@EXP_PMP1");
+                dbsPMP2 = Form.DataSources.DBDataSources.Item("@EXP_PMP2");
                 utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
 
                 if (utblConf.GetByKey("2"))
@@ -49,7 +53,7 @@ namespace SMC_APM.View.USRForms
 
                 Matrix = Form.GetMatrix("Item_12");
 
-                Matrix.SetColumnsVisible(false, "Col_12", "Col_15", "Col_19", "Col_24");
+                Matrix.SetColumnsVisible(false, "Col_3", "Col_12", "Col_15", "Col_19", "Col_24");
 
                 Combo = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_3").Specific;
                 while (Combo.ValidValues.Count > 0) Combo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
@@ -75,6 +79,7 @@ namespace SMC_APM.View.USRForms
                 {
                     Combo.Item.Visible = false;
                     Form.Items.Item("Item_4").Visible = false;
+                    Form.Items.Item("Item_23").Visible = false;
                 }
 
                 Form.Items.Item("btnTrcRtn").Visible = esTerceroRetenedor;
@@ -94,7 +99,22 @@ namespace SMC_APM.View.USRForms
                     cmbClmBncPrv.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                     recSet.MoveNext();
                 }
+       
+                var cmbSucursales = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_22").Specific;
+                recSet.DoQuery("select \"BPLId\",\"BPLName\",coalesce(U_EXX_RETPRO,'N') as \"RetPro\" from OBPL order by 1");
+                dbsPMP2.Clear();
+                while (!recSet.EoF)
+                {
+                    cmbSucursales.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    Matrix.Columns.Item("Col_31").ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    recSet.MoveNext();
+                }
+                cmbSucursales.ValidValues.Add("-1", "Todas");
 
+                var tblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
+                tieneAutorizaciones = tblConf.GetByKey("5") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
+
+                Form.GetButton("btnGrbEnv").Item.Visible = tieneAutorizaciones;
                 /*
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -120,17 +140,38 @@ namespace SMC_APM.View.USRForms
         public void LoadDataOnFormAddMode()
         {
             var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
 
             Matrix = Form.GetMatrix("Item_12");
             Button = Form.GetButton("btnGrbEnv");
             Combo = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_26").Specific;
             Combo.ValidValues.LoadSeries(Form.BusinessObject.Type, SAPbouiCOM.BoSeriesMode.sf_Add);
             if (Combo.ValidValues.Count > 0) Combo.Select(0, SAPbouiCOM.BoSearchKey.psk_Index);
-            dbsOPMP.SetValue("U_EXP_ESTADO", 0, "P");
+            dbsOPMP.SetValue("U_EXP_ESTADO", 0, tieneAutorizaciones ? "P" : "A");
             dbsOPMP.SetValue("U_EXP_FECHAPAGO", 0, DateTime.Today.ToString("yyyyMMdd"));
             dbsOPMP.SetValue("U_EXP_ESTADOEJEC", 0, "0");
             dbsOPMP.SetValue("U_EXP_TIPODECAMBIO", 0, sboBOB.GetCurrencyRate("USD", DateTime.Today).Fields.Item(0).Value.ToString());
             dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValue("Series", 0).Trim(), Form.BusinessObject.Type).ToString());
+            Form.GetUserDataSource("UD_TOTAL").Value = "0.00";
+
+            var position = 0;
+            recSet.DoQuery("select \"BPLId\",\"BPLName\",coalesce(U_EXX_RETPRO,'N') as \"RetPro\" from OBPL order by 1");
+            dbsPMP2.Clear();
+            while (!recSet.EoF)
+            {           
+                dbsPMP2.InsertRecord(position);
+                dbsPMP2.Offset = position;
+                dbsPMP2.SetValue("U_COD_SUCURSAL", position, recSet.Fields.Item(0).Value);
+                dbsPMP2.SetValue("U_NOM_SUCURSAL", position, recSet.Fields.Item(1).Value);
+                dbsPMP2.SetValue("U_RETPRO", position, recSet.Fields.Item(2).Value);
+                dbsPMP2.SetValue("U_COD_SERIE_PAGO", position, string.Empty);
+                dbsPMP2.SetValue("U_COD_SERIE_RETEN", position, string.Empty);
+                dbsPMP2.SetValue("U_NOM_SERIE_PAGO", position, string.Empty);
+                dbsPMP2.SetValue("U_NOM_SERIE_RETEN", position, string.Empty);
+                position++;
+                recSet.MoveNext();
+            }
+
             HabilitarControlesPorEstado("P");
             //Button.Caption = "Grabar";
             //Matrix.Columns.Item("Col_0").Editable = true;
@@ -160,7 +201,8 @@ namespace SMC_APM.View.USRForms
                 if (!e.BeforeAction)
                 {
                     var fecha = dbsOPMP.GetValue("U_EXP_FECHA", 0).Trim();
-                    var lstDocumentos = PagoMasivoController.ListarDocumentosParaPagos(fecha);
+                    var codSucursal = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_COD_SUCURSAL").Trim());
+                    var lstDocumentos = PagoMasivoController.ListarDocumentosParaPagos(fecha, codSucursal);
                     var lineNum = 0;
 
                     dbsPMP1.Clear();
@@ -171,7 +213,9 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.Offset = lineNum;
                         dbsPMP1.SetValue("U_EXP_SLC_PAGO", lineNum, doc.SlcPago);
                         dbsPMP1.SetValue("U_EXP_SLC_RETENCION", lineNum, doc.SlcRetencion);
+                        dbsPMP1.SetValue("U_EXP_COD_SUCURSAL", lineNum, doc.CodSucursal.ToString());
                         dbsPMP1.SetValue("U_EXP_COD_ESCENARIOPAGO", lineNum, doc.CodigoEscenarioPago);
+                        dbsPMP1.SetValue("U_EXP_NUM_ESCENARIOPAGO", lineNum, doc.NumeroEscenarioPago);
                         dbsPMP1.SetValue("U_EXP_MEDIODEPAGO", lineNum, doc.MedioDePago);
                         dbsPMP1.SetValue("U_EXP_MONEDA_PAGO", lineNum, doc.MonedaDePago);
                         dbsPMP1.SetValue("U_EXP_CODBANCO", lineNum, doc.CodBanco);
@@ -199,6 +243,7 @@ namespace SMC_APM.View.USRForms
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
+                    Form.GetUserDataSource("UD_TOTAL").Value = lstDocumentos.Sum(d => d.Importe).ToString();
                 }
                 return true;
             }));
@@ -261,7 +306,7 @@ namespace SMC_APM.View.USRForms
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                         Matrix.FlushToDataSource();
                         var pgoDS = dbsPMP1.GetAsXML();
-                        var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS, esAgenteRetenedor);
+                        var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS, dbsPMP2, esAgenteRetenedor);
                         var estado = string.Empty;
                         var msjError = string.Empty;
                         var nroPago = 0;
@@ -272,6 +317,7 @@ namespace SMC_APM.View.USRForms
                         var docEntryForm = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
                         try
                         {
+
                             GenerarPagosAsync(docEntryForm, lstPagos);
 
                             /*
@@ -340,6 +386,14 @@ namespace SMC_APM.View.USRForms
                 if (!e.BeforeAction)
                 {
                     var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
+                    var EXP_PMP1 = Form.GetDBDataSource("@EXP_PMP1");
+                    var totPgoMsv = 0d;
+                    for (int i = 0; i < EXP_PMP1.Size; i++)
+                    {
+                        EXP_PMP1.Offset = i;
+                        totPgoMsv += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
+                    }
+                    Form.GetUserDataSource("UD_TOTAL").Value = totPgoMsv.ToString();
                     HabilitarControlesPorEstado(estadoDoc);
                 }
                 return true;
@@ -347,12 +401,14 @@ namespace SMC_APM.View.USRForms
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "1", e =>
             {
-                if (e.BeforeAction)
+                if (e.BeforeAction && Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE)
                 {
                     var seriePago = dbsOPMP.GetValue("U_EXP_SERIEPAGO", 0).Trim();
                     var serieRetencion = dbsOPMP.GetValue("U_EXP_SERIERETENCION", 0).Trim();
-                    if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(seriePago)) throw new InvalidOperationException("Seleccione una serie de pago");
-                    if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(serieRetencion) && esAgenteRetenedor) throw new InvalidOperationException("Seleccione una serie de retención");
+                    var codSucursal = Convert.ToInt32(dbsOPMP.GetValue("U_EXP_COD_SUCURSAL", 0).Trim());
+                    if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && ((codSucursal != -1 && string.IsNullOrWhiteSpace(seriePago))
+                    || (codSucursal == -1 && ValidarSelecSeriesPagoXSucursal()))) throw new InvalidOperationException("Seleccione una serie de pago");
+                    //if ((Form.Mode != SAPbouiCOM.BoFormMode.fm_FIND_MODE) && string.IsNullOrWhiteSpace(serieRetencion) && esAgenteRetenedor) throw new InvalidOperationException("Seleccione una serie de retención");
                     if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE && (dbsPMP1.Size == 0 || (dbsPMP1.Size > 0 && string.IsNullOrWhiteSpace(dbsPMP1.GetValue("U_EXP_DOCENTRYDOC", 0)))))
                         throw new InvalidOperationException("Debe registrar al menos un documento para pagar");
                     var btnCrgEnv = (SAPbouiCOM.Button)Form.Items.Item("btnGrbEnv").Specific;
@@ -381,7 +437,7 @@ namespace SMC_APM.View.USRForms
                             try
                             {
                                 var codPais = ObtenerPaisBanco(banc.Banco, banc.CtaBanco);
-                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Moneda, banc.CtaBanco, codPais);
+                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
                                 Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                             }
                             catch (Exception ex)
@@ -407,6 +463,10 @@ namespace SMC_APM.View.USRForms
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "btnLibSNT", e => AbrirLiberacionSUNAT(e)));
 
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "Item_24", e => AbrirFormAsignacionDeSeries(e, "P")));
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "Item_23", e => AbrirFormAsignacionDeSeries(e, "R")));
+
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED, "Item_12", e =>
             {
                 if (e.BeforeAction)
@@ -415,6 +475,45 @@ namespace SMC_APM.View.USRForms
                     objType = objType == "24" ? "30" : objType;
                     var linkedButton = (SAPbouiCOM.LinkedButton)Form.GetMatrix(e.ItemUID).Columns.Item("Col_6").ExtendedObject;
                     linkedButton.LinkedObjectType = objType;
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_COMBO_SELECT, "Item_22", e =>
+            {
+                if (!e.BeforeAction)
+                {
+                    var codSucursal = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_COD_SUCURSAL"));
+
+                    Form.Items.Item("Item_3").Enabled = codSucursal != -1;
+                    Form.Items.Item("Item_24").Enabled = codSucursal == -1;
+
+                    Form.Items.Item("Item_5").Enabled = codSucursal != -1;
+                    Form.Items.Item("Item_23").Enabled = codSucursal == -1;
+                    dbsOPMP.SetValueExt("U_EXP_SERIEPAGO", null);
+                    dbsOPMP.SetValueExt("U_EXP_SERIERETENCION", null);
+
+                    if (codSucursal == -1) return true;
+                    var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                    var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'N'";
+                    var cmbSeriePago = (SAPbouiCOM.ComboBox)Form.GetItem("Item_3").Specific;
+                    recSet.DoQuery(sqlQry);
+                    while (cmbSeriePago.ValidValues.Count > 0) cmbSeriePago.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                    while (!recSet.EoF)
+                    {
+                        cmbSeriePago.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                        recSet.MoveNext();
+                    }
+
+                    sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'Y'";
+                    var cmbSerieReten = (SAPbouiCOM.ComboBox)Form.GetItem("Item_5").Specific;
+                    recSet.DoQuery(sqlQry);
+                    while (cmbSerieReten.ValidValues.Count > 0) cmbSerieReten.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                    while (!recSet.EoF)
+                    {
+                        cmbSerieReten.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                        recSet.MoveNext();
+                    }
                 }
                 return true;
             }));
@@ -453,8 +552,20 @@ namespace SMC_APM.View.USRForms
             return true;
         }
 
+        private bool AbrirFormAsignacionDeSeries(SAPbouiCOM.ItemEvent e, string tipoSerie)
+        {
+            if (!e.BeforeAction)
+            {
+                var formUID = string.Concat(FormSeriesPorSucursal.TYPE, new Random().Next(0, 1000));
+                if (!UIFormFactory.FormUIDExists(formUID))
+                    UIFormFactory.AddUSRForm(formUID, new FormSeriesPorSucursal(formUID, tipoSerie, dbsPMP2));
+            }
+            return true;
+        }
+
         private void HabilitarControlesPorEstado(string codEstado)
         {
+            codEstado = tieneAutorizaciones ? codEstado : (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE ? "P" : "A");
             Form.Items.Item("edtFocus").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
             Form.Items.Item("btnGrbEnv").Enabled = false;
             Form.Items.Item("Item_1").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
@@ -472,11 +583,13 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("btnGenPag").Enabled = false;
             Form.Items.Item("btnTrcRtn").Enabled = false;
             Form.Items.Item("btnLibSNT").Enabled = false;
+            Form.Items.Item("Item_23").Enabled = false;
+            Form.Items.Item("Item_24").Enabled = false;
             if (codEstado == "P" || codEstado == "R")
             {
                 Form.Items.Item("btnGrbEnv").Enabled = (Form.Mode != SAPbouiCOM.BoFormMode.fm_ADD_MODE && true);
-                Form.Items.Item("Item_3").Enabled = true;
-                Form.Items.Item("Item_5").Enabled = true;
+                //Form.Items.Item("Item_3").Enabled = true;
+                //Form.Items.Item("Item_5").Enabled = true;
                 Form.Items.Item("Item_12").Enabled = true;
                 Form.Items.Item("Item_17").Enabled = true;
                 Form.Items.Item("Item_26").Enabled = true;
@@ -524,23 +637,29 @@ namespace SMC_APM.View.USRForms
         {
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
             var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}', \"U_EXP_ESTADO\" = '{estado}', " +
-                $"\"U_EXP_MSJERROR\" = '{msjError}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+                $"\"U_EXP_MSJERROR\" = '{msjError.Replace("'", "")}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
             recSet.DoQuery(sqlQry);
         }
 
         private async void GenerarPagosAsync(int docEntryForm, IEnumerable<SBOPago> lstPagos)
         {
             Globales.Aplication.StatusBar.SetText("Iniciando generación de pagos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning); ;
-            var ejecucionOK = await Task.Run(() => GenerarPagos(docEntryForm, lstPagos));
+            var ejecucionOK = await Task.Run(() => GenerarPagosDocumentos(docEntryForm, lstPagos));
             if (ejecucionOK)
+            {
+                Globales.Aplication.Menus.Item("1304").Activate();
+                GenerarPagosCuentaBanco(docEntryForm);
                 Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+            }
             else
+            {
                 Globales.Aplication.StatusBar.SetText($"Proceso finalizado con errores", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
-            Globales.Aplication.Menus.Item("1304").Activate();
+                Globales.Aplication.Menus.Item("1304").Activate();
+            }
             //Matrix.LoadFromDataSource();
         }
 
-        private bool GenerarPagos(int docEntryForm, IEnumerable<SBOPago> lstPagos)
+        private bool GenerarPagosDocumentos(int docEntryForm, IEnumerable<SBOPago> lstPagos)
         {
             var estado = string.Empty;
             var msjError = string.Empty;
@@ -617,6 +736,70 @@ namespace SMC_APM.View.USRForms
                 }
             }
             return ejecucionOK;
+        }
+
+        private bool GenerarPagosCuentaBanco(int docEntryForm)
+        {
+            var estado = string.Empty;
+            var msjError = string.Empty;
+            var ejecucionOK = false;
+
+            var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
+            var strXMLDTDocs = dbsPMP1.GetAsXML();
+            var _dsrXmlDBDataSource = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
+            var codSeriePago = int.TryParse(dbsOPMP.GetValue("U_EXP_SERIEPAGO", 0).Trim(), out var srePgoAux) ? srePgoAux : 0;
+            var codSlcSucursal = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_COD_SUCURSAL"));
+
+            var lstPagos = _dsrXmlDBDataSource.Rows.Where(r => r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO")).Value == "OK").GroupBy(g => new
+            {
+                Sucursal = Convert.ToInt32(g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value),
+                MedioDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MEDIODEPAGO")).Value,
+                MonedaDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA")).Value,
+                Banco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value,
+                CtaBanco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value
+            }).Select(s => new SBOPago
+            {
+                CodSerieSBO = codSlcSucursal != -1 ? codSeriePago : PagoMasivoController.ObtenerSeriePagoPorSucursal(s.Key.Sucursal, dbsPMP2, "N"),
+                CodSucursal = s.Key.Sucursal,
+                Moneda = s.Key.MonedaDePago,
+                FechaContabilizacion = DateTime.Today,
+                FechaDocumento = DateTime.Today,
+                FechaVencimiento = DateTime.Today,
+                Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                MetodoPago = new SBOMetodoPago
+                {
+                    Tipo = s.Key.MedioDePago,
+                    Pais = "PE",
+                    Banco = s.Key.Banco,
+                    Cuenta = s.Key.CtaBanco,
+                    Referencia = "001",
+                },
+                Detalle = s.Select(s1 => new SBOPagoDetalle
+                {
+                    CodigoCuenta = PagoMasivoController.ObtenerCodCuentaPuentePorSucursal(s.Key.Sucursal),
+                    Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                    MontoAPagar = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                }).Take(1)
+            });
+
+            foreach (var pago in lstPagos)
+            {
+                PagoMasivoController.GenerarPagoACuenta(pago);
+            }
+            return ejecucionOK;
+        }
+
+        private bool ValidarSelecSeriesPagoXSucursal()
+        {
+            var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
+            var strXMLDSDocs = dbsPMP1.GetAsXML();
+            var _dsrXmlDocs = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDSDocs));
+            var strXMLDSSeries = dbsPMP2.GetAsXML();
+            var _dsrXmlSeries = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDSSeries));
+
+            var lstSucursalesDocs = _dsrXmlDocs.Rows.Select(r => r.Cells.FirstOrDefault(c => c.Uid == "U_EXP_COD_SUCURSAL").Value).Distinct();
+            var lstSucursalesSrie = _dsrXmlSeries.Rows.Where(r => !string.IsNullOrWhiteSpace(r.Cells.FirstOrDefault(c => c.Uid == "U_COD_SERIE_PAGO").Value)).Select(r => r.Cells.FirstOrDefault(c => c.Uid == "U_COD_SUCURSAL").Value).Distinct();
+            return !lstSucursalesDocs.All(itm => lstSucursalesSrie.Contains(itm));
         }
     }
 }

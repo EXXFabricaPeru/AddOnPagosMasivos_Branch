@@ -16,6 +16,10 @@ namespace SMC_APM.View.USRForms
         public const string MENU = "MNUID_AUT";
         public const string PATH = "Resources/FrmAutorizacion.srf";
 
+        //Controles
+
+        private SAPbouiCOM.Matrix mtxDocumentos = null;
+
         public FormAutorizacion(string id) : base(TYPE, MENU, id, PATH)
         {
             if (!UIFormFactory.FormUIDExists(id)) UIFormFactory.AddUSRForm(id, this);
@@ -45,12 +49,12 @@ namespace SMC_APM.View.USRForms
 
                     if (ventana == "E")
                     {
-                        sqlQry = "UPDATE \"@SMC_APM_AUTORIZAR\" set \"U_EXD_CNTAUT\" = {0} where \"Code\" = '{1}'";
-                        sqlQry2 = "update \"@SMC_APM_ESCCAB\" set \"U_EXD_ESTE\" = '{0}' where \"Code\" = '{1}'";
+                        sqlQry = "UPDATE \"@EXD_OEPG\" set \"U_CNT_AUT\" = {0} where \"DocEntry\" = '{1}'";
+                        sqlQry2 = "update \"@EXD_OEPG\" set \"U_ESTADO\" = '{0}' where \"DocEntry\" = '{1}'";
                     }
                     else
                     {
-                        sqlQry = "UPDATE \"@EXP_OPMP\" set \"U_EXD_CNTAUT\" = {0} where \"DocEntry\" = '{1}'";
+                        sqlQry = "UPDATE \"@EXP_OPMP\" set \"U_EXP_CNTAUT\" = {0} where \"DocEntry\" = '{1}'";
                         sqlQry2 = "update \"@EXP_OPMP\" set \"U_EXP_ESTADO\" = '{0}' where \"DocEntry\" = '{1}'";
                     }
 
@@ -78,6 +82,36 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED, mtxDocumentos.Item.UniqueID, e =>
+            {
+                if (e.BeforeAction && e.ColUID.Equals("Col_1"))
+                {
+                    var tipoDocumento = ((SAPbouiCOM.ComboBox)mtxDocumentos.GetCellSpecific("Col_Esc", e.Row)).Value;
+                    var idDocumento = ((SAPbouiCOM.EditText)mtxDocumentos.GetCellSpecific(e.ColUID, e.Row)).Value;
+
+                    if (tipoDocumento == "E")
+                    {
+                        Globales.Aplication.ActivateMenuItem("SMCPAGMASPRO");
+                        var formAuxP = Globales.Aplication.Forms.ActiveForm;
+                        formAuxP.Select();
+                        formAuxP.Mode = SAPbouiCOM.BoFormMode.fm_FIND_MODE;
+                        ((SAPbouiCOM.EditText)formAuxP.Items.Item("txtDocEnt").Specific).Value = idDocumento;
+                        formAuxP.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    }
+                    else
+                    {
+                        Globales.Aplication.ActivateMenuItem("SMC0008");
+                        var formAuxE = Globales.Aplication.Forms.ActiveForm;
+                        formAuxE.Select();
+                        formAuxE.Mode = SAPbouiCOM.BoFormMode.fm_FIND_MODE;
+                        ((SAPbouiCOM.EditText)formAuxE.Items.Item("edtDocEnt").Specific).Value = idDocumento;
+                        formAuxE.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    }
+                }
+                return true;
+            }));
         }
 
         protected override void CargarFormularioInicial()
@@ -85,6 +119,9 @@ namespace SMC_APM.View.USRForms
             Form.DataSources.UserDataSources.Item("dtuFechaI").Value = DateTime.Today.ToString("yyyyMMdd");
             Form.DataSources.UserDataSources.Item("dtuFechaF").Value = DateTime.Today.ToString("yyyyMMdd");
             Form.DataSources.UserDataSources.Item("UD_VENT").Value = "E";
+
+            //Instanciar controles
+            mtxDocumentos = Form.GetMatrix("mtxDocs");
         }
 
         private void MostrarDocumentosPorAutorizar()
@@ -98,13 +135,18 @@ namespace SMC_APM.View.USRForms
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
 
             var sqlQry = $"CALL EXP_SP_PMP_OBTENER_CNT_AUT_POR_AUTORIZADOR('{ventana}','{codAutori}')";
+            if (Globales.Company.DbServerType != SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                sqlQry = $"EXEC EXP_SP_PMP_OBTENER_CNT_AUT_POR_AUTORIZADOR '{ventana}','{codAutori}'";
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF) cntAutori = Convert.ToInt32(recSet.Fields.Item(0).Value);
 
             sqlQry = $"CALL EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION('{codAutori}','{fechaDsd.ToString("yyyyMMdd")}','{fechaHst.ToString("yyyyMMdd")}','{cntAutori}','{ventana}')";
+            if (Globales.Company.DbServerType != SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                sqlQry = $"EXEC EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION '{codAutori}','{fechaDsd.ToString("yyyyMMdd")}','{fechaHst.ToString("yyyyMMdd")}','{cntAutori}','{ventana}'";
             dtblDocs.ExecuteQuery(sqlQry);
             Form.GetMatrix("mtxDocs").LoadFromDataSource();
             Form.GetMatrix("mtxDocs").AutoResizeColumns();
+            Form.GetMatrix("mtxDocs").Columns.Item("Col_1").Width = 18;
         }
     }
 }

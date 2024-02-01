@@ -8,6 +8,7 @@ namespace SMC_APM.Modelo
 {
     public class SBOPago
     {
+        public int CodSucursal { get; set; }
         public int CodSerieSBO { get; set; }
         public string CodigoSN { get; set; }
         public DateTime FechaDocumento { get; set; }
@@ -39,7 +40,7 @@ namespace SMC_APM.Modelo
         public string CodigoCuenta { get; set; }
         public string NumeroCuenta { get; set; }
         public double Monto { get; set; }
-        public double MontoAPagar{ get; set; }
+        public double MontoAPagar { get; set; }
         public string Comentarios { get; set; }
         public string CodProyecto { get; set; }
         public string CentroCosto { get; set; }
@@ -60,5 +61,6 @@ namespace SMC_APM.Modelo
         public string CuentaBanco { get; set; }
         public string Pais { get; set; }
         public string Referencia { get; set; }
+        public string ReferenciaME { get; set; }
     }
 }

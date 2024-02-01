@@ -24,6 +24,9 @@
 			<row>
 				<TableName>EXP_PMP1</TableName>
 			</row>
+			<row>
+				<TableName>EXP_PMP2</TableName>
+			</row>
 		</UDO1>
 		<UDO2>
 			<row>
@@ -187,5 +190,208 @@
 				<ColumnDesc>U_COD_MONEDA_EXT</ColumnDesc>
 			</row>
 		</UDO2>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>206</Object>
+		</AdmInfo>
+		<OUDO>
+			<row>
+				<Code>EXD_OEPG</Code>
+				<Name>EXD_OEPG</Name>
+				<TableName>EXD_OEPG</TableName>
+				<TYPE>3</TYPE>
+				<MngSeries>Y</MngSeries>
+				<CanFind>Y</CanFind>
+				<CanYrTrnsf>N</CanYrTrnsf>
+				<CanDefForm>N</CanDefForm>
+				<CanLog>N</CanLog>
+				<CanDelete>N</CanDelete>
+				<CanCancel>Y</CanCancel>
+				<CanClose>Y</CanClose>
+			</row>
+		</OUDO>
+		<UDO1>
+			<row>
+				<TableName>EXD_EPG1</TableName>
+			</row>
+		</UDO1>
+		<UDO2>
+			<row>
+				<ColAlias>DocNum</ColAlias>
+				<ColumnDesc>DocNum</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>CreateDate</ColAlias>
+				<ColumnDesc>CreateDate</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>UpdateDate</ColAlias>
+				<ColumnDesc>UpdateDate</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_ESTADO</ColAlias>
+				<ColumnDesc>U_ESTADO</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_FECHA_PAGO</ColAlias>
+				<ColumnDesc>U_FECHA_PAGO</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_COD_BANCO</ColAlias>
+				<ColumnDesc>U_COD_BANCO</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_MEDIO_DE_PAGO</ColAlias>
+				<ColumnDesc>U_MEDIO_DE_PAGO</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_FECHA_VENC</ColAlias>
+				<ColumnDesc>U_FECHA_VENC</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_COD_PROV</ColAlias>
+				<ColumnDesc>U_COD_PROV</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_COD_BANCO_BUSC</ColAlias>
+				<ColumnDesc>U_COD_BANCO_BUSC</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_CTA_BANCO_ML</ColAlias>
+				<ColumnDesc>U_CTA_BANCO_ML</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_CTA_BANCO_ME</ColAlias>
+				<ColumnDesc>U_CTA_BANCO_ME</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_COD_MONEDA_LOC</ColAlias>
+				<ColumnDesc>U_COD_MONEDA_LOC</ColumnDesc>
+			</row>
+
+			<row>
+				<ColAlias>U_COD_MONEDA_EXT</ColAlias>
+				<ColumnDesc>U_COD_MONEDA_EXT</ColumnDesc>
+			</row>
+		</UDO2>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>206</Object>
+		</AdmInfo>
+		<OUDO>
+			<row>
+				<Code>EXD_PM_CONFAUT</Code>
+				<Name>EXD_PM_CONFAUT</Name>
+				<TableName>EXD_PM_CONFAUT</TableName>
+				<TYPE>1</TYPE>
+				<MngSeries>N</MngSeries>
+				<CanDelete>N</CanDelete>
+				<CanClose>N</CanClose>
+				<CanCancel>N</CanCancel>
+				<CanFind>Y</CanFind>
+				<CanYrTrnsf>N</CanYrTrnsf>
+				<CanDefForm>Y</CanDefForm>
+				<CanLog>N</CanLog>
+				<MenuItem>N</MenuItem>
+				<CanNewForm>N</CanNewForm>
+			</row>
+		</OUDO>
+		<UDO1>
+			<row>
+				<TableName>EXD_PM_CONFAUT1</TableName>
+			</row>
+		</UDO1>
+		<UDO2>
+			<row>
+				<ColAlias>Code</ColAlias>
+				<ColumnDesc>Code</ColumnDesc>
+			</row>
+			<row>
+				<ColAlias>Name</ColAlias>
+				<ColumnDesc>Name</ColumnDesc>
+			</row>
+			<row>
+				<ColAlias>U_VENTANA</ColAlias>
+				<ColumnDesc>Ventana</ColumnDesc>
+			</row>
+			<row>
+				<ColAlias>U_CANTAUTO</ColAlias>
+				<ColumnDesc>Cnt. autorizadores</ColumnDesc>
+			</row>
+			<row>
+				<ColAlias>U_TIENEAUTBKP</ColAlias>
+				<ColumnDesc>Tiene autorizacion backup</ColumnDesc>
+			</row>
+		</UDO2>
+		<UDO3>
+			<row>
+				<SonNum>0</SonNum>
+				<ColAlias>Code</ColAlias>
+				<ColDesc>Code</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>0</SonNum>
+				<ColAlias>U_VENTANA</ColAlias>
+				<ColDesc>Ventana</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>0</SonNum>
+				<ColAlias>U_CANTAUTO</ColAlias>
+				<ColDesc>Cnt. autorizadores</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>0</SonNum>
+				<ColAlias>U_TIENEAUTBKP</ColAlias>
+				<ColDesc>Tiene autorizacion backup</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>1</SonNum>
+				<ColAlias>Code</ColAlias>
+				<ColDesc>Code</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>1</SonNum>
+				<ColAlias>LineId</ColAlias>
+				<ColDesc>LineId</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>1</SonNum>
+				<ColAlias>U_CNTAUTNEC</ColAlias>
+				<ColDesc>Cnt. autorizaciones necesarias</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>1</SonNum>
+				<ColAlias>U_CODAUTORI</ColAlias>
+				<ColDesc>Codigo autorizador</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+			<row>
+				<SonNum>1</SonNum>
+				<ColAlias>U_CODAUTBKP</ColAlias>
+				<ColDesc>Cod autorizador backup</ColDesc>
+				<ColEdit>Y</ColEdit>
+			</row>
+		</UDO3>
 	</BO>
 </BOM>

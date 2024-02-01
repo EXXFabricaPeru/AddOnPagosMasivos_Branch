@@ -6,7 +6,7 @@ AS
 factoring nvarchar(1);
 BEGIN
 -- Llenado de variables
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount;
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and ifnull("U_EXM_PMASIVO",'') = 'Y';
 
 IF :factoring='N' THEN
 
@@ -34,7 +34,7 @@ FROM (
 	'#' AS "001-001 (1)",
 	'1' AS "002-002(1)",
 	'P' AS "003-003(1)",
-	LEFT(T2."UsrNumber2",1) AS "004-004(1)",
+	LEFT(ifnull(T2."UsrNumber2",''),1) AS "004-004(1)",
 	LEFT(
 		LEFT(REPLACE(T2."Account",'-',''),3)
 		||RIGHT(replicate('0',8)||LEFT(RIGHT(REPLACE(T2."Account",'-',''),LENGTH(REPLACE(T2."Account",'-',''))-3),LENGTH(RIGHT(REPLACE(T2."Account",'-',''),LENGTH(REPLACE(T2."Account",'-',''))-3))-3),8)
@@ -64,8 +64,9 @@ FROM (
 	FROM "@EXP_OPMP" T0
 	INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
 	INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
-	WHERE T0."DocEntry"=:docEntry
+	WHERE T0."DocEntry"= :docEntry
 	AND T1."U_EXP_CODBANCO"='002' AND T1."U_EXP_CODCTABANCO"=:glaccount
+	AND IFNULL(T2."U_EXM_PMASIVO",'') = 'Y'
 	AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG') AND T1."U_EXP_SLC_RETENCION"='N'
 	--AND T1."U_EXP_CARDCODE"='P20603816898'
 	AND ((T1."U_EXP_MEDIODEPAGO"='TB' AND IFNULL(T1."U_EXP_NROCTAPROV",'')!='') OR (T1."U_EXP_MEDIODEPAGO"='CG'))
@@ -112,7 +113,7 @@ FROM (
 		WHEN 'CG' THEN 'C'
 		ELSE
 			CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-				WHEN '002' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode"=T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV" AND "BankCode"='002')
+				WHEN '002' THEN (SELECT ifnull("UsrNumber2",'') FROM OCRB WHERE "CardCode"=T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV" AND "BankCode"='002')
 				ELSE 'B' END
 			END AS "003-003(1)",
 	CASE T1."U_EXP_MEDIODEPAGO"
@@ -166,6 +167,7 @@ FROM (
 	LEFT JOIN ODPO T5 ON T1."U_EXP_DOCENTRYDOC"=T5."DocEntry" AND T1."U_EXP_TIPODOC"=T5."ObjType"
 	WHERE T0."DocEntry"=:docEntry
 	AND T1."U_EXP_CODBANCO"='002' AND T1."U_EXP_CODCTABANCO"=:glaccount
+	AND IFNULL(T2."U_EXM_PMASIVO",'') = 'Y'
 	AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG') AND T1."U_EXP_SLC_RETENCION"='N'
 	AND ((T1."U_EXP_MEDIODEPAGO"='TB' AND IFNULL(T1."U_EXP_NROCTAPROV",'')!='') OR (T1."U_EXP_MEDIODEPAGO"='CG'))
 	--AND T1."U_EXP_CARDCODE"='P20603816898'

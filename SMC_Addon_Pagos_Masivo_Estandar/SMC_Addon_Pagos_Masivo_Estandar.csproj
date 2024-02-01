@@ -199,6 +199,7 @@
     <Compile Include="View\USRForms\FormEscenarioPago.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
+    <Compile Include="View\USRForms\FormSeriesPorSucursal.cs" />
     <Compile Include="View\USRForms\FormSlcProveedores.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -256,6 +257,9 @@
     <Content Include="Resources\BO\UT.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\FrmSeriesXSucursal.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\FrmSlcProveedores.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -281,6 +285,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_OBTENER_CNT_AUT_POR_AUTORIZADOR.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\REPLICATE.sql">
@@ -329,6 +339,33 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT_CREADO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\EXP_SP_PMP_OBTENER_CNT_AUT_POR_AUTORIZADOR.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SBO_EXX_PM_BCP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SBO_EXX_PM_INTERBANK.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SBO_EXX_PM_SANTANDER.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SBO_EXX_PM_SCOTIABANK.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SMC_APM_LISTAR_BANCOS.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\SMC_APM_LISTAR_FACPENDIENTES_PP.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Scripts\HANA\SMC_APM_ARCHIVOBANCO_BCP_CABECERA_NUEVO.sql">
@@ -393,7 +430,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\Scripts\SQL\" />
     <Folder Include="Scripts\SQL\" />
   </ItemGroup>
   <ItemGroup>

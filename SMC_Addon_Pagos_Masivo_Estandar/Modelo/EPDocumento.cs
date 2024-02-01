@@ -8,6 +8,7 @@ namespace SMC_APM.Modelo
 {
     class EPDocumento
     {
+        public int CodSucursal { get; set; }
         public int FILA { get; set; }
         public int DocEntry { get; set; }
         public string DocNum { get; set; }
@@ -16,6 +17,7 @@ namespace SMC_APM.Modelo
         public string CardCode { get; set; }
         public string CardName { get; set; }
         public string NumAtCard { get; set; }
+        public string CodBancoPago { get; set; }
         public string MonedaPago { get; set; }
         public string DocCur { get; set; }
         public double Total { get; set; }
@@ -39,6 +41,9 @@ namespace SMC_APM.Modelo
         public string GlosaAsiento { get; set; }
         public string CardCodeFactoring { get; set; }
         public string CardNameFactoring { get; set; }
-        public string EstadoExt { get; set; }       
+        public string EstadoExt { get; set; }
+        public string NroCtaPago { get; set; }
+        public string CodCtaPago { get; set; }
+        public string CodPrioridad { get; set; }
     }
 }

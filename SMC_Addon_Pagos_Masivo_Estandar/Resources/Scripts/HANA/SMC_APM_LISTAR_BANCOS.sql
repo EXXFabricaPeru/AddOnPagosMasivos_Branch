@@ -5,7 +5,7 @@ CREATE PROCEDURE SMC_APM_LISTAR_BANCOS
 AS
 BEGIN
 	SELECT 
-		T1."Segment_0" || '-' || T1."Segment_1" || '-' ||  T1."Segment_1" AS "CuentaCont",
+		T1."Segment_0" || ifnull('-' || T1."Segment_1",'') || ifnull('-' ||  T1."Segment_1",'') AS "CuentaCont",
 		T1."AcctName",
 		T0."BankCode",
 		--T0."Branch" AS "BankName",

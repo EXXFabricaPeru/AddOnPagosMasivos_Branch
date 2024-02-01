@@ -10,7 +10,9 @@ namespace SMC_APM.Modelo
     {
         public string SlcPago { get; set; }
         public string SlcRetencion { get; set; }
+        public int CodSucursal { get; set; }
         public string CodigoEscenarioPago { get; set; }
+        public string NumeroEscenarioPago { get; set; }
         public string DescripcionEscenarioPago { get; set; }
         public string MedioDePago { get; set; }
         public string MonedaDePago { get; set; }

@@ -630,40 +630,28 @@
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>
-			<Version>2</Version>
 		</AdmInfo>
-		<UserFieldsMD>
+		<CUFD>
 			<row>
-				<Name>EXM_PMASIVO</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Pagos Masivos</Description>
-				<SubType>st_None</SubType>
-				<TableName>DSC1</TableName>
+				<TableID>OCPR</TableID>
+				<AliasID>EXC_BENEFI</AliasID>
+				<Descr>Beneficiario</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
 				<EditSize>1</EditSize>
-				<Mandatory>tNO</Mandatory>
+				<Dflt>N</Dflt>
 			</row>
-		</UserFieldsMD>
-	</BO>
-
-
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
+		</CUFD>
+		<UFD1>
 			<row>
-				<Name>EXC_BENEFI</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Beneficiario</Description>
-				<SubType>st_None</SubType>
-				<TableName>OCPR</TableName>
-				<EditSize>1</EditSize>
-				<Mandatory>tNO</Mandatory>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
 			</row>
-		</UserFieldsMD>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
 	</BO>
 
 	<BO>
@@ -680,43 +668,6 @@
 				<SubType>st_None</SubType>
 				<TableName>OCRB</TableName>
 				<EditSize>50</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
-
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXC_ACTIVO</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Banco Activo</Description>
-				<SubType>st_None</SubType>
-				<TableName>OCRB</TableName>
-				<EditSize>1</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXC_PAGBEN</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Pago a Beneficiario</Description>
-				<SubType>st_None</SubType>
-				<TableName>ODPO</TableName>
-				<EditSize>1</EditSize>
 				<Mandatory>tNO</Mandatory>
 			</row>
 		</UserFieldsMD>
@@ -753,24 +704,6 @@
 				<SubType>st_None</SubType>
 				<TableName>ODPO</TableName>
 				<EditSize>20</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXC_ESCPAG</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Aparece en Escenario de Pago</Description>
-				<SubType>st_None</SubType>
-				<TableName>OPCH</TableName>
-				<EditSize>1</EditSize>
 				<Mandatory>tNO</Mandatory>
 			</row>
 		</UserFieldsMD>
@@ -2352,25 +2285,6 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
-
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXC_CR</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Comprobante de Retención</Description>
-				<SubType>st_None</SubType>
-				<TableName>NNM1</TableName>
-				<EditSize>1</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>
@@ -2408,26 +2322,6 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
-
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXC_FCTRNG</Name>
-				<Type>db_Alpha</Type>
-				<Size>1</Size>
-				<Description>Factoring</Description>
-				<SubType></SubType>
-				<TableName>DSC1</TableName>
-				<EditSize>1</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
-
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>
@@ -2701,6 +2595,26 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>CNT_AUT</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>Cantidad de autorizaciones</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_OEPG</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>
@@ -3237,6 +3151,723 @@
 				<SubType>st_Sum</SubType>
 				<TableName>@EXD_EPG1</TableName>
 				<EditSize>16</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>@EXD_PM_CONFAUT</TableID>
+				<AliasID>VENTANA</AliasID>
+				<Descr>Ventana</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>E</FldValue>
+				<Descr>Escenario</Descr>
+			</row>
+			<row>
+				<FldValue>P</FldValue>
+				<Descr>Pagos</Descr>
+			</row>
+		</UFD1>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>CANTAUTO</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>Cnt. autorizadores</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_PM_CONFAUT</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>@EXD_PM_CONFAUT</TableID>
+				<AliasID>TIENEAUTBKP</AliasID>
+				<Descr>Tiene autorizacion backup</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>CNTAUTNEC</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>Cnt. autorizaciones necesarias</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_PM_CONFAUT1</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>CODAUTORI</Name>
+				<Type>db_Alpha</Type>
+				<Size>50</Size>
+				<Description>Codigo autorizador</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_PM_CONFAUT1</TableName>
+				<EditSize>50</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>CODAUTBKP</Name>
+				<Type>db_Alpha</Type>
+				<Size>50</Size>
+				<Description>Cod autorizador backup</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_PM_CONFAUT1</TableName>
+				<EditSize>50</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXP_NROREF_ME</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Número de ref M.E.</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_OPMP</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXP_CNTAUT</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>Cantidad de autorizaciones</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_OPMP</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXD_MDPG</Name>
+				<Type>db_Alpha</Type>
+				<Size>5</Size>
+				<Description>Moneda de pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_TRR1</TableName>
+				<EditSize>5</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>ID_LINEA</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>ID Linea</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>OPCH</TableID>
+				<AliasID>EXC_ESCPAG</AliasID>
+				<Descr>Aparece en Escenario de Pago</Descr>
+				<TypeID>A</TypeID>
+				<EditSize>1</EditSize>
+				<Dflt>Y</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>NNM1</TableID>
+				<AliasID>EXC_CR</AliasID>
+				<Descr>Constancia de retencion</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>DSC1</TableID>
+				<AliasID>EXM_PMASIVO</AliasID>
+				<Descr>Pagos Masivos</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>DSC1</TableID>
+				<AliasID>EXC_FCTRNG</AliasID>
+				<Descr>Factoring</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>OPCH</TableID>
+				<AliasID>EXC_PAGBEN</AliasID>
+				<Descr>Pago a Beneficiario</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+		</AdmInfo>
+		<CUFD>
+			<row>
+				<TableID>OCRB</TableID>
+				<AliasID>EXC_ACTIVO</AliasID>
+				<Descr>Banco Activo</Descr>
+				<TypeID>A</TypeID>
+				<SizeID>1</SizeID>
+				<EditSize>1</EditSize>
+				<Dflt>N</Dflt>
+			</row>
+		</CUFD>
+		<UFD1>
+			<row>
+				<FldValue>Y</FldValue>
+				<Descr>SI</Descr>
+			</row>
+			<row>
+				<FldValue>N</FldValue>
+				<Descr>NO</Descr>
+			</row>
+		</UFD1>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXX_NUMDOC</Name>
+				<Type>db_Alpha</Type>
+				<Size>15</Size>
+				<Description>Número de documento de identidad</Description>
+				<SubType>st_None</SubType>
+				<TableName>OCPR</TableName>
+				<EditSize>15</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXX_TIPDOC</Name>
+				<Type>db_Alpha</Type>
+				<Size>1</Size>
+				<Description>Tipo de documento de identidad</Description>
+				<SubType>st_None</SubType>
+				<TableName>OCPR</TableName>
+				<EditSize>1</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXX_CONFTIPODET</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Detracción</Description>
+				<SubType>st_None</SubType>
+				<TableName>INV6</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXP_NUM_ESCENARIOPAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Número escenario</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP1</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXP_COD_SUCURSAL</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP1</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>EXP_COD_SUCURSAL</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_OPMP</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_SUCURSAL</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_OEPG</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_PRIORIDAD</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Código de prioridad</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_OEPG</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_SUCURSAL</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_CTA_PAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Código de cuenta de pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>NRO_CTA_PAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>50</Size>
+				<Description>Número de cuenta de pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>50</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_BANCO_PAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código del banco de pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_PRIORIDAD</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Código prioridad</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXD_EPG1</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_SUCURSAL</Name>
+				<Type>db_Numeric</Type>
+				<Size>11</Size>
+				<Description>Código de sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_SERIE_PAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de serie pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>COD_SERIE_RETEN</Name>
+				<Type>db_Alpha</Type>
+				<Size>10</Size>
+				<Description>Código de serie retención</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>10</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>NOM_SUCURSAL</Name>
+				<Type>db_Alpha</Type>
+				<Size>80</Size>
+				<Description>Nombre de la sucursal</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>80</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>RETPRO</Name>
+				<Type>db_Alpha</Type>
+				<Size>1</Size>
+				<Description>Retiene proveedores</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>1</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>NOM_SERIE_PAGO</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Nombre de serie de pago</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>20</EditSize>
+				<Mandatory>tNO</Mandatory>
+			</row>
+		</UserFieldsMD>
+	</BO>
+	<BO>
+		<AdmInfo>
+			<Object>152</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserFieldsMD>
+			<row>
+				<Name>NOM_SERIE_RETEN</Name>
+				<Type>db_Alpha</Type>
+				<Size>20</Size>
+				<Description>Nombre de serie retención</Description>
+				<SubType>st_None</SubType>
+				<TableName>@EXP_PMP2</TableName>
+				<EditSize>20</EditSize>
 				<Mandatory>tNO</Mandatory>
 			</row>
 		</UserFieldsMD>

@@ -56,7 +56,7 @@ namespace SMC_APM.Controladores
 
             //carga los menus
             cargarMenus();
-            cargarObjetosUsuario();
+            //cargarObjetosUsuario();
             registrarEventos();
 
             setFiltersCustom();
@@ -144,8 +144,8 @@ namespace SMC_APM.Controladores
 
             //creacion de menus y submenus
             sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenuSAP1, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.nomMenu1, SAPbouiCOM.BoMenuType.mt_POPUP);
-            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
             sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0007", "Autorizacion Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
+            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
             sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0008", "Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
 
             sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0004", "Reporte Tercero Ret. Embargo", SAPbouiCOM.BoMenuType.mt_STRING);
@@ -267,7 +267,12 @@ namespace SMC_APM.Controladores
                             _ctrFrmAutorizacion = new ctrFrmAutorizacion(sboApplication, sboCompany);
                             _ctrFrmAutorizacion.cargarFormulario("frmSMC7");
                             */
-                            formAutorizacion = new FormAutorizacion("FRMAUT" + DateTime.Now.ToString("hhmmss"));
+                            var tblConf = sboCompany.UserTables.Item("SMC_APM_CONFIAPM");
+                            if ((tblConf.GetByKey("4") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y")
+                                || (tblConf.GetByKey("5") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y"))
+                                formAutorizacion = new FormAutorizacion("FRMAUT" + DateTime.Now.ToString("hhmmss"));
+                            else
+                                sboApplication.MessageBox("No tiene activada esta opción");
                             break;
                         case "SMC0008":
                             //sboApplication.Forms.Item("frmSMC7").Select();
@@ -316,7 +321,7 @@ namespace SMC_APM.Controladores
                                 default:
                                     break;
                             }
-                       
+
                             break;
                     }
                 }
@@ -361,8 +366,8 @@ namespace SMC_APM.Controladores
             try
             {
 
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT")
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV")
+
+                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV" || pVal.FormTypeEx == "FrmSRESUC")
                 {
                     IUSAP uiForm = null;
 

@@ -44,7 +44,7 @@ namespace SMC_APM.Conexion
         {
             try
             {
-                
+
                 ObtenerAplicacion();
                 ConectarCompany();
             }
@@ -146,7 +146,6 @@ namespace SMC_APM.Conexion
                     throw new Exception("Login context failed");
 
                 ret = sboCompany.Connect();
-
             }
             catch (Exception ex)
             {

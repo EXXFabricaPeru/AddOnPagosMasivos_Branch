@@ -1,16 +1,20 @@
 CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
 (
 	fechaVenc DATE,
-	moneda VARCHAR(3),
+	monedaLoc VARCHAR(3),
+	monedaExt VARCHAR(3),
 	CardCode VARCHAR(20),
 	escenario varchar(15),
 	tipoBanco varchar(3),
-	filtroBanco varchar(3)
+	filtroBanco varchar(3),
+	codSucursal varchar(3),
+	codPrioridad varchar(50)
 )
 AS
 BEGIN
 	SELECT 
 		'N' as "Slc",
+		T0."CodSucursal",
 		ROW_NUMBER() OVER(ORDER BY T0."FechaVencimiento" DESC) AS "FILA",
 		T0."DocEntry",
 		T0."DocNum",
@@ -19,7 +23,10 @@ BEGIN
 		T0."CardCode",
 		T0."CardName",
 		T0."NumAtCard",
+		case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end as "CodBancoPago",
 		T0."DocCur" as "MonedaPago",
+		(select  max(TX0."GLAccount") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal") as "CodCtaPago",
+		(select  max(TX0."Account") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal") as "NroCtaPago",
 		T0."DocCur",
 		T0."Total",
 		T0."CodigoRetencion",
@@ -48,6 +55,7 @@ BEGIN
 		,"GlosaAsiento"
 		,"CardCodeFactoring" 
 		,"CardNameFactoring" 
+		,"CodPrioridad"
 	FROM 
 		(SELECT
 		T0."DocEntry",
@@ -118,21 +126,21 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."Account") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --*AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
-				CASE :tipoBanco WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
-			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
+			CASE  R2."BankCode" WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
+			ELSE CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "Cuenta",
 		
@@ -140,18 +148,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'') */
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."UsrNumber1" ELSE R3."UsrNumber1" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc  --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "CuentaMoneda",
 		
@@ -159,18 +167,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."BankCode" ELSE R3."BankCode" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc   --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		
@@ -193,6 +201,8 @@ BEGIN
 		,T0."JrnlMemo" AS "GlosaAsiento"
 		,null as "CardCodeFactoring" 
 		,null as "CardNameFactoring" 
+		,T0."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		OPCH T0
 		LEFT JOIN PCH6 T1 ON T0."DocEntry" = T1."DocEntry"
@@ -208,15 +218,15 @@ BEGIN
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') ='No'
 		AND T1."DueDate" <= :fechaVenc
-		AND T0."DocCur" = UPPER(:moneda)
+		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FT-P' AND "U_EXP_NROCUOTA"=T1."InstlmntID")
-									/*
-		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'FT-P') OR T0."U_CP_VARESC"='Y')
-									*/
+						
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
+		and TX0."U_TIPO_DOCUMENTO" = 'FT-P'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+								
 
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		AND IFNULL(T0."U_EXX_NUMEREND",'')=''
@@ -271,12 +281,12 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."Account") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --*AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
@@ -284,8 +294,8 @@ BEGIN
 			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "Cuenta",
 		
@@ -293,18 +303,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'') */
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."UsrNumber1" ELSE R3."UsrNumber1" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "CuentaMoneda",
 		
@@ -312,18 +322,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."BankCode" ELSE R3."BankCode" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -345,6 +355,8 @@ BEGIN
 		,T0."JrnlMemo" AS "GlosaAsiento"
 		,null as "CardCodeFactoring" 
 		,null as "CardNameFactoring" 
+		,T0."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		ORIN T0
 		LEFT JOIN RIN6 T1 ON T0."DocEntry" = T1."DocEntry"
@@ -361,12 +373,12 @@ BEGIN
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
-		AND T0."DocCur" = UPPER(:moneda)
+		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'NC-C')
-		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'NC-C') OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
+		and TX0."U_TIPO_DOCUMENTO" = 'NC-C'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
@@ -418,12 +430,12 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."Account") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --*AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
@@ -431,8 +443,8 @@ BEGIN
 			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "Cuenta",
 		
@@ -440,18 +452,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'') */
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."UsrNumber1" ELSE R3."UsrNumber1" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "CuentaMoneda",
 		
@@ -459,18 +471,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."BankCode" ELSE R3."BankCode" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur" --:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -492,6 +504,8 @@ BEGIN
 		,T0."JrnlMemo" AS "GlosaAsiento"
 		,null as "CardCodeFactoring" 
 		,null as "CardNameFactoring" 
+		,T0."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		ODPO T0
 		LEFT JOIN DPO6 T1 ON T0."DocEntry" = T1."DocEntry"
@@ -508,13 +522,13 @@ BEGIN
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
-		AND T0."DocCur" = UPPER(:moneda)
+		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'Y'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FA-P')
-		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'FA-P') OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
+		and TX0."U_TIPO_DOCUMENTO" = 'FA-P'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
@@ -568,12 +582,12 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."Account") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --*AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."U_EXM_INTERBANCARIA") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
@@ -581,8 +595,8 @@ BEGIN
 			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "Cuenta",
 		
@@ -590,18 +604,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."UsrNumber1") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'') */
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."UsrNumber1" ELSE R3."UsrNumber1" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "CuentaMoneda",
 		
@@ -609,18 +623,18 @@ BEGIN
 		IFNULL(IFNULL(IFNULL(IFNULL(IFNULL(
 		IFNULL(
 		(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" --AND "BankCode" = :tipoBanco
-			AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y')) 
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
-		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:moneda) = :moneda)and "U_EXC_ACTIVO" = 'Y'))
+			AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '011' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '002' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y')) 
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '009' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '022' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
+		,(SELECT MAX(R0."BankCode") FROM OCRB R0 WHERE R0."CardCode" = T0."CardCode" AND "BankCode" = '003' AND (IFNULL(R0."UsrNumber1",:monedaLoc) = :monedaLoc)and "U_EXC_ACTIVO" = 'Y'))
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN" WHEN 'Y' THEN R2."BankCode" ELSE R3."BankCode" END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
-		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = :moneda --beneficiario
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc --beneficiario
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -641,7 +655,9 @@ BEGIN
 		,0 AS "LineaAsiento"
 		,T0."JrnlMemo" AS "GlosaAsiento"
 		,null as "CardCodeFactoring" 
-		,null as "CardNameFactoring" 
+		,null as "CardNameFactoring"
+		,T0."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		ODPO T0
 		LEFT JOIN DPO6 T1 ON T0."DocEntry" = T1."DocEntry"
@@ -658,21 +674,19 @@ BEGIN
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		AND T1."DueDate" <= :fechaVenc
-		AND T0."DocCur" = UPPER(:moneda)
+		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'N'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SA-P')
-		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'SA-P') OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
+		and TX0."U_TIPO_DOCUMENTO" = 'SA-P'),'N') = 'N'OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
-		union
-		
-		
-		
-SELECT
+	union all	
+	
+	SELECT
 		T0."DocEntry",
 		T0."DocNum",
 		T0."TaxDate" AS "FechaContable",
@@ -703,21 +717,21 @@ SELECT
 			
 		(select "LicTradNum" from OCRD where "CardCode" = T0."CardCode") AS "RUC",
 
-		(SELECT CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END
+		(SELECT CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END 
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCurr"--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "Cuenta",
 		
 		(SELECT R3."UsrNumber1"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCurr"--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "CuentaMoneda",
 
 		(SELECT R3."BankCode"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCurr"--normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -738,6 +752,8 @@ SELECT
 		,T0."JrnlMemo" AS "GlosaAsiento"
 		,null as "CardCodeFactoring" 
 		,null as "CardNameFactoring" 
+		,T0."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		OPDF T0
 		LEFT JOIN OCRD T3 ON T0."CardCode" = T3."CardCode"
@@ -746,26 +762,19 @@ SELECT
 
 		T0."DocDueDate" <= :fechaVenc
 		AND T0."Canceled" = 'N'
-		AND T0."DocCurr" = UPPER(:moneda)
+		--AND (T0."DocCurr" = UPPER(:monedaLoc) or T0."DocCurr" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SP')
-		AND (T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'SP') OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
+		and TX0."U_TIPO_DOCUMENTO" = 'SP'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 	
-		
 		UNION	
-		
-		
-		
-	
-
-
 	--------pagos recibicos-------
 
-SELECT
-DISTINCT
-			T0."TransId" as "DocEntry",
+		SELECT
+		DISTINCT
+		T0."TransId" as "DocEntry",
 		T0."Number" as "DocNum",
 		T0."TaxDate" AS "FechaContable",
 		T1."DueDate" AS "FechaVencimiento",
@@ -813,19 +822,19 @@ DISTINCT
 
 		(SELECT CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = IFNULL(T1."FCCurrency",'SOL')--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "Cuenta",
 		
 		(SELECT R3."UsrNumber1"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = IFNULL(T1."FCCurrency",'SOL')--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "CuentaMoneda",
 
 		(SELECT R3."BankCode"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = IFNULL(T1."FCCurrency",'SOL')--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -847,6 +856,8 @@ DISTINCT
 		,T0."Memo" AS "GlosaAsiento"
 		,T0."U_EXX_PROORI" as "CardCodeFactoring" 
 		,T4."CardName" as "CardNameFactoring" 
+		,T1."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		OJDT T0
 		LEFT JOIN JDT1 T1 ON T0."TransId" = T1."TransId"
@@ -867,27 +878,19 @@ DISTINCT
 		
 
 		AND T1."DueDate" <= :fechaVenc
-		AND IFNULL(T1."FCCurrency",'SOL') = UPPER(:moneda)
+		AND (IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
 		AND T3."CardCode" like '%' || :CardCode ||'%'
 		and T1."Credit">0
 		--AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'PR')
-		AND (T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET"
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'PR') OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."TransId" 
+		and TX0."U_TIPO_DOCUMENTO" = 'PR'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		
-		
-
-
-
--------pagos recibidos-------
-/*
-
-		UNION ALL
-		
-
+		-------pagos recibidos-------
+		union all
 		---------AS-------------------------
 		SELECT
-DISTINCT
+		DISTINCT
 		T0."TransId" as "DocEntry",
 		T0."Number" as "DocNum",
 		T0."TaxDate" AS "FechaContable",
@@ -896,19 +899,19 @@ DISTINCT
 		T3."CardName",
 		'AS'||'-'||T0."Number" as "NumAtCard",
 		--T0."TransCurr"
-		IFNULL(T1."FCCurrency",'SOL')
+		ifnull(T1."FCCurrency",'SOL')
 		,
 		CAST( 
 		(CASE 
-			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
 			
-				THEN (T1."FCCredit" - IFNULL((select sum(TT0."ReconSumFC") from 
+				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
 		
 			ELSE 
 			
-				(T1."Credit" - IFNULL((select sum(TT0."ReconSum") from 
+				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId",TT0."TransRowId"),0))
 				
@@ -918,7 +921,7 @@ DISTINCT
 		
 		IFNULL(CAST( 
 		(CASE 
-			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
+			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 
 				THEN (T2."WTAmntFC") 
 			ELSE 
 				(T2."WTAmnt")
@@ -928,26 +931,26 @@ DISTINCT
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
-				THEN 	(IFNULL(T1."FCCredit",0) - IFNULL((select sum(TT0."ReconSumFC") 
+				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
 												 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 												 GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
 												 
 						(
-							(IFNULL(T1."FCCredit",0) - IFNULL((select sum(TT0."ReconSumFC") 
+							(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
 													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * IFNULL((T2."WTAmntFC" - T2."ApplAmntFC"),0)
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
 												 
 						)						 
 												 
 			ELSE 
-						(IFNULL(T1."Credit",0) - IFNULL((select sum(TT0."ReconSum") from 
+						(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") from 
 						"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
 						GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
 						
 						(
-							(IFNULL(T1."Credit",0) - IFNULL((select sum(TT0."ReconSum") 
+							(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") 
 													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * IFNULL((T2."WTAmnt" - T2."ApplAmnt"),0)
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
 												 
 						)	
 				
@@ -955,21 +958,21 @@ DISTINCT
 			
 		T3."LicTradNum" AS "RUC",
 
-		(SELECT CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END
+		(SELECT CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END 
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",'SOL') --:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "Cuenta",
 		
 		(SELECT R3."UsrNumber1"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",'SOL') --:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "CuentaMoneda",
 
 		(SELECT R3."BankCode"
 		FROM OCRD R0
-		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = :moneda --normal
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",'SOL') --:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
@@ -991,6 +994,8 @@ DISTINCT
 		,T0."Memo" AS "GlosaAsiento"
 		,T0."U_EXX_PROORI" as "CardCodeFactoring" 
 		,T4."CardName" as "CardNameFactoring" 
+		,T1."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
 	FROM 
 		OJDT T0
 		LEFT JOIN JDT1 T1 ON T0."TransId" = T1."TransId"
@@ -1003,33 +1008,32 @@ DISTINCT
 	 	T0."TransType" = 30
 	
 		/*
-		AND IFNULL((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
+		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
 			and (T1."Credit" - 
-		IFNULL((select sum(TT0."ReconSum") from 
+		ifnull((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0
 		
 		AND T1."DueDate" <= :fechaVenc
-		AND IFNULL(T1."FCCurrency",'SOL') = UPPER(:moneda)
-		AND T3."CardCode" like '%' || :CardCode ||'%'
+		--AND (ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
+		AND T3."CardCode" like '%' || :CardCode || '%'
 		and T1."Credit">0
 		/*AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'AS')*/
-		--AND IFNULL((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
+		--AND ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario 
 		--and "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'
-		/*AND (IFNULL((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
-									WHERE "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'		
+		AND (ifnull((SELECT max('Y') FROM "@EXD_EPG1" TX0
+		WHERE TX0."U_TIPO_DOCUMENTO" = 'AS' and TX0."U_DOCENTRY" = T0."TransId" and TX0."U_NRO_LINEA_AS" = T1."Line_ID"),'N') != 'Y'		
 		OR T0."U_CP_VARESC"='Y')
-		*/
+		
 		) T0
 	WHERE
 		T0."Total" > 0 
-		--and T0."BankCode" like '%'+:filtroBanco+'%' --se agrego nuevo
-
+		--and T0."BankCode" like '%'||:filtroBanco||'%' --se agrego nuevo
+		and T0."CodSucursal"	= ifnull(nullif(:codSucursal,'-1'),T0."CodSucursal")
+		and ifnull(T0."CodPrioridad",'') like '%'||:codPrioridad||'%'
 	ORDER BY 
 		T0."FechaVencimiento" desc;  
-
-	
 END;
