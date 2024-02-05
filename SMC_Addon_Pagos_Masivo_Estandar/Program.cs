@@ -56,6 +56,8 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "6",Name="Medio de pago efectivo",Valor="999" },
                                 new { Code = "7",Name="Medio de pago tranferencia",Valor="999" },
                                 new { Code = "8",Name="Medio de pago cheque",Valor="999" },
+                                new { Code = "9",Name="Sucursales",Valor="N" },
+                                new { Code = "10",Name="Host to Host",Valor="N" },                               
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");

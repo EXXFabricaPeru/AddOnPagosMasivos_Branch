@@ -493,7 +493,7 @@ namespace SMC_APM.View.USRForms
                         if (filaSelec) return true;
                         if (bloqueoPgo == "Y" || detracPend == "Y")
                         {
-                            Globales.Aplication.MessageBox("No se puede seleccionar facturas con bloqueo de pago o con cuora de detracción pendientes");
+                            Globales.Aplication.MessageBox("No se puede seleccionar facturas con bloqueo de pago o con cuota de detracción pendientes");
                             return false;
                         }
 
@@ -565,43 +565,55 @@ namespace SMC_APM.View.USRForms
                     }
                     cmbNroCtaPgo.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index);
                 }
-                else if (!e.BeforeAction && e.ColUID == "Col_12")
+                else if (e.ColUID == "Col_12")
                 {
-                    //Nro de cuenta del proveedor
-                    var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                    var codBancoPago = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_12", e.Row)).Value;
-                    var codBancoProv = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_4", e.Row)).Value;
-                    var codProveedor = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("fCard", e.Row)).Value;
-
-                    var sqlQry = $"select coalesce(\"Account\",'') as \"CC\",coalesce(\"U_EXM_INTERBANCARIA\",'') as \"CCI\" " +
-                    $"from OCRB where \"CardCode\" = '{codProveedor}' and \"BankCode\" = '{codBancoProv}' and coalesce(\"U_EXC_ACTIVO\",'') = 'Y'";
-                    recSet.DoQuery(sqlQry);
-                    ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_3", e.Row)).Value = "";
-                    if (!recSet.EoF) ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_3", e.Row)).Value = (codBancoProv == codBancoPago ? recSet.Fields.Item(0).Value : recSet.Fields.Item(1).Value);
-
-                    //Cuentas del banco seleccionado    
-                    var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
-                    var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
-                    sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                    $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}'";
-
-                    var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
-                    var edtCodCtaPgo = (SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_11", e.Row);
-
-                    while (cmbNroCtaPgo.ValidValues.Count > 0) cmbNroCtaPgo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
-
-                    recSet.DoQuery(sqlQry);
-                    if (recSet.RecordCount > 0)
+                    if (e.BeforeAction)
                     {
-                        cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(0).Value);
-                        edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                        var codBancoProv = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_4", e.Row)).Value;
+                        if (string.IsNullOrWhiteSpace(codBancoProv))
+                        {
+                            Globales.Aplication.MessageBox("El proveedor no tiene definida ninguna cuenta de banco");
+                            return false;
+                        }
                     }
                     else
                     {
-                        cmbNroCtaPgo.ValidValues.Add("", "");
-                        edtCodCtaPgo.Value = string.Empty;
+                        //Nro de cuenta del proveedor
+                        var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                        var codBancoPago = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_12", e.Row)).Value;
+                        var codBancoProv = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_4", e.Row)).Value;
+                        var codProveedor = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("fCard", e.Row)).Value;
+
+                        var sqlQry = $"select coalesce(\"Account\",'') as \"CC\",coalesce(\"U_EXM_INTERBANCARIA\",'') as \"CCI\" " +
+                        $"from OCRB where \"CardCode\" = '{codProveedor}' and \"BankCode\" = '{codBancoProv}' and coalesce(\"U_EXC_ACTIVO\",'') = 'Y'";
+                        recSet.DoQuery(sqlQry);
+                        ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_3", e.Row)).Value = "";
+                        if (!recSet.EoF) ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_3", e.Row)).Value = (codBancoProv == codBancoPago ? recSet.Fields.Item(0).Value : recSet.Fields.Item(1).Value);
+
+                        //Cuentas del banco seleccionado    
+                        var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
+                        var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
+                        sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
+                        $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}'";
+
+                        var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
+                        var edtCodCtaPgo = (SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_11", e.Row);
+
+                        while (cmbNroCtaPgo.ValidValues.Count > 0) cmbNroCtaPgo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+
+                        recSet.DoQuery(sqlQry);
+                        if (recSet.RecordCount > 0)
+                        {
+                            cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(0).Value);
+                            edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                        }
+                        else
+                        {
+                            cmbNroCtaPgo.ValidValues.Add("", "");
+                            edtCodCtaPgo.Value = string.Empty;
+                        }
+                        cmbNroCtaPgo.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index);
                     }
-                    cmbNroCtaPgo.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index);
                 }
                 return true;
             }));
@@ -611,9 +623,11 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
+                    var cancelado = dbsEXD_OEPG.GetValueExt("Canceled") == "Y";
                     // Form.Mode = "PR".Contains(dbsEXD_OEPG.GetValueExt("U_ESTADO")) ? SAPbouiCOM.BoFormMode. : SAPbouiCOM.BoFormMode.fm_VIEW_MODE;
                     btnEnvApr.Item.Enabled = "PR".Contains(dbsEXD_OEPG.GetValueExt("U_ESTADO"));
-                    HabiltarControlesPorEstado(dbsEXD_OEPG.GetValueExt("U_ESTADO"));
+                    dbsEXD_OEPG.SetValueExt("U_ESTADO", cancelado ? "N" : dbsEXD_OEPG.GetValueExt("U_ESTADO"));
+                    HabiltarControlesPorEstado(dbsEXD_OEPG.GetValueExt("U_ESTADO"));         
                     dttFac.Rows.Clear();
                     mtxFact.LoadFromDataSource();
                     _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
@@ -830,6 +844,8 @@ namespace SMC_APM.View.USRForms
             Form.GetItem("FiltroBank").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.GetItem("btnAddPrv").Enabled = activar;
             Form.GetItem("btnBuscar").Enabled = activar;
+            Form.GetItem("Item_11").Enabled = activar;
+            Form.GetItem("Item_19").Enabled = activar;
 
             Form.GetItem("mtxFact").Enabled = activar;
             Form.GetItem("mtxSelect").Enabled = activar;

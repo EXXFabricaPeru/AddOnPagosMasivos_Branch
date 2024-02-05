@@ -141,16 +141,29 @@ namespace SMC_APM.Controladores
         private void cargarMenus()
         {
             sapObjetos sapObj = new sapObjetos();
+            try
+            {
+                sboApplication.Forms.GetForm("169", 1)?.Freeze(true);
+                //creacion de menus y submenus
+                sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenuSAP1, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.nomMenu1, SAPbouiCOM.BoMenuType.mt_POPUP);
+                sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0007", "Autorizacion Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0008", "Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
 
-            //creacion de menus y submenus
-            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenuSAP1, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.nomMenu1, SAPbouiCOM.BoMenuType.mt_POPUP);
-            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0007", "Autorizacion Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
-            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
-            sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0008", "Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0004", "Reporte Tercero Ret. Embargo", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0005", "Reporte Tercero Ret. Liberación", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0006", "Reporte cuentas por pagar informadas a SUNAT", SAPbouiCOM.BoMenuType.mt_STRING);
+            }
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                sboApplication.Forms.GetForm("169", 1)?.Freeze(false);
+                sboApplication.Forms.GetForm("169", 1)?.Update();
+                sboApplication.StatusBar.SetText("Menú add-on pago masivo cargado correctamente", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+            }
 
-            sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0004", "Reporte Tercero Ret. Embargo", SAPbouiCOM.BoMenuType.mt_STRING);
-            sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0005", "Reporte Tercero Ret. Liberación", SAPbouiCOM.BoMenuType.mt_STRING);
-            sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0006", "Reporte cuentas por pagar informadas a SUNAT", SAPbouiCOM.BoMenuType.mt_STRING);
         }
 
         private void cargarObjetosUsuario()
