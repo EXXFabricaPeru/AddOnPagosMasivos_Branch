@@ -52,12 +52,12 @@ begin
 		inner 	join OCRD				T6 on T4."CardCode"		= T6."CardCode"
 		left 	join PCH5				T7 on T4."DocEntry"		= T7. "AbsEntry"
 		where  T0."U_FECHA_PAGO" = :fechaEscPago and ifnull(T4."DocStatus",'') != 'C' and ifnull(T4."CANCELED",'') = 'N' 
-		and T5."Status" = 'O' and T0."U_ESTADO"='A' and T4."BPLId" = case when :codSucursal = '-1' then T4."BPLId" else :codSucursal end
+		and T5."Status" = 'O' and T0."U_ESTADO"='A' 
 
 		union all 
 		--Nota de credito de cliente
 		select distinct		
-			'0'							as "CodSucursal",
+			T4."BPLId"					as "CodSucursal",
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -98,7 +98,7 @@ begin
 		union all
 		--Anticipo de proveedor
 		select distinct		
-			'0'							as "CodSucursal",
+			T4."BPLId"					as "CodSucursal",
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -138,7 +138,7 @@ begin
 		union all
 		--Pago borrador
 		select distinct	
-			'0'							as "CodSucursal",	
+			T4."BPLId"					as "CodSucursal",	
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -225,7 +225,7 @@ begin
 		union all  
 		--Pago recibido
 		select DISTINCT 	
-			'0'							as "CodSucursal",	
+			T4."BPLId"					as "CodSucursal",	
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -261,7 +261,7 @@ begin
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"								 
-		where  T0."U_FECHA_PAGO" = :fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" and T5."CardType" = 'C' and T4."DebCred" = 'C' --AND T0."U_ESTADO"='A'
+		where  T0."U_FECHA_PAGO" = :fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" and T5."CardType" = 'C' and T4."DebCred" = 'C' AND T0."U_ESTADO"='A'
 	),
 	RSLT2 
 	AS
@@ -305,5 +305,9 @@ begin
 		T0."GlosaAsiento",
 		T0."CardCodeFacto",
 		T0."CardNameFacto"
-	from RSLT1 T0;
+	from RSLT1 T0 where ifnull((select 'Y' from "@EXP_PMP1" TX0 
+	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
+	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"
+	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento" ),'') != 'Y'
+	and T0."CodSucursal" = case when :codSucursal = '-1' then T0."CodSucursal" else :codSucursal end;
 end

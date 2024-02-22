@@ -3321,6 +3321,33 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>@EXP_OPMP</TableID>
+        <AliasID>EXP_ENVIADO_H2H</AliasID>
+        <Descr>Enviado a H2H</Descr>
+        <TypeID>A</TypeID>
+        <EditSize>1</EditSize>
+        <Dflt>N</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>Y</FldValue>
+        <Descr>SI</Descr>
+      </row>
+      <row>
+        <FldValue>N</FldValue>
+        <Descr>NO</Descr>
+      </row>
+    </UFD1>
+  </BO>
+  
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>
@@ -3872,4 +3899,118 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
+  
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>IP_FTP</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>IP FTP</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>PUERTO</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Puerto</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>USUARIO</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Usuario</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>PASSWORD</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Password</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>RUTA_FLD_IN</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Rutal folder IN</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>RUTA_FLD_OUT</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Rutal folder OUT</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFH2H</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
 </BOM>

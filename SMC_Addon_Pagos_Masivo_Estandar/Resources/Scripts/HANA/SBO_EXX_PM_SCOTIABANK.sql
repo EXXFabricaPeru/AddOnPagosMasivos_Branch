@@ -1,5 +1,5 @@
 CREATE PROCEDURE SBO_EXX_PM_SCOTIABANK (
-docEntry int, glaccount nvarchar(15)
+docEntry int,codSucursal int, glaccount nvarchar(15)
 )
 
 AS
@@ -10,7 +10,7 @@ BEGIN
 
 -- Llenado de variables
 SELECT "TaxIdNum" INTO RUCCineplex FROM OADM;
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount;
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and ifnull("U_EXM_PMASIVO",'') = 'Y';
 
 IF :factoring='N' THEN
 -- Estructura Pago Proveedores

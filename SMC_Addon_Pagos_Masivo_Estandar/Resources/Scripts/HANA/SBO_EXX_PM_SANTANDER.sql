@@ -1,5 +1,5 @@
 CREATE PROCEDURE SBO_EXX_PM_SANTANDER (
-docEntry int, glaccount nvarchar(15)
+docEntry int,codSucursal int,glaccount nvarchar(15)
 )
 
 AS

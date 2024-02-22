@@ -27,6 +27,7 @@ namespace SMC_APM.Controladores
         private FormPagoMasivo formPagoMasivo = null;
         private FormEscenarioPago formEscenarioPago = null;
         private FormAutorizacion formAutorizacion = null;
+        private FormConfiguracionH2H formConfiguracionH2H = null;
 
         #endregion Atributos
 
@@ -149,6 +150,7 @@ namespace SMC_APM.Controladores
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0007", "Autorizacion Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0008", "Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, "11264", "SMC0009", "Configuración H2H - Pago masivo", SAPbouiCOM.BoMenuType.mt_STRING);
 
                 sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0004", "Reporte Tercero Ret. Embargo", SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0005", "Reporte Tercero Ret. Liberación", SAPbouiCOM.BoMenuType.mt_STRING);
@@ -292,29 +294,32 @@ namespace SMC_APM.Controladores
                             formPagoMasivo = new FormPagoMasivo("FRMPMP" + DateTime.Now.ToString("hhmmss"));
 
                             break;
-                            /*case "1287":
-                                SAPbouiCOM.Form oFormFather = sboApplication.Forms.ActiveForm;
-                                if (oFormFather.TypeEx.Equals("65306")
-                                    || oFormFather.TypeEx.Equals("141")
-                                    || oFormFather.TypeEx.Equals("65301")
-                                    || oFormFather.TypeEx.Equals("181"))
+                        /*case "1287":
+                            SAPbouiCOM.Form oFormFather = sboApplication.Forms.ActiveForm;
+                            if (oFormFather.TypeEx.Equals("65306")
+                                || oFormFather.TypeEx.Equals("141")
+                                || oFormFather.TypeEx.Equals("65301")
+                                || oFormFather.TypeEx.Equals("181"))
+                            {
+                                SAPbouiCOM.Form oForm = sboApplication.Forms.Item(oFormFather.UDFFormUID);
+                                SAPbouiCOM.Item oItem;
+                                SAPbouiCOM.EditText oEditText;
+
+                                oItem = oForm.Items.Item("U_SMC_FEFECTIVO");
+                                oEditText = (SAPbouiCOM.EditText)oItem.Specific;
+
+                                if (oEditText.Value.ToString().Equals(""))
                                 {
-                                    SAPbouiCOM.Form oForm = sboApplication.Forms.Item(oFormFather.UDFFormUID);
-                                    SAPbouiCOM.Item oItem;
-                                    SAPbouiCOM.EditText oEditText;
-
-                                    oItem = oForm.Items.Item("U_SMC_FEFECTIVO");
-                                    oEditText = (SAPbouiCOM.EditText)oItem.Specific;
-
-                                    if (oEditText.Value.ToString().Equals(""))
-                                    {
-                                        oEditText.Value = "Proveedores de Bienes y Servicios";
-                                    }
-
-                                    oItem = oFormFather.Items.Item("4");
-                                    oItem.Click();
+                                    oEditText.Value = "Proveedores de Bienes y Servicios";
                                 }
-                                break;*/
+
+                                oItem = oFormFather.Items.Item("4");
+                                oItem.Click();
+                            }
+                            break;*/
+                        case "SMC0009":
+                            formConfiguracionH2H = new FormConfiguracionH2H(FormConfiguracionH2H.TYPE + DateTime.Now.ToString("hhmmss"));
+                            break;
                     }
                 }
                 else
@@ -380,7 +385,8 @@ namespace SMC_APM.Controladores
             {
 
 
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV" || pVal.FormTypeEx == "FrmSRESUC")
+                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV"
+                    || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE)
                 {
                     IUSAP uiForm = null;
 

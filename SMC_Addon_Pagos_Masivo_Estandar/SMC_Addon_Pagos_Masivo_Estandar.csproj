@@ -87,6 +87,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\EXX_Metadata.BL.dll</HintPath>
     </Reference>
+    <Reference Include="FluentFTP, Version=49.0.2.0, Culture=neutral, PublicKeyToken=f4af092b1d8df44f, processorArchitecture=MSIL">
+      <HintPath>..\packages\FluentFTP.49.0.2\lib\net472\FluentFTP.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=1.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.1.4.1\lib\net46\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
@@ -122,6 +125,9 @@
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
+    <Reference Include="Renci.SshNet, Version=2020.0.2.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2020.0.2\lib\net40\Renci.SshNet.dll</HintPath>
+    </Reference>
     <Reference Include="SAP_AddonExtensions">
       <HintPath>..\packages\SAP_AddonExtensions.dll</HintPath>
     </Reference>
@@ -156,6 +162,7 @@
     <Compile Include="Controller\ctrFrmReporteLiberacion.cs" />
     <Compile Include="Controller\ctrFrmReporteRCArchivo.cs" />
     <Compile Include="Controller\ctrPrincipal.cs" />
+    <Compile Include="Controller\HostToHostManager.cs" />
     <Compile Include="Controller\LiberarTerceroController.cs" />
     <Compile Include="Controller\PagoMasivoController.cs" />
     <Compile Include="dao\ConexionDAO.cs" />
@@ -196,6 +203,7 @@
     <Compile Include="Util\utilNET.cs" />
     <Compile Include="View\frmPagoProveedores.cs" />
     <Compile Include="View\USRForms\FormAutorizacion.cs" />
+    <Compile Include="View\USRForms\FormConfiguracionH2H.cs" />
     <Compile Include="View\USRForms\FormEscenarioPago.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
@@ -257,6 +265,9 @@
     <Content Include="Resources\BO\UT.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\FrmConfH2H.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\FrmSeriesXSucursal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -282,6 +293,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Img\CFL.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\EXD_SP_PM_H2H_DATOS_TXT_BCP.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">

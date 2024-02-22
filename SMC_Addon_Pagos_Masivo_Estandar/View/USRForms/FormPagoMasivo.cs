@@ -50,6 +50,19 @@ namespace SMC_APM.View.USRForms
                 {
                     esTerceroRetenedor = utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
                 }
+                if (utblConf.GetByKey("10"))
+                {
+                    if (utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y")
+                    {
+                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Caption = "Enviar H2H";
+                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Item.Description = "H2H";
+                    }
+                    else
+                    {
+                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Caption = "Generar TXT";
+                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Item.Description = "TXT";
+                    }
+                }
 
                 Matrix = Form.GetMatrix("Item_12");
 
@@ -99,7 +112,7 @@ namespace SMC_APM.View.USRForms
                     cmbClmBncPrv.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                     recSet.MoveNext();
                 }
-       
+
                 var cmbSucursales = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_22").Specific;
                 recSet.DoQuery("select \"BPLId\",\"BPLName\",coalesce(U_EXX_RETPRO,'N') as \"RetPro\" from OBPL order by 1");
                 dbsPMP2.Clear();
@@ -158,7 +171,7 @@ namespace SMC_APM.View.USRForms
             recSet.DoQuery("select \"BPLId\",\"BPLName\",coalesce(U_EXX_RETPRO,'N') as \"RetPro\" from OBPL order by 1");
             dbsPMP2.Clear();
             while (!recSet.EoF)
-            {           
+            {
                 dbsPMP2.InsertRecord(position);
                 dbsPMP2.Offset = position;
                 dbsPMP2.SetValue("U_COD_SUCURSAL", position, recSet.Fields.Item(0).Value);
@@ -421,7 +434,14 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction && e.ActionSuccess)
                 {
+                    var cntErr = 0;
+                    var tipoEnvio = Form.Items.Item("btnGenTXT").Description;
                     if (Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    if (tipoEnvio == "H2H" && dbsOPMP.GetValueExt("U_EXP_ENVIADO_H2H") == "Y")
+                    {
+                        Globales.Aplication.MessageBox("Estos documentos ya se enviaron a Host to Host, esperando respuesta de los bancos...");
+                        return true;
+                    }
                     Globales.Aplication.StatusBar.SetText("Iniciando generación de archivos para bancos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                     Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                     Matrix.FlushToDataSource();
@@ -430,6 +450,7 @@ namespace SMC_APM.View.USRForms
                     //.Select(s => new { CodBanco = s.Banco, CodMoneda = s.Moneda, GLCuenta = s.MetodoPago.Cuenta }).Distinct().ToList();
                     var docEntry = Convert.ToInt32(dbsOPMP.GetValue("DocEntry", 0));
                     var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
+
                     try
                     {
                         foreach (var banc in lstBancos)
@@ -437,14 +458,24 @@ namespace SMC_APM.View.USRForms
                             try
                             {
                                 var codPais = ObtenerPaisBanco(banc.Banco, banc.CtaBanco);
-                                PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
-                                Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                if (tipoEnvio == "TXT")
+                                {
+                                    PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
+                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
+                                else
+                                {
+                                    PagoMasivoController.GenerarTXTH2H(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
+                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                }
                             }
                             catch (Exception ex)
                             {
+                                cntErr++;
                                 Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             }
                         }
+                        if (cntErr == 0) dbsOPMP.SetValueExt("U_EXP_ENVIADO_H2H", "Y");
                         //Globales.Aplication.MessageBox("Archivos para bancos generados correctamente en la ruta \n C:\\PagosMasivos\\");
                     }
                     finally

@@ -1,12 +1,12 @@
 CREATE PROCEDURE SBO_EXX_PM_INTERBANK (
-docEntry int, glaccount nvarchar(15)
+docEntry int,codSucursal int, glaccount nvarchar(15)
 )
 
 AS
 factoring nvarchar(1);
 BEGIN
 -- Llenado de variables
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount;
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and ifnull("U_EXM_PMASIVO",'') = 'Y';
 
 IF :factoring='N' THEN
 

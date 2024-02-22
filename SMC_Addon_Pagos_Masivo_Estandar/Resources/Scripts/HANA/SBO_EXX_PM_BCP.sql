@@ -1,5 +1,7 @@
 CREATE PROCEDURE SBO_EXX_PM_BCP (
-docEntry int, glaccount nvarchar(15)
+docEntry int, 
+codSucursal int,
+glaccount nvarchar(15)
 )
 
 AS
@@ -65,7 +67,9 @@ FROM (
 	INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
 	INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
 	WHERE T0."DocEntry"= :docEntry
-	AND T1."U_EXP_CODBANCO"='002' AND T1."U_EXP_CODCTABANCO"=:glaccount
+	AND T1."U_EXP_CODBANCO"='002' 
+	AND T1."U_EXP_CODCTABANCO"	=	:glaccount
+	AND T1."U_EXP_COD_SUCURSAL"	=	:codSucursal
 	AND IFNULL(T2."U_EXM_PMASIVO",'') = 'Y'
 	AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG') AND T1."U_EXP_SLC_RETENCION"='N'
 	--AND T1."U_EXP_CARDCODE"='P20603816898'

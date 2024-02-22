@@ -21,6 +21,7 @@ BEGIN
 	inner join "@EXD_PM_CONFAUT1"	T4 on T3."Code" = T4."Code"
 	where
 	T0."U_ESTADO" = 'E'
+	and ifnull(T0."Canceled",'') != 'Y'
 	and 
 	(
 	 	T4."U_CODAUTORI" = :codAutorizador or
@@ -28,7 +29,7 @@ BEGIN
 	)
 	and T0."CreateDate" between :fechaDesde and :fechaHasta
 	and ifnull(T0."U_CNT_AUT",0) = :cntAutorizaciones
-	and T3."U_VENTANA" = :ventana
+	and 'E' = :ventana
 	
 	union all 
 	
@@ -45,6 +46,7 @@ BEGIN
 	inner join "@EXD_PM_CONFAUT1"	T2 on T1."Code" = T2."Code"
 	where 
 	T0."U_EXP_ESTADO" = 'E'
+	and ifnull(T0."Canceled",'') != 'Y'
 	and
 	(
 	 	T2."U_CODAUTORI" = :codAutorizador or
@@ -52,5 +54,5 @@ BEGIN
 	)
 	and T0."CreateDate" between :fechaDesde and :fechaHasta
 	and ifnull(T0."U_EXP_CNTAUT",0) = :cntAutorizaciones
-	and T1."U_VENTANA" = :ventana;
+	and 'P' = :ventana;
 END

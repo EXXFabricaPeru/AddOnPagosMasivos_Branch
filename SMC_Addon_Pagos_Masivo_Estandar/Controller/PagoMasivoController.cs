@@ -508,6 +508,92 @@ namespace SMC_APM.Controller
             catch { throw; }
         }
 
+        public static void GenerarTXTH2H(int docEntry, string codBanco, int codSucursal, string codMoneda, string GLAccount, string codPais)
+        {
+            try
+            {
+                var tblConfH2H = Globales.Company.UserTables.Item("EXD_PM_CONFH2H");
+                var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+                var qry = "select top 1 \"AttachPath\" from OADP";
+                recordset.DoQuery(qry);
+                var attachPath = recordset.Fields.Item(0).Value;
+                if (string.IsNullOrWhiteSpace(attachPath)) throw new InvalidOperationException("No se ha definido ruta de anexos en SAP");
+                var rutaFisica = attachPath + @"PagosMasivos\";
+                var ipFPT = string.Empty;
+                var puertoFTP = default(int);
+                var usuarioFTP = string.Empty;
+                var passwordFTP = string.Empty;
+                var rutaFldINFTP = string.Empty;
+
+                switch (codPais)
+                {
+                    case "PE":
+                        switch (codBanco)
+                        {
+                            case "002":
+                                if (!tblConfH2H.GetByKey("001")) throw new InvalidOperationException("No se han definido los datos para el banco BCP");
+                                ipFPT = tblConfH2H.UserFields.Fields.Item("U_IP_FTP").Value;
+                                puertoFTP = Convert.ToInt32(tblConfH2H.UserFields.Fields.Item("U_PUERTO").Value);
+                                usuarioFTP = tblConfH2H.UserFields.Fields.Item("U_USUARIO").Value;
+                                passwordFTP = tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value;
+                                rutaFldINFTP = tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value;
+
+                                if (string.IsNullOrWhiteSpace(ipFPT)) throw new InvalidOperationException("No se ha definido la ip del banco BCP");
+
+                                var nombreArchivo = $"P{DateTime.Today.ToString("yyyyMMdd")}{("00000" + docEntry).Substring(docEntry.ToString().Length, 5)}P.txt";
+                                rutaFisica += nombreArchivo;
+                                rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
+
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_BCP({docEntry},{codSucursal})";
+                                else
+                                    qry = $"EXEC SBO_EXX_PM_BCP {docEntry},'{GLAccount}'";
+                                break;
+                            default:
+                                throw new Exception($"Código de banco {codBanco} no soportado");
+                        }
+                        break;
+                    case "CL":
+                        switch (codBanco)
+                        {
+                            //PODRÍA SER UNA INTERFAZ
+                            case "001":
+                                qry = $"CALL SBO_EXX_PM_BANCO_CHILE_CH({docEntry},'{GLAccount}')";
+                                break;
+                            case "014":
+                                qry = $"CALL SBO_EXX_PM_SCOTIABANK_CH({docEntry},'{GLAccount}')";
+                                break;
+                            case "037":
+                                qry = $"CALL SBO_EXX_PM_SANTANDER_CH({docEntry},'{GLAccount}')";
+                                break;
+                            default:
+                                throw new Exception($"Código de banco {codBanco} no soportado");
+                        }
+                        break;
+                    default:
+                        throw new Exception($"Código de pais {codPais} no soportado");
+                }
+
+                string valorLinea = string.Empty;
+                recordset.DoQuery(qry);
+                using (StreamWriter archivo = new StreamWriter(rutaFisica, false, Encoding.GetEncoding(1252)))
+                {
+                    while (!recordset.EoF)
+                    {
+                        valorLinea = recordset.Fields.Item(0).Value;
+
+                        archivo.WriteLine(valorLinea.Remove(valorLinea.Length - 1));
+                        recordset.MoveNext();
+                    }
+                    archivo.Close();
+                    archivo.Dispose();
+                }
+                HostToHostManager.SendToFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaFisica, rutaFldINFTP);
+            }
+            catch { throw; }
+        }
+
         public static IEnumerable<dynamic> ObtenerListaBancoPorPago(object obj)
         {
             XDocument xDoc = null;

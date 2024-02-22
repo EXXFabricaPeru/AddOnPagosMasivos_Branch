@@ -1,14 +1,17 @@
 CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA --'20231013'
 (
-	@fechaEscPago date
+	@fechaEscPago date,
+	@codSucursal int
 )
 as
 begin
-	--Factura de proveedor
+
 	WITH RSLT1
 	as
-	(
-		 select distinct		
+	(	
+		--Factura de proveedor
+		 select distinct
+			T4."BPLId"					as "CodSucursal",		
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -38,19 +41,20 @@ begin
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
-		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 		= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = 'SOL' then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join OPCH				T4 on T4."DocEntry" 	= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'FT-P'
 		inner 	join PCH6 				T5 on T5."DocEntry"		= T4."DocEntry" AND T5."InstlmntID"=T1."U_NRO_CUOTA"
 		inner 	join OCRD				T6 on T4."CardCode"		= T6."CardCode"
 		left 	join PCH5				T7 on T4."DocEntry"		= T7. "AbsEntry"
 		where  T0."U_FECHA_PAGO" = @fechaEscPago and ISNULL(T4."DocStatus",'') != 'C' and ISNULL(T4."CANCELED",'') = 'N' 
-		and T5."Status" = 'O' and T0."U_ESTADO"='A'
+		and T5."Status" = 'O' and T0."U_ESTADO"='A' and ISNULL(T0."U_COD_SUCURSAL",'-1') = @codSucursal
 
 		union all 
 		--Nota de credito de cliente
 		select distinct		
+			''							as "CodSucursal",	
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -91,6 +95,7 @@ begin
 		union all
 		--Anticipo de proveedor
 		select distinct		
+			''							as "CodSucursal",
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -129,7 +134,8 @@ begin
 	
 		union all
 		--Pago borrador
-		select distinct		
+		select distinct	
+			''							as "CodSucursal",	
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -168,6 +174,7 @@ begin
 		union all
 		--Asiento
 		select distinct		
+			T4.BPLId					as "CodSucursal",
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -183,7 +190,7 @@ begin
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			T3."UsrNumber1" 			as "Moneda",
+			isnull(T4."FCCurrency",'SOL') 			as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			T4."Line_ID"				as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -198,7 +205,7 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = 'SOL' then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'AS'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"	
@@ -214,7 +221,8 @@ begin
 	
 		union all  
 		--Pago recibido
-		select DISTINCT 		
+		select DISTINCT 	
+			''							as "CodSucursal",	
 			T0."DocEntry"				as "CodEscenarioPago",
 			T0."DocNum"					as "NumEscenarioPago",
 			''							as "DscEscenarioPago",
@@ -245,7 +253,7 @@ begin
 			T1."U_NOM_PROV_FACTO"	as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = 'SOL' then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
@@ -264,6 +272,7 @@ begin
 	select 
 		'Y'							as "SlcPago",
 		'N'							as "SlcRetencion",
+		T0."CodSucursal",
 		T0."CodEscenarioPago",
 		T0."NumEscenarioPago",
 		T0."DscEscenarioPago",

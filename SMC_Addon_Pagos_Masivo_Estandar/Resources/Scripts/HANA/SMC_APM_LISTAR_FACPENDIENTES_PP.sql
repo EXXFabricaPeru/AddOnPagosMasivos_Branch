@@ -23,10 +23,10 @@ BEGIN
 		T0."CardCode",
 		T0."CardName",
 		T0."NumAtCard",
-		case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end as "CodBancoPago",
+		case when :tipoBanco = '000' then T0."BankCode" else case when ifnull(T0."BankCode",'') != '' then :tipoBanco end end as "CodBancoPago",
 		T0."DocCur" as "MonedaPago",
-		(select  max(TX0."GLAccount") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal") as "CodCtaPago",
-		(select  max(TX0."Account") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal") as "NroCtaPago",
+		(select  max(TX0."GLAccount") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "CodCtaPago",
+		(select  max(TX0."Account") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "NroCtaPago",
 		T0."DocCur",
 		T0."Total",
 		T0."CodigoRetencion",
@@ -224,8 +224,8 @@ BEGIN
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FT-P' AND "U_EXP_NROCUOTA"=T1."InstlmntID")
 						
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
-		and TX0."U_TIPO_DOCUMENTO" = 'FT-P'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'FT-P' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 								
 
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
@@ -377,8 +377,8 @@ BEGIN
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'NC-C')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
-		and TX0."U_TIPO_DOCUMENTO" = 'NC-C'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'NC-C' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
@@ -527,8 +527,8 @@ BEGIN
 		AND T0."CreateTran" = 'Y'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FA-P')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
-		and TX0."U_TIPO_DOCUMENTO" = 'FA-P'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'FA-P' and ifnull(TX1."Canceled",'') !='Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
@@ -679,8 +679,8 @@ BEGIN
 		AND T0."CreateTran" = 'N'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SA-P')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
-		and TX0."U_TIPO_DOCUMENTO" = 'SA-P'),'N') = 'N'OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SA-P' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N'OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		
@@ -766,8 +766,8 @@ BEGIN
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SP')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."DocEntry" 
-		and TX0."U_TIPO_DOCUMENTO" = 'SP'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SP' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 	
 		UNION	
 	--------pagos recibicos-------
@@ -883,8 +883,8 @@ BEGIN
 		and T1."Credit">0
 		--AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'PR')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 where TX0."U_DOCENTRY" = T0."TransId" 
-		and TX0."U_TIPO_DOCUMENTO" = 'PR'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."TransId" and TX0."U_TIPO_DOCUMENTO" = 'PR' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
 		
 		-------pagos recibidos-------
 		union all
@@ -1024,9 +1024,9 @@ BEGIN
 		--AND ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario 
 		--and "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'
-		AND (ifnull((SELECT max('Y') FROM "@EXD_EPG1" TX0
-		WHERE TX0."U_TIPO_DOCUMENTO" = 'AS' and TX0."U_DOCENTRY" = T0."TransId" and TX0."U_NRO_LINEA_AS" = T1."Line_ID"),'N') != 'Y'		
-		OR T0."U_CP_VARESC"='Y')
+		AND (ifnull((SELECT max('Y') FROM "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		WHERE TX0."U_TIPO_DOCUMENTO" = 'AS' and TX0."U_DOCENTRY" = T0."TransId" and TX0."U_NRO_LINEA_AS" = T1."Line_ID" 
+		and ifnull(TX1."Canceled",'') != 'Y'),'N') != 'Y' OR T0."U_CP_VARESC"='Y')
 		
 		) T0
 	WHERE

@@ -147,6 +147,7 @@
 			</row>
 		</UserTablesMD>
 	</BO>
+  
 	<BO>
 		<AdmInfo>
 			<Object>153</Object>
@@ -203,4 +204,19 @@
 			</row>
 		</UserTablesMD>
 	</BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_CONFH2H</TableName>
+        <TableDescription>PM: Conf. Host To Host</TableDescription>
+        <TableType>bott_NoObject</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
+  
 </BOM>
