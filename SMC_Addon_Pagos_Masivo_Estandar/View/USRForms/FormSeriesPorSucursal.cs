@@ -39,6 +39,7 @@ namespace SMC_APM.View.USRForms
                 if (tipoSerie == "R" && _dbsPMP2Main.GetValue("U_RETPRO", i).Trim().Equals("N")) continue;
                 _dbsPMP2.InsertRecord(position);
                 _dbsPMP2.Offset = position;
+                _dbsPMP2.SetValue("U_RETPRO", position, _dbsPMP2Main.GetValue("U_RETPRO", i));
                 _dbsPMP2.SetValue("U_COD_SUCURSAL", position, _dbsPMP2Main.GetValue("U_COD_SUCURSAL", i));
                 _dbsPMP2.SetValue("U_NOM_SUCURSAL", position, _dbsPMP2Main.GetValue("U_NOM_SUCURSAL", i));
                 _dbsPMP2.SetValue("U_COD_SERIE_PAGO", position, _dbsPMP2Main.GetValue("U_COD_SERIE_PAGO", i));
@@ -98,6 +99,7 @@ namespace SMC_APM.View.USRForms
                         {
                             if (_dbsPMP2Main.GetValue("U_COD_SUCURSAL", j) == _dbsPMP2.GetValue("U_COD_SUCURSAL", i))
                             {
+                                _dbsPMP2Main.SetValue("U_RETPRO", i, _dbsPMP2.GetValue("U_RETPRO", i));
                                 _dbsPMP2Main.SetValue("U_COD_SUCURSAL", i, _dbsPMP2.GetValue("U_COD_SUCURSAL", i));
                                 _dbsPMP2Main.SetValue("U_NOM_SUCURSAL", i, _dbsPMP2.GetValue("U_NOM_SUCURSAL", i));
                                 _dbsPMP2Main.SetValue("U_COD_SERIE_PAGO", i, _dbsPMP2.GetValue("U_COD_SERIE_PAGO", i));

@@ -144,7 +144,7 @@ namespace SMC_APM.Conexion
 
                 if (ret != 0)
                     throw new Exception("Login context failed");
-
+                sboCompany.language = SAPbobsCOM.BoSuppLangs.ln_Spanish_La;
                 ret = sboCompany.Connect();
             }
             catch (Exception ex)

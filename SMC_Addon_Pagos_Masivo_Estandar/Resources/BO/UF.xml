@@ -3773,6 +3773,24 @@
 			</row>
 		</UserFieldsMD>
 	</BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>NOM_BANCO_PAGO</Name>
+        <Type>db_Alpha</Type>
+        <Size>120</Size>
+        <Description>Nombre del banco de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>120</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
 	<BO>
 		<AdmInfo>
 			<Object>152</Object>

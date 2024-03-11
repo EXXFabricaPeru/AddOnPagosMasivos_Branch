@@ -18,6 +18,7 @@ namespace SMC_APM.Modelo
         public string CardName { get; set; }
         public string NumAtCard { get; set; }
         public string CodBancoPago { get; set; }
+        public string NomBancoPago { get; set; }
         public string MonedaPago { get; set; }
         public string DocCur { get; set; }
         public double Total { get; set; }
