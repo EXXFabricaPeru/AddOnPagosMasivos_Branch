@@ -27,6 +27,9 @@
 			<row>
 				<TableName>EXP_PMP2</TableName>
 			</row>
+      <row>
+        <TableName>EXP_PMP3</TableName>
+      </row>
 		</UDO1>
 		<UDO2>
 			<row>

@@ -1,11 +1,15 @@
 ﻿using SAP_AddonExtensions;
 using SAP_AddonFramework;
+using SAPbobsCOM;
 using SMC_APM.Modelo;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -67,6 +71,9 @@ namespace SMC_APM.View.USRForms
             {
                 if (!UIFormFactory.FormUIDExists(id)) UIFormFactory.AddUSRForm(id, this);
                 Form.Freeze(true);
+                // Deshabilito la opcion de restablecer
+                Form.EnableMenu("1285", false);
+
                 var tblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
                 tieneAutorizaciones = tblConf.GetByKey("4") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
                 tieneSucursales = tblConf.GetByKey("9") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
@@ -169,11 +176,15 @@ namespace SMC_APM.View.USRForms
             mtxSelc = Form.GetMatrix("mtxSelect");
 
             mtxFact.Columns.Item("Col_8").ExpandType = SAPbouiCOM.BoExpandType.et_DescriptionOnly;
+            mtxFact.Columns.Item("Col_10").ExpandType = SAPbouiCOM.BoExpandType.et_ValueOnly;
 
             mtxFact.Columns.Item("Col_11").Visible = false;
             mtxFact.Columns.Item("Col_12").Visible = false;
             mtxSelc.Columns.Item("Col_8").Visible = false;
             mtxSelc.Columns.Item("Col_10").Visible = false;
+
+            mtxFact.CommonSetting.FixedColumnsCount = 2;
+            mtxSelc.CommonSetting.FixedColumnsCount = 2;
 
         }
 
@@ -318,7 +329,8 @@ namespace SMC_APM.View.USRForms
                     try
                     {
                         var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                        var fechaVenc = dbsEXD_OEPG.GetValueExt("U_FECHA_VENC");
+                        var fechaVencD = dbsEXD_OEPG.GetValueExt("U_FECHA_VENC");
+                        var fechaVencH = dbsEXD_OEPG.GetValueExt("U_FECHA_VENH");
                         var monedaLoc = string.IsNullOrWhiteSpace(dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_LOC")) ? "XZY" : dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_LOC");
                         var monedaExt = string.IsNullOrWhiteSpace(dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_EXT")) ? "XZY" : dbsEXD_OEPG.GetValueExt("U_COD_MONEDA_EXT");
                         var codBanco = dbsEXD_OEPG.GetValueExt("U_COD_BANCO");
@@ -331,10 +343,18 @@ namespace SMC_APM.View.USRForms
                                 SAPbouiCOM.BoStatusBarMessageType.smt_Error);
                             return false;
                         }
-                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVenc}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}'";
+                        dttFac.Rows.Clear();
+                        mtxFact.LoadFromDataSourceEx();
+                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}'";
                         if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
-                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVenc}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}')";
+                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}')";
                         dttFac.ExecuteQuery(qry);
+                        if (dttFac.Rows.Count == 1 && string.IsNullOrWhiteSpace(dttFac.GetValue("CardCode", 0).ToString()))
+                        {
+                            Globales.Aplication.StatusBar.SetText("La busqueda no obtuvo resultados", SAPbouiCOM.BoMessageTime.bmt_Short,
+                                SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            return false;
+                        }
                         _xmlSerializer = new XmlSerializer(typeof(XMLDataTable));
                         var strXMLDTDocs = dttFac.SerializeAsXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly);
                         _dsrXmlDTDocs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
@@ -380,15 +400,22 @@ namespace SMC_APM.View.USRForms
                             EstadoExt = "P"
                         }).ToList();
 
-                        lstDocumentos.RemoveAll(d => d.EstadoExt == "P");
-                        lstDocumentos.AddRange(lstDocumentosNuevos);
 
                         strXMLDTDocs = dttProveedores.SerializeAsXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly);
                         var _dsrXmlDTProvs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
                         var lstProveedoresSlc = _dsrXmlDTProvs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Slc")).Value == "Y")
                         .Select(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "CardCode").Value).ToList();
                         if (!string.IsNullOrWhiteSpace(dbsEXD_OEPG.GetValueExt("U_COD_PROV"))) lstProveedoresSlc.Add(dbsEXD_OEPG.GetValueExt("U_COD_PROV"));
-                        if (lstProveedoresSlc.Count > 0) lstDocumentos = lstDocumentos.Where(d => lstProveedoresSlc.Contains(d.CardCode)).ToList();
+                        if (lstProveedoresSlc.Count > 0) lstDocumentosNuevos = lstDocumentosNuevos.Where(d => lstProveedoresSlc.Contains(d.CardCode)).ToList();
+
+                        var lstSeleccionados = lstDocumentos.Where(d => d.EstadoExt == "S").ToList();
+                        lstDocumentosNuevos = lstDocumentosNuevos.Where(d => !lstSeleccionados.Any(ds => ds.Documento == d.Documento && ds.DocEntry == d.DocEntry
+                        && ds.NroCuota == d.NroCuota && ds.LineaAsiento == d.LineaAsiento)).ToList();
+
+                        lstDocumentos.Clear();
+                        lstDocumentos.AddRange(lstDocumentosNuevos);
+                        lstDocumentos.AddRange(lstSeleccionados);
+
                         this.LoadMatrixByStatus();
                         //mtxFact.LoadFromDataSource();
                     }
@@ -410,7 +437,11 @@ namespace SMC_APM.View.USRForms
                     _dsrXmlDBDataSource = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
                     _dsrXmlDBDataSource.Rows.Where(r => r.Cells.FirstOrDefault(c => c.Uid == "U_SELECCIONADO")?.Value == "Y").All(r =>
                     {
-                        var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid == "U_DOCENTRY").Value));
+                        var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid == "U_DOCENTRY").Value)
+                        && d.Documento == r.Cells.FirstOrDefault(c => c.Uid == "U_TIPO_DOCUMENTO").Value
+                        && d.NroCuota == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid == "U_NRO_CUOTA").Value)
+                        && d.LineaAsiento == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid == "U_NRO_LINEA_AS").Value));
+
                         doc.EstadoExt = "P";
                         return true;
                     });
@@ -427,17 +458,43 @@ namespace SMC_APM.View.USRForms
                     _xmlSerializer = new XmlSerializer(typeof(XMLDataTable));
                     var strXMLDTDocs = dttFac.SerializeAsXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly);
                     _dsrXmlDTDocs = (XMLDataTable)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
-                    _dsrXmlDTDocs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value == "Y"
-                    && r.Cells.FirstOrDefault(c => c.ColumnUid == "BloqueoPago").Value == "N"
-                    && r.Cells.FirstOrDefault(c => c.ColumnUid == "DetraccionPend").Value == "N").All(r =>
+                    _dsrXmlDTDocs.Rows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value == "Y").All(r =>
                     {
-                        var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid == "DocEntry").Value));
-                        doc.EstadoExt = "S";
-                        doc.MonedaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "MonedaPago").Value;
-                        doc.CodBancoPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "CodBancoPago").Value;
-                        doc.NomBancoPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NomBancoPago").Value;
-                        doc.CodCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "CodCtaPago").Value;
-                        doc.NroCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NroCtaPago").Value;
+                        try
+                        {
+                            var docEntry = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid == "DocEntry").Value);
+                            var documento = r.Cells.FirstOrDefault(c => c.ColumnUid == "Documento").Value;
+                            var nroCuota = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid == "NroCuota").Value);
+                            var lineaAsiento = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.ColumnUid == "LineaAsiento").Value);
+                            var docNum = r.Cells.FirstOrDefault(c => c.ColumnUid == "DocNum").Value;
+                            var codCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "CodCtaPago").Value;
+                            var nroCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NroCtaPago").Value;
+
+                            var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == docEntry
+                            && d.Documento == documento
+                            && d.NroCuota == nroCuota
+                            && d.LineaAsiento == lineaAsiento);
+
+                            if (doc == null) throw new Exception($"No se encontro documento de tipo: {documento} y id: {docNum}");
+                            else if (r.Cells.FirstOrDefault(c => c.ColumnUid == "BloqueoPago").Value == "Y") throw new Exception($"El documento:{documento} - {docNum}, tiene bloqueo de pago");
+                            else if (r.Cells.FirstOrDefault(c => c.ColumnUid == "DetraccionPend").Value == "Y") throw new Exception($"El documento:{documento} - {docNum}, tiene pendiente el pago de detracción");
+                            else if (string.IsNullOrWhiteSpace(r.Cells.FirstOrDefault(c => c.ColumnUid == "NroCtaPago")?.Value.Trim())) throw new Exception($"En el documento:{documento} - {docNum}, no se ha asignado el número de cuenta del banco de pago");
+                            else if (string.IsNullOrWhiteSpace(r.Cells.FirstOrDefault(c => c.ColumnUid == "Cuenta")?.Value.Trim())) throw new Exception($"En el documento:{documento} - {docNum}, el número de cuenta del banco del proveedor esta vacio");
+                            else if (!EsCuentaPagoMasivo(nroCtaPago, codCtaPago)) throw new Exception($"El número de cuenta: {nroCtaPago}, no esta asiganada a pago masivo");
+
+                            doc.EstadoExt = "S";
+                            doc.MonedaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "MonedaPago").Value;
+                            doc.CodBancoPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "CodBancoPago").Value;
+                            doc.NomBancoPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NomBancoPago").Value;
+                            doc.CodCtaPago = codCtaPago;
+                            doc.NroCtaPago = nroCtaPago;
+                            doc.Cuenta = r.Cells.FirstOrDefault(c => c.ColumnUid == "Cuenta")?.Value;
+                            doc.TotalPagar = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid == "TotalPagar").Value);
+                        }
+                        catch (Exception ex)
+                        {
+                            Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                        }
                         return true;
                     });
                     LoadMatrixByStatus();
@@ -472,12 +529,19 @@ namespace SMC_APM.View.USRForms
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, btnAddSBO.Item.UniqueID, e =>
             {
-                if (e.BeforeAction && Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE)
+                if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE)
                 {
-                    if (lstDocumentos == null || lstDocumentos.Where(d => d.EstadoExt == "S").Count() == 0)
+                    if (e.BeforeAction)
                     {
-                        Globales.Aplication.StatusBar.SetText("Agregue al menos un documento al escenario", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-                        return false;
+                        if (lstDocumentos == null || lstDocumentos.Where(d => d.EstadoExt == "S").Count() == 0)
+                        {
+                            Globales.Aplication.StatusBar.SetText("Agregue al menos un documento al escenario", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            return false;
+                        }
+                    }
+                    else if (!e.BeforeAction && e.ActionSuccess)
+                    {
+                        FormDataLoadAdd();
                     }
                 }
                 else
@@ -499,6 +563,7 @@ namespace SMC_APM.View.USRForms
                         var filaSelec = ((SAPbouiCOM.CheckBox)mtxFact.GetCellSpecific("lSelect", e.Row)).Checked;
                         var bloqueoPgo = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_1", e.Row)).Value;
                         var detracPend = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_2", e.Row)).Value;
+                        var codCtaBcoProv = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_3", e.Row)).Value;
                         var codBanco = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_12", e.Row)).Value;
                         var nroCuenta = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row)).Value;
 
@@ -520,6 +585,39 @@ namespace SMC_APM.View.USRForms
                             Globales.Aplication.MessageBox("Seleccione un nro de cuenta");
                             return false;
                         }
+
+                        if (string.IsNullOrWhiteSpace(codCtaBcoProv))
+                        {
+                            Globales.Aplication.MessageBox("EL proveedor no tiene número de cuenta de banco");
+                            return false;
+                        }
+                    }
+                    else if (e.Row > 0 && e.ColUID.Equals("Col_10") && e.Row <= mtxFact.RowCount)
+                    {
+                        try
+                        {
+                            Form.Freeze(true);
+                            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                            var codBanco = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_12", e.Row)).Value;
+                            var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
+                            var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
+                            var sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
+                            $"where TX0.\"BankCode\" = '{codBanco}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(TX0.\"U_EXM_PMASIVO\",'') = 'Y'";
+
+                            var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
+                            while (cmbNroCtaPgo.ValidValues.Count > 0) cmbNroCtaPgo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                            recSet.DoQuery(sqlQry);
+                            while (!recSet.EoF)
+                            {
+                                cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                                recSet.MoveNext();
+                            }
+                        }
+                        finally
+                        {
+                            Form.Freeze(false);
+                        }
+
                     }
                     else if (e.Row > 0 && e.ColUID.Equals("Col_14"))
                     {
@@ -581,7 +679,7 @@ namespace SMC_APM.View.USRForms
                     var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
                     var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
                     var sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                    $"where TX0.\"BankCode\" = '{codBanco}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}'";
+                    $"where TX0.\"BankCode\" = '{codBanco}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
 
 
                     var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
@@ -592,8 +690,12 @@ namespace SMC_APM.View.USRForms
                     recSet.DoQuery(sqlQry);
                     if (recSet.RecordCount > 0)
                     {
-                        cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(0).Value);
-                        edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                        while (!recSet.EoF)
+                        {
+                            cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                            edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                            recSet.MoveNext();
+                        }
                     }
                     else
                     {
@@ -601,6 +703,13 @@ namespace SMC_APM.View.USRForms
                         edtCodCtaPgo.Value = string.Empty;
                     }
                     cmbNroCtaPgo.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                }
+                else if (e.ColUID == "Col_10")
+                {
+                    var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
+                    var edtCodCtaPgo = (SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_11", e.Row);
+
+                    edtCodCtaPgo.Value = cmbNroCtaPgo.Selected?.Description;
                 }
                 else if (e.ColUID == "Col_14")
                 {
@@ -639,7 +748,7 @@ namespace SMC_APM.View.USRForms
                             var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
                             var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
                             sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                            $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}'";
+                            $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
 
                             var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
                             var edtCodCtaPgo = (SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_11", e.Row);
@@ -649,8 +758,12 @@ namespace SMC_APM.View.USRForms
                             recSet.DoQuery(sqlQry);
                             if (recSet.RecordCount > 0)
                             {
-                                cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(0).Value);
-                                edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                                while (!recSet.EoF)
+                                {
+                                    cmbNroCtaPgo.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                                    edtCodCtaPgo.Value = recSet.Fields.Item(1).Value;
+                                    recSet.MoveNext();
+                                }
                             }
                             else
                             {
@@ -667,6 +780,41 @@ namespace SMC_APM.View.USRForms
                         {
                             Form.Freeze(false);
                         }
+                    }
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_VALIDATE, mtxSelc.Item.UniqueID, e =>
+            {
+                if (e.BeforeAction)
+                {
+                    if (e.ColUID == "fTotalP")
+                    {
+                        var total = Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotal", e.Row)).Value);
+                        var totalPagar = Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", e.Row)).Value);
+                        var totMonLoc = 0.00;
+                        var totMonExt = 0.00;
+
+                        if (totalPagar <= 0 || totalPagar > total)
+                        {
+                            Globales.Aplication.StatusBar.SetText("Ingrese un monto valido", SAPbouiCOM.BoMessageTime.bmt_Short);
+                            return false;
+                        }
+                        for (int i = 0; i < mtxSelc.RowCount; i++)
+                        {
+                            var moneda = ((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fMon", i + 1)).Value;
+                            if (moneda != "SOL")
+                            {
+                                totMonExt += Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", i + 1)).Value);
+                            }
+                            else
+                            {
+                                totMonLoc += Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", i + 1)).Value);
+                            }
+                        }
+                        udsTOTAL.Value = totMonLoc.ToString();
+                        udsTOTAL_USD.Value = totMonExt.ToString();
                     }
                 }
                 return true;
@@ -751,6 +899,7 @@ namespace SMC_APM.View.USRForms
             dbsEXD_OEPG.SetValueExt("U_COD_BANCO", "000");
             dbsEXD_OEPG.SetValueExt("U_FECHA_PAGO", DateTime.Today.ToString("yyyyMMdd"));
             dbsEXD_OEPG.SetValueExt("U_FECHA_VENC", DateTime.Today.ToString("yyyyMMdd"));
+            dbsEXD_OEPG.SetValueExt("U_FECHA_VENH", DateTime.Today.ToString("yyyyMMdd"));
             dbsEXD_OEPG.SetValueExt("U_COD_SUCURSAL", "-1");
             cmbSeries.ValidValues.LoadSeries(Form.BusinessObject.Type, SAPbouiCOM.BoSeriesMode.sf_Add);
             if (cmbSeries.ValidValues.Count > 0) cmbSeries.Select(0, SAPbouiCOM.BoSearchKey.psk_Index);
@@ -823,6 +972,7 @@ namespace SMC_APM.View.USRForms
                 var verTmp = strWritter.ToString();
                 dttFac.LoadSerializedXML(SAPbouiCOM.BoDataTableXmlSelect.dxs_DataOnly, strWritter.ToString());
                 mtxFact.LoadFromDataSource();
+                mtxFact.AutoResizeColumns();
             }
 
             _dsrXmlDBDataSource.Rows = lstDocumentos.Where(d => d.EstadoExt == "S").Select(d => new RowDBS
@@ -870,6 +1020,7 @@ namespace SMC_APM.View.USRForms
                 var verTmp = strWritter.ToString();
                 dbsEXD_EPG1.LoadFromXML(strWritter.ToString());
                 mtxSelc.LoadFromDataSource();
+                mtxSelc.AutoResizeColumns();
             }
         }
 
@@ -912,6 +1063,14 @@ namespace SMC_APM.View.USRForms
             Form.GetItem("mtxSelect").Enabled = activar;
             Form.GetItem("btnAgg").Enabled = activar;
             Form.GetItem("btnQuit").Enabled = activar;
+        }
+
+        private bool EsCuentaPagoMasivo(string account, string glAccount)
+        {
+            var sqlQry = $"select 'A' from DSC1 where \"Account\" = '{account}' and \"GLAccount\" = '{glAccount}' and coalesce(\"U_EXM_PMASIVO\",'') = 'Y'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            return !recSet.EoF;
         }
     }
 }

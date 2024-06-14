@@ -29,10 +29,8 @@ namespace SMC_APM
                         dictionaryForms.Remove(itemEvent.FormUID);
                 }
             }
-
             if (dictionaryForms.ContainsKey(obj.FormUID))
                 return dictionaryForms[obj.FormUID];
-
             return null;
         }
 

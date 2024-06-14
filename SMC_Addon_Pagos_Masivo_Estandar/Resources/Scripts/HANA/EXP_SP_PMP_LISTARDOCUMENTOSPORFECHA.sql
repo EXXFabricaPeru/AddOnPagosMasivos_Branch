@@ -22,7 +22,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
 			T4."FolioPref"|| '-'||T4."FolioNum" as "NroDocSUNAT",
@@ -65,7 +65,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
 			T4."FolioPref" ||'-'||T4."FolioNum" as "NroDocSUNAT",
@@ -73,7 +73,7 @@ begin
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			T3."UsrNumber1" 			as "Moneda",
+			T4."DocCur" 				as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			'0'							as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -88,7 +88,7 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner  	join ORIN				T4 on T4."DocEntry" 	= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'NC-C'
 		inner 	join OCRD				T5 on T4."CardCode"		= T5."CardCode"
@@ -106,7 +106,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
 			T4."FolioPref"||'-'||T4."FolioNum" as "NroDocSUNAT",
@@ -114,10 +114,10 @@ begin
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			T3."UsrNumber1" 			as "Moneda",
+			T4."DocCur" 				as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			'0'							as "NroLineaAsiento",
-			'1'							as "NroCuota",
+			T1."U_NRO_CUOTA"			as "NroCuota",
 			T1."U_CUENTA_PROV"			as "NroCtaProveedor",
 			T1."U_COD_BANCO"			as "CodBncProveedor",
 			''							as "CodRetencion",
@@ -128,7 +128,7 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"	
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join ODPO				T4 on T4."DocEntry" 	= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" IN ('FA-P','SA-P')
 		inner 	join OCRD				T5 on T4."CardCode"		= T5."CardCode"
@@ -146,7 +146,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'140'						as "TipoDocumento",
 			'' 							as "NroDocSUNAT",
@@ -154,7 +154,7 @@ begin
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			T3."UsrNumber1" 			as "Moneda",
+			T4."DocCurr" 				as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			'0'							as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -168,7 +168,7 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join OPDF				T4 on T4."DocEntry" 	= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'SP'
 		inner 	join OCRD				T5 on T4."CardCode"		= T5."CardCode"
@@ -185,7 +185,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end	as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"			as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
 			'' 							as "NroDocSUNAT",
@@ -233,7 +233,7 @@ begin
 			T1."U_MONEDA_PAGO"			as "MonedaDePago",
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
-			case when T1."U_MONEDA_PAGO" = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end	as "NumCtaBanco",
+			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'24'						as "TipoDocumento",
 			'' 							as "NroDocSUNAT",
@@ -241,7 +241,7 @@ begin
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			T3."UsrNumber1" 			as "Moneda",
+			ifnull(T4."FCCurrency",'SOL') 			as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			T4."Line_ID"				as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -256,7 +256,7 @@ begin
 			T1."U_NOM_PROV_FACTO"	as "CardNameFacto"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
-		inner 	join OACT 				T2 on T2."FormatCode" 	= replace(case when T1.U_MONEDA_PAGO = :mndLoc then  T0."U_CTA_BANCO_ML" else T0."U_CTA_BANCO_ME" end,'-','')
+		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
@@ -305,9 +305,11 @@ begin
 		T0."GlosaAsiento",
 		T0."CardCodeFacto",
 		T0."CardNameFacto"
-	from RSLT1 T0 where ifnull((select 'Y' from "@EXP_PMP1" TX0 
+	from RSLT1 T0 where (ifnull((select max('Y') from "@EXP_PMP1" TX0 
 	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
 	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"
-	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento" ),'') != 'Y'
+	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento"
+	and ifnull(TX0."U_EXP_ASNROLINEA",'0') = ifnull(T0."NroLineaAsiento",'0')
+	and ifnull(TX0."U_EXP_NMROCUOTA",'0') = ifnull(T0."NroCuota",'0')),'') != 'Y')
 	and T0."CodSucursal" = case when :codSucursal = '-1' then T0."CodSucursal" else :codSucursal end;
 end

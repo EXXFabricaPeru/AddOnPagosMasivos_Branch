@@ -50,7 +50,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject />
+    <StartupObject>SMC_Addon_Pagos_Masivo_Estandar.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -199,6 +199,7 @@
     <Compile Include="SAP\sapMatrix.cs" />
     <Compile Include="SAP\sapObjetos.cs" />
     <Compile Include="SAP\sapObjUser.cs" />
+    <Compile Include="View\UDOForms\Form_EXD_PM_CONFAUT.cs" />
     <Compile Include="View\UIFormFactory.cs" />
     <Compile Include="Util\utilNET.cs" />
     <Compile Include="View\frmPagoProveedores.cs" />
@@ -206,6 +207,7 @@
     <Compile Include="View\USRForms\FormConfiguracionH2H.cs" />
     <Compile Include="View\USRForms\FormEscenarioPago.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
+    <Compile Include="View\USRForms\FormNumeroDeOperacion.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
     <Compile Include="View\USRForms\FormSeriesPorSucursal.cs" />
     <Compile Include="View\USRForms\FormSlcProveedores.cs" />
@@ -268,6 +270,9 @@
     <Content Include="Resources\FrmConfH2H.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\FrmPMNroOpe.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\FrmSeriesXSucursal.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -298,6 +303,9 @@
     <Content Include="Resources\Scripts\HANA\EXD_SP_PM_H2H_DATOS_TXT_BCP.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Scripts\HANA\EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -310,7 +318,13 @@
     <Content Include="Resources\Scripts\HANA\REPLICATE.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_BBVA.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_BCP.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_BCP_DEV.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\SBO_EXX_PM_INTERBANK.sql">
@@ -353,6 +367,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT_CREADO.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\SQL\EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\SQL\EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA.sql">

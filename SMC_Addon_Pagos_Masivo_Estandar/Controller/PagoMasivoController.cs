@@ -1,8 +1,10 @@
+using Microsoft.Practices.EnterpriseLibrary.Logging;
 using SAP_AddonFramework;
 using SAPbobsCOM;
 using SMC_APM.dao;
 using SMC_APM.Modelo;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -42,7 +44,7 @@ namespace SMC_APM.Controller
         public static SAPbobsCOM.Recordset ObtenerInfoBancos()
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"select top 1 \"BankCode\",\"BankName\" from ODSC";
+            var sqlQry = $"select \"BankCode\",\"BankName\" from ODSC";
             recordset.DoQuery(sqlQry);
             if (recordset.RecordCount == 0)
                 throw new Exception("No se ha definido información de bancos");
@@ -307,7 +309,7 @@ namespace SMC_APM.Controller
                 row++;
             });
 
-            if (sboPayments.Add() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
+            if (sboPayments.Add() != 0) throw new InvalidOperationException($"{Globales.Company.GetLastErrorCode()}-{Globales.Company.GetLastErrorDescription()}");
             var rslt = 0;
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
@@ -321,7 +323,7 @@ namespace SMC_APM.Controller
             sboPaymentDraft.TaxDate = pago.FechaDocumento;
             sboPaymentDraft.DueDate = pago.FechaVencimiento;
 
-            switch ("NN")
+            switch (pago.MetodoPago.Tipo)
             {
                 case "CB": //Pago con cheque
                     var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
@@ -336,20 +338,22 @@ namespace SMC_APM.Controller
                 case "CG":
                 case "PV":
                 case "TB"://Pago con Transferencia
-                    sboPaymentDraft.TransferAccount = pago.MetodoPago.Cuenta;
+                    var codCtaTrnsf = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    sboPaymentDraft.TransferAccount = codCtaTrnsf;
                     sboPaymentDraft.TransferReference = pago.MetodoPago.Referencia;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPaymentDraft.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
 
                 case "NN"://Pago en Efectivo
-                    sboPaymentDraft.CashAccount = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    var codCtaEfect = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    sboPaymentDraft.CashAccount = codCtaEfect;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPaymentDraft.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
             }
-            if (sboPaymentDraft.Update() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
-            if (sboPaymentDraft.SaveDraftToDocument() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
+            if (sboPaymentDraft.Update() != 0) throw new InvalidOperationException($"{Globales.Company.GetLastErrorCode()}-{Globales.Company.GetLastErrorDescription()}");
+            if (sboPaymentDraft.SaveDraftToDocument() != 0) throw new InvalidOperationException($"{Globales.Company.GetLastErrorCode()}-{Globales.Company.GetLastErrorDescription()}");
             var rslt = 0;
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
@@ -431,8 +435,11 @@ namespace SMC_APM.Controller
                 recordset.DoQuery(qry);
                 var attachPath = recordset.Fields.Item(0).Value;
                 if (string.IsNullOrWhiteSpace(attachPath)) throw new InvalidOperationException("No se ha definido ruta de anexos en SAP");
+                qry = $"select max(\"Account\") from DSC1 where \"GLAccount\" = '{GLAccount}'";
+                recordset.DoQuery(qry);
+                var nroCuenta = recordset.Fields.Item(0).Value;
                 var nombre = attachPath + @"PagosMasivos\";
-                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-" + codMoneda + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
+                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-" + codMoneda + "-" + nroCuenta + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
 
                 switch (codPais)
                 {
@@ -442,7 +449,7 @@ namespace SMC_APM.Controller
                             //PODRÍA SER UNA INTERFAZ
                             case "002":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                                    qry = $"CALL SBO_EXX_PM_BCP({docEntry},{codSucursal},'{GLAccount}')";
+                                    qry = $"CALL SBO_EXX_PM_BCP_DEV({docEntry},{codSucursal},'{GLAccount}')";
                                 else
                                     qry = $"EXEC SBO_EXX_PM_BCP {docEntry},{codSucursal},'{GLAccount}'";
                                 break;
@@ -457,6 +464,12 @@ namespace SMC_APM.Controller
                                     qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},{codSucursal},'{GLAccount}')";
                                 else
                                     qry = $"EXEC SBO_EXX_PM_SCOTIABANK {docEntry},{codSucursal},'{GLAccount}'";
+                                break;
+                            case "011":
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL SBO_EXX_PM_BBVA({docEntry},{codSucursal},'{GLAccount}')";
+                                else
+                                    qry = $"EXEC SBO_EXX_PM_BBVA {docEntry},{codSucursal},'{GLAccount}'";
                                 break;
                             case "022":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
@@ -615,7 +628,7 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static int GenerarPagoACuenta(SBOPago pago)
+        public static int GenerarPagoACuenta(int docEntry, SBOPago pago)
         {
             var sboPayments = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
             var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
@@ -642,6 +655,15 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.CheckSum = pago.Monto;
                     sboPayments.Checks.CountryCode = sucursalBanco.Item4;
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
+                    if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
+                    {
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtChecks;
+                        if (pago.Moneda == "SOL")
+                            sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
+                        else
+                            sboPayments.PrimaryFormItems.AmountFC = pago.Monto;
+                    }
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPayments.UserFields.Fields.Item("U_EXX_MPCHEQUE").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
@@ -651,8 +673,18 @@ namespace SMC_APM.Controller
                 case "VV"://Pago con Transferencia
                     sboPayments.TransferAccount = pago.MetodoPago.Cuenta;
                     sboPayments.TransferDate = pago.FechaContabilizacion;
-                    sboPayments.TransferReference = pago.Moneda == mndLoc ? pago.MetodoPago.Referencia : pago.MetodoPago.ReferenciaME;
+                    sboPayments.TransferReference = ObtenerNroOperacion(docEntry, sboPayments.BPLID, pago.MetodoPago.Banco, pago.MetodoPago.Cuenta, pago.Moneda);
                     sboPayments.TransferSum = pago.Monto;
+                    sboPayments.CounterReference = sboPayments.TransferReference;
+                    if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
+                    {
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtBankTransfer;
+                        if (pago.Moneda == "SOL")
+                            sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
+                        else
+                            sboPayments.PrimaryFormItems.AmountFC = pago.Monto;
+                    }
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPayments.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
@@ -660,6 +692,15 @@ namespace SMC_APM.Controller
                 case "NN"://Pago en Efectivo
                     sboPayments.CashAccount = pago.MetodoPago.Cuenta;
                     sboPayments.CashSum = pago.Monto;
+                    if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
+                    {
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtCash;
+                        if (pago.Moneda == "SOL")
+                            sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
+                        else
+                            sboPayments.PrimaryFormItems.AmountFC = pago.Monto;
+                    }
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPayments.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
@@ -683,7 +724,7 @@ namespace SMC_APM.Controller
                 return true;
             });
 
-            if (sboPayments.Add() != 0) throw new InvalidOperationException($"{ Globales.Company.GetLastErrorCode()}-{ Globales.Company.GetLastErrorDescription()}");
+            if (sboPayments.Add() != 0) throw new InvalidOperationException($"{Globales.Company.GetLastErrorCode()}-{Globales.Company.GetLastErrorDescription()}");
             var rslt = 0;
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
@@ -712,6 +753,34 @@ namespace SMC_APM.Controller
             return Convert.ToInt32(rslt);
         }
 
+        private static string ObtenerNroOperacion(int docEntry, int codSucursal, string codBanco, string codCtaPago, string codMoneda)
+        {
+            var sqlQry = $"select U_NRO_OPERACION from \"@EXP_PMP3\" where  \"DocEntry\" = '{docEntry}' and U_COD_SUCURSAL = '{codSucursal}' and U_COD_BANCO = '{codBanco}' and U_COD_CTAPAGO = '{codCtaPago}' and U_COD_MONEDA = '{codMoneda}'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF) return recSet.Fields.Item(0).Value.ToString();
+            throw new InvalidOperationException($"No se han definido los números de operación para la sucursal: {codSucursal}, banco: {codBanco}");
+        }
+
+        private static int ObtenerIDFlujoDeCaja(int codSucursal)
+        {
+            var sqlQry = $"select TX1.\"U_EXD_CFWID\" from  OBPL TX1 where TX1.\"BPLId\" = '{codSucursal}' and coalesce(TX1.\"U_EXD_CFWID\",'-1') <> '-1'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF)
+                return Convert.ToInt32(recSet.Fields.Item(0).Value);
+            else
+                throw new InvalidOperationException($"No se ha definido el ID del flujo de caja para la sucursal cod ID:{codSucursal}");
+        }
+
+        private static bool EsRelevanteFlujoDeCaja(string codCuenta)
+        {
+            var sqlQry = $"select coalesce(\"CfwRlvnt\",'') from oact where\"AcctCode\" ='{codCuenta}'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            return recSet.Fields.Item(0).Value == "Y";
+        }
 
         #region Obsoleto
         private static void GenerarTXT_Santander(string nombre, int docEntry, string gLAccount)

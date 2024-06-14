@@ -120,6 +120,20 @@
 		</UserTablesMD>
 	</BO>
 
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXP_PMP3</TableName>
+        <TableDescription>PM: Número OP por sucursal</TableDescription>
+        <TableType>bott_DocumentLines</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
+
 	<BO>
 		<AdmInfo>
 			<Object>153</Object>

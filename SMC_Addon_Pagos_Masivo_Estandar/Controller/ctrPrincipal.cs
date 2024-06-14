@@ -4,6 +4,7 @@ using SAPbouiCOM;
 using SMC_APM.Controller;
 using SMC_APM.SAP;
 using SMC_APM.View;
+using SMC_APM.View.UDOForms;
 using SMC_APM.View.USRForms;
 using System;
 using System.Linq;
@@ -102,7 +103,7 @@ namespace SMC_APM.Controladores
                 eventFilter = eventFilters.Add(BoEventTypes.et_ALL_EVENTS);
                 var q = from t in Assembly.GetExecutingAssembly().GetTypes()
                         where t.IsClass
-                        && (t.Namespace == "SMC_APM.View.USRForms")
+                        && (t.Namespace == "SMC_APM.View.USRForms" || t.Namespace == "SMC_APM.View.UDOForms")
                         && t.Name.StartsWith("Form")
                         select t;
                 q.ToList().ForEach(c =>
@@ -255,6 +256,7 @@ namespace SMC_APM.Controladores
             BubbleEvent = true;
             try
             {
+                var activeForm = sboApplication.Forms.ActiveForm;
                 if (pVal.BeforeAction)
                 {
                     switch (pVal.MenuUID)
@@ -320,6 +322,27 @@ namespace SMC_APM.Controladores
                         case "SMC0009":
                             formConfiguracionH2H = new FormConfiguracionH2H(FormConfiguracionH2H.TYPE + DateTime.Now.ToString("hhmmss"));
                             break;
+                        case "1284":
+                            switch (activeForm.TypeEx)
+                            {
+                                case "FrmPMP":
+                                    ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).ValidarAnulacionPagos();
+                                    break;
+                            }
+                            break;
+                        case "1286":
+                            switch (activeForm.TypeEx)
+                            {
+                                case "FrmPMP":
+                                    var rslt = sboApplication.MessageBox("Al realizar esta acción el estado del formulario cambiará a Cerrado, y se liberarán los documentos con errores para ser procesados en otro escenario de pago \n ¿Desea proceder con esta acción?", 1, "SI", "NO");
+                                    if (rslt != 1) BubbleEvent = false;
+                                    else
+                                    {
+                                        ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).AnularPagosConError();
+                                    }
+                                    break;
+                            }
+                            break;
                     }
                 }
                 else
@@ -327,7 +350,6 @@ namespace SMC_APM.Controladores
                     switch (pVal.MenuUID)
                     {
                         case "1282":
-                            var activeForm = sboApplication.Forms.ActiveForm;
                             switch (activeForm.TypeEx)
                             {
                                 case "FrmPMP":
@@ -339,13 +361,17 @@ namespace SMC_APM.Controladores
                                 default:
                                     break;
                             }
-
                             break;
                     }
+                    var menuSBO = sboApplication.Menus.Item(pVal.MenuUID);
+                    if (menuSBO != null && menuSBO.String.Contains("EXD_PM_CONFAUT")) new Form_EXD_PM_CONFAUT(activeForm.UniqueID);
                 }
             }
             catch (Exception ex)
             {
+                sboApplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                BubbleEvent = false;
+                /*
                 if (pVal.BeforeAction)
                 {
                     switch (pVal.MenuUID)
@@ -375,6 +401,7 @@ namespace SMC_APM.Controladores
                             break;
                     }
                 }
+                */
             }
         }
 
@@ -383,10 +410,8 @@ namespace SMC_APM.Controladores
             BubbleEvent = true;
             try
             {
-
-
                 if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV"
-                    || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE)
+                    || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE || pVal.FormTypeEx == FormNumeroDeOperacion.TYPE || pVal.FormTypeEx == "EXD_PM_CONFAUT")
                 {
                     IUSAP uiForm = null;
 

@@ -1,6 +1,7 @@
 CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
 (
-	fechaVenc DATE,
+	fechaVencD date,
+	fechaVencH date,
 	monedaLoc VARCHAR(3),
 	monedaExt VARCHAR(3),
 	CardCode VARCHAR(20),
@@ -23,14 +24,27 @@ BEGIN
 		T0."CardCode",
 		T0."CardName",
 		T0."NumAtCard",
-		(select TX0."BankCode" from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else  :tipoBanco end and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur" and ifnull(T0."BankCode",'') != '') as "CodBancoPago",
-		(select TX0."BankName" from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else  :tipoBanco end and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur" and ifnull(T0."BankCode",'') != '') as "NomBancoPago",
+		(select max(TX0."BankCode") from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else  :tipoBanco end and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur" and ifnull(T0."BankCode",'') != '') as "CodBancoPago",
+		(select max(TX0."BankName") from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else  :tipoBanco end and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur" and ifnull(T0."BankCode",'') != '') as "NomBancoPago",
 		--(select TX0."BankCode" from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = T0."BankCode" and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur")	as "CodBancoPago",
 		--(select TX0."BankName" from ODSC TX0 inner join DSC1 TX1 on TX0."BankCode" = TX1."BankCode" where TX0."BankCode" = T0."BankCode" and TX1."Branch" = T0."CodSucursal" and TX1."UsrNumber4" = T0."DocCur")	as "NomBancoPago",
 		--case when :tipoBanco = '000' then T0."BankCode" else case when ifnull(T0."BankCode",'') != '' then :tipoBanco end end as "CodBancoPago",
 		T0."DocCur" as "MonedaPago",
-		(select  max(TX0."GLAccount") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "CodCtaPago",
-		(select  max(TX0."Account") from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "NroCtaPago",
+		(select (select I0."GLAccount" from DSC1 I0 where I0."AbsEntry" = MAX(TX0."AbsEntry")) from DSC1 TX0 
+			inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" 			
+			where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end 			
+			and TX1."ActCurr" = T0."DocCur" 
+			and TX0."Branch" = T0."CodSucursal" 
+			and ifnull(T0."BankCode",'') != '' 
+			and ifnull(TX0."U_EXM_PMASIVO",'') = 'Y') as "CodCtaPago",
+		(select (select I0."Account" from DSC1 I0 where I0."AbsEntry" = MAX(TX0."AbsEntry")) from DSC1 TX0 
+			inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" 
+			where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end 			
+			and TX1."ActCurr" = T0."DocCur" 
+			and TX0."Branch" = T0."CodSucursal" 
+			and ifnull(T0."BankCode",'') != '' 
+			and ifnull(TX0."U_EXM_PMASIVO",'') = 'Y') as "NroCtaPago",
+		--(select TX0."Account" from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "NroCtaPago",
 		T0."DocCur",
 		T0."Total",
 		T0."CodigoRetencion",
@@ -187,8 +201,8 @@ BEGIN
 		AS "BankCode",
 		
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -221,15 +235,31 @@ BEGIN
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') ='No'
-		AND T1."DueDate" <= :fechaVenc
+		--AND T1."DueDate" <= :fechaVencH
 		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FT-P' AND "U_EXP_NROCUOTA"=T1."InstlmntID")
 						
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
-		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'FT-P' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND 
+		(
+		
+		ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'FT-P'
+		
+		and (ifnull((select max('Y') from "@EXP_OPMP" TT0 
+		inner join "@EXP_PMP1" TT1 on TT0."DocEntry" = TT1."DocEntry"
+		where TT0."Status" = 'C' and TT1."U_EXP_COD_ESCENARIOPAGO" = TX1."DocEntry" and TT1."U_EXP_TIPODOC" = '18' 
+		and TT1."U_EXP_DOCENTRYDOC" = TX0."U_DOCENTRY" and TT1."U_EXP_ESTADO" = 'ER'),'N')) = 'N'
+		
+		and ifnull(TX1."Canceled",'') != 'Y'
+		
+		),'N'
+		
+		) = 'N' 
+		
+		OR T0."U_CP_VARESC"='Y')
 								
 
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
@@ -341,8 +371,8 @@ BEGIN
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -376,7 +406,7 @@ BEGIN
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
-		AND T1."DueDate" <= :fechaVenc
+		--AND T1."DueDate" <= :fechaVencH
 		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
@@ -490,8 +520,8 @@ BEGIN
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -502,7 +532,8 @@ BEGIN
 		T1."DueDate"
 		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
-		,'N' AS "DetraccionPend"
+		,IFNULL((select MAX('Y') from JDT1 TX0 where TX0."ShortName" = T0."CardCode" and TX0."Ref2" = T0."NumAtCard" and U_EXX_DETRACCION = 'Y'
+		and case when ifnull(TX0."FCCurrency",'') <> 'SOL' then TX0."BalDueCred" else TX0."BalFcCred" end > 0),'N')  AS "DetraccionPend"
 		,T1."InstlmntID" AS "NroCuota"
 		,0 AS "LineaAsiento"
 		,T0."JrnlMemo" AS "GlosaAsiento"
@@ -525,8 +556,8 @@ BEGIN
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
-		AND T1."DueDate" <= :fechaVenc
-		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
+		--AND T1."DueDate" <= :fechaVencH
+		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'Y'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
@@ -642,8 +673,8 @@ BEGIN
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -677,8 +708,8 @@ BEGIN
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
-		AND T1."DueDate" <= :fechaVenc
-		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
+		--AND T1."DueDate" <= :fechaVencH
+		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		AND T0."CreateTran" = 'N'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
@@ -739,8 +770,8 @@ BEGIN
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
 		END) AS "Atraso",
 		'' AS "Marca",
 		'' AS "Estado",
@@ -763,15 +794,31 @@ BEGIN
 		LEFT JOIN OCRD T3 ON T0."CardCode" = T3."CardCode"
 	WHERE 
 		--AND T1."InstlmntID" = '1'
-
-		T0."DocDueDate" <= :fechaVenc
+		1=1
+		--T0."DocDueDate" <= :fechaVencH
 		AND T0."Canceled" = 'N'
 		--AND (T0."DocCurr" = UPPER(:monedaLoc) or T0."DocCurr" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SP')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
-		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SP' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N' OR T0."U_CP_VARESC"='Y')
+		AND 
+		(
+		
+		ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SP' 
+		
+		and (ifnull((select max('Y') from "@EXP_OPMP" TT0 
+		inner join "@EXP_PMP1" TT1 on TT0."DocEntry" = TT1."DocEntry"
+		where TT0."Status" = 'C' and TT1."U_EXP_COD_ESCENARIOPAGO" = TX1."DocEntry" and TT1."U_EXP_TIPODOC" = '140' 
+		and TT1."U_EXP_DOCENTRYDOC" = TX0."U_DOCENTRY" and TT1."U_EXP_ESTADO" = 'ER'),'N')) = 'N'
+		
+		and ifnull(TX1."Canceled",'') != 'Y'
+		
+		),'N'
+		
+		) = 'N' 
+		
+		OR T0."U_CP_VARESC"='Y')
 	
 		UNION	
 	--------pagos recibicos-------
@@ -842,8 +889,8 @@ BEGIN
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -881,8 +928,8 @@ BEGIN
 		GROUP BY TT0."TransId",TT0."TransRowId"),0)) > 0
 		
 
-		AND T1."DueDate" <= :fechaVenc
-		AND (IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
+		--AND T1."DueDate" <= :fechaVencH
+		--AND (IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or IFNULL(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
 		AND T3."CardCode" like '%' || :CardCode ||'%'
 		and T1."Credit">0
 		--AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
@@ -980,8 +1027,8 @@ BEGIN
 		WHERE R0."CardCode" = T3."CardCode")
 		AS "BankCode",
 		(CASE 
-			WHEN DAYS_BETWEEN(T0."DueDate", :fechaVenc) < 0 THEN 0 
-			ELSE DAYS_BETWEEN(T0."DueDate", :fechaVenc) 
+			WHEN DAYS_BETWEEN(T0."DueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DueDate", :fechaVencH) 
 		END) AS "Atraso",
 		--0 AS "Atraso",
 		'' AS "Marca",
@@ -1019,22 +1066,32 @@ BEGIN
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
 		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0
 		
-		AND T1."DueDate" <= :fechaVenc
+		--AND T1."DueDate" <= :fechaVencH
 		--AND (ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
 		AND T3."CardCode" like '%' || :CardCode || '%'
 		and T1."Credit">0
+		and ifnull(T1."U_EXX_DETRACCION",'') <> 'Y'
 		/*AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'AS')*/
 		--AND ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario 
 		--and "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'
+
 		AND (ifnull((SELECT max('Y') FROM "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
 		WHERE TX0."U_TIPO_DOCUMENTO" = 'AS' and TX0."U_DOCENTRY" = T0."TransId" and TX0."U_NRO_LINEA_AS" = T1."Line_ID" 
-		and ifnull(TX1."Canceled",'') != 'Y'),'N') != 'Y' OR T0."U_CP_VARESC"='Y')
+		
+		and (ifnull((select max('Y') from "@EXP_OPMP" TT0 
+		inner join "@EXP_PMP1" TT1 on TT0."DocEntry" = TT1."DocEntry"
+		where TT0."Status" = 'C' and TT1."U_EXP_COD_ESCENARIOPAGO" = TX1."DocEntry" and TT1."U_EXP_TIPODOC" = '30' 
+		and TT1."U_EXP_DOCENTRYDOC" = TX0."U_DOCENTRY" and TT1."U_EXP_ASNROLINEA" = TX0."U_NRO_LINEA_AS" and TT1."U_EXP_ESTADO" = 'ER'),'N')) = 'N'
+		
+		and ifnull(TX1."Canceled",'') != 'Y'),'N') != 'Y' 
+		OR T0."U_CP_VARESC"='Y')
 		
 		) T0
 	WHERE
 		T0."Total" > 0 
+		and T0."FechaVencimiento" between :fechaVencD and :fechaVencH
 		--and T0."BankCode" like '%'||:filtroBanco||'%' --se agrego nuevo
 		and T0."CodSucursal"	= ifnull(nullif(:codSucursal,'-1'),T0."CodSucursal")
 		and ifnull(T0."CodPrioridad",'') like '%'||:codPrioridad||'%'
