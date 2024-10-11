@@ -1,8 +1,10 @@
 using Microsoft.Practices.EnterpriseLibrary.Logging;
+using SAP_AddonExtensions;
 using SAP_AddonFramework;
 using SAPbobsCOM;
 using SMC_APM.dao;
 using SMC_APM.Modelo;
+using SMC_APM.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -60,7 +62,7 @@ namespace SMC_APM.Controller
             return !recordset.EoF;
         }
 
-        public static Tuple<string, string, string, string> ObtenerSucursaCtaBanco(string codBanco, string codCta)
+        public static Tuple<string, string, string, string> ObtenerSucursalCtaBanco(string codBanco, string codCta)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             //var sqlQry = $"select top 1 \"Account\",\"Branch\" from DSC1 where \"BankCode\" = '{codBanco}' and \"GLAccount\" = '{codCta}';";
@@ -237,7 +239,7 @@ namespace SMC_APM.Controller
                 yield return null;
         }
 
-        public static int GenerarPagoEfectuadoSBO(SBOPago pago)
+        public static int GenerarPagoEfectuadoSBO(SBOPago pago, bool tieneSucursales)
         {
             var row = 0;
             var sboPayments = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
@@ -251,20 +253,16 @@ namespace SMC_APM.Controller
             sboPayments.DueDate = pago.FechaVencimiento;
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
+            if (pago.Moneda != mndLoc) sboPayments.DocRate = pago.TipoCambio;
             sboPayments.DocType = pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
             //if (pago.ObjType == 24) sboPayments.CheckAccount = ((EL.Pago)documento).CuentaCheque;
             sboPayments.Remarks = "";
             sboPayments.JournalRemarks = "";
-            sboPayments.ProjectCode = pago.CodigoProyecto;
-            //if (!string.IsNullOrWhiteSpace(pago.TipoRendicion)) sboPayments.UserFields.Fields.Item("U_BPP_TIPR").Value = pago.TipoRendicion;
-            //if (!string.IsNullOrWhiteSpace(pago.SerieRendicion)) sboPayments.UserFields.Fields.Item("U_BPP_CCHI").Value = pago.SerieRendicion;
-            //if (!string.IsNullOrWhiteSpace(pago.CorrelativoRendicion)) sboPayments.UserFields.Fields.Item("U_BPP_NUMC").Value = pago.CorrelativoRendicion;
-            //lo_PgoEfc.UserFields.Fields.Item("U_BPP_PtFC").Value = "";
-            //if (!string.IsNullOrWhiteSpace(pago.MedioPagoSUNAT)) sboPayments.UserFields.Fields.Item("U_BPP_MPPG").Value = pago.MedioPagoSUNAT;
+            if (!string.IsNullOrWhiteSpace(pago.CodigoProyecto)) sboPayments.ProjectCode = pago.CodigoProyecto;
             switch ("NN")//pago.MetodoPago.Tipo)
             {
                 case "CB": //Pago con cheque
-                    var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
+                    var sucursalBanco = ObtenerSucursalCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
                     sboPayments.Checks.AccounttNum = sucursalBanco.Item1;
                     sboPayments.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPayments.Checks.Branch = sucursalBanco.Item2;
@@ -289,7 +287,7 @@ namespace SMC_APM.Controller
                     break;
 
                 case "NN"://Pago en Efectivo
-                    sboPayments.CashAccount = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    sboPayments.CashAccount = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal, tieneSucursales);
                     sboPayments.CashSum = pago.Monto;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPayments.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
@@ -314,19 +312,21 @@ namespace SMC_APM.Controller
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
 
-        public static int GenerarPagoEfectuadoSBODesdeDraft(int idDraft, SBOPago pago)
+        public static int GenerarPagoEfectuadoSBODesdeDraft(int idDraft, SBOPago pago, bool tieneSucursales)
         {
             var tblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
             var sboPaymentDraft = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oPaymentsDrafts);
+            var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
+            var mndLoc = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
             sboPaymentDraft.GetByKey(idDraft);
             sboPaymentDraft.DocDate = pago.FechaContabilizacion;
             sboPaymentDraft.TaxDate = pago.FechaDocumento;
             sboPaymentDraft.DueDate = pago.FechaVencimiento;
-
+            if (sboPaymentDraft.DocCurrency != mndLoc) sboPaymentDraft.DocRate = pago.TipoCambio;
             switch (pago.MetodoPago.Tipo)
             {
                 case "CB": //Pago con cheque
-                    var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
+                    var sucursalBanco = ObtenerSucursalCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
                     sboPaymentDraft.Checks.AccounttNum = sucursalBanco.Item1;
                     sboPaymentDraft.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPaymentDraft.Checks.Branch = sucursalBanco.Item2;
@@ -338,7 +338,7 @@ namespace SMC_APM.Controller
                 case "CG":
                 case "PV":
                 case "TB"://Pago con Transferencia
-                    var codCtaTrnsf = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    var codCtaTrnsf = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal, tieneSucursales);
                     sboPaymentDraft.TransferAccount = codCtaTrnsf;
                     sboPaymentDraft.TransferReference = pago.MetodoPago.Referencia;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
@@ -346,7 +346,7 @@ namespace SMC_APM.Controller
                     break;
 
                 case "NN"://Pago en Efectivo
-                    var codCtaEfect = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal);
+                    var codCtaEfect = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal, tieneSucursales);
                     sboPaymentDraft.CashAccount = codCtaEfect;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPaymentDraft.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
@@ -358,7 +358,7 @@ namespace SMC_APM.Controller
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
 
-        public static IEnumerable<SBOPago> ObtenerListaPagos(SAPbouiCOM.DBDataSource dbsCab, object obj, SAPbouiCOM.DBDataSource dbsSre, bool esAgenteRetenedor)
+        public static IEnumerable<SBOPago> ObtenerListaPagos(SAPbouiCOM.DBDataSource dbsCab, object obj, SAPbouiCOM.DBDataSource dbsSre, bool esAgenteRetenedor, bool esHostToHost)
         {
             XDocument xDoc = null;
 
@@ -367,16 +367,30 @@ namespace SMC_APM.Controller
                 var rsltNroLinea = 0;
                 var rsltNroCuota = 0;
                 var fechaPago = DateTime.ParseExact(dbsCab.GetValue("U_EXP_FECHAPAGO", 0).Trim(), "yyyyMMdd", CultureInfo.InvariantCulture);
+                var tipoDeCambio = dbsCab.GetValueExt("U_EXP_TIPODECAMBIO");
                 var codSeriePago = int.TryParse(dbsCab.GetValue("U_EXP_SERIEPAGO", 0).Trim(), out var codSreAux) ? codSreAux : 0;
                 var codSerieRtcn = esAgenteRetenedor ? (int.TryParse(dbsCab.GetValue("U_EXP_SERIERETENCION", 0).Trim(), out var codSreRtnAux) ? codSreRtnAux : 0) : 0;
                 var codSlcSucursal = Convert.ToInt32(dbsCab.GetValue("U_EXP_COD_SUCURSAL", 0));
                 var refTransf = dbsCab.GetValue("U_EXP_NMROREFTRANS", 0).Trim();
                 var refTransfME = dbsCab.GetValue("U_EXP_NROREF_ME", 0).Trim();
                 xDoc = XDocument.Parse((string)obj);
-                var xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
-               .Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_PAGO") && a.Element("value").Value.Equals("Y"))
-               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_RETENCION") && a.Element("value").Value.Equals("N"))
-               && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_ESTADO") && a.Element("value").Value != "OK"));
+                IEnumerable<XElement> xElements = null;
+                if (esHostToHost)
+                {
+                    xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
+                    .Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_PAGO") && a.Element("value").Value.Equals("Y"))
+                    && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_ESTADO_H2H") && a.Element("value").Value.Equals("OK"))
+                    && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_RETENCION") && a.Element("value").Value.Equals("N"))
+                    && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_ESTADO") && a.Element("value").Value != "OK"));
+                }
+                else
+                {
+                    xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
+                    .Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_PAGO") && a.Element("value").Value.Equals("Y"))
+                    && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_RETENCION") && a.Element("value").Value.Equals("N"))
+                    && w.Descendants("cell").Any(a => a.Element("uid").Value.Equals("U_EXP_ESTADO") && a.Element("value").Value != "OK"));
+                }
+
                 return xElements.Descendants("cells").GroupBy(g => new
                 {
                     CardCode = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("CARDCODE")).FirstOrDefault().Element("value").Value,
@@ -396,6 +410,7 @@ namespace SMC_APM.Controller
                     FechaContabilizacion = fechaPago,
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
+                    TipoCambio = Convert.ToDouble(tipoDeCambio),
                     Monto = s.Sum(sm => (Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
                     /*- Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/)),
                     //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
@@ -425,7 +440,7 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static void GenerarTXTBancos(int docEntry, string codBanco, int codSucursal, string codMoneda, string GLAccount, string codPais)
+        public static void GenerarTXTBancos(int docEntry, string codBanco, int codSucursal, string codMoneda, string GLAccount, string codPais, string formatoScotia)
         {
             try
             {
@@ -461,9 +476,9 @@ namespace SMC_APM.Controller
                                 break;
                             case "009":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                                    qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},{codSucursal},'{GLAccount}')";
+                                    qry = $"CALL SBO_EXX_PM_SCOTIABANK({docEntry},{codSucursal},'{GLAccount}','{formatoScotia}')";
                                 else
-                                    qry = $"EXEC SBO_EXX_PM_SCOTIABANK {docEntry},{codSucursal},'{GLAccount}'";
+                                    qry = $"EXEC SBO_EXX_PM_SCOTIABANK {docEntry},{codSucursal},'{GLAccount}','{formatoScotia}'";
                                 break;
                             case "011":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
@@ -538,6 +553,9 @@ namespace SMC_APM.Controller
                 var usuarioFTP = string.Empty;
                 var passwordFTP = string.Empty;
                 var rutaFldINFTP = string.Empty;
+                var nombreArchivo = string.Empty;
+                var rutaLlavePublica = string.Empty;
+                var rutaLlavePrivada = string.Empty;
 
                 switch (codPais)
                 {
@@ -554,14 +572,78 @@ namespace SMC_APM.Controller
 
                                 if (string.IsNullOrWhiteSpace(ipFPT)) throw new InvalidOperationException("No se ha definido la ip del banco BCP");
 
-                                var nombreArchivo = $"P{DateTime.Today.ToString("yyyyMMdd")}{("00000" + docEntry).Substring(docEntry.ToString().Length, 5)}P.txt";
-                                rutaFisica += nombreArchivo;
-                                rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
+                                //nombreArchivo = $"P{DateTime.Today.ToString("yyyyMMdd")}{(string.Concat("000000", docEntry, codSucursal)).Substring(string.Concat("000000", docEntry, codSucursal).Length - 6)}P.txt";
+                                //rutaFisica += nombreArchivo;
+                                //rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
 
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_BCP({docEntry},{codSucursal})";
+                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_BCP({docEntry},{codSucursal},'{GLAccount}')";
                                 else
                                     qry = $"EXEC SBO_EXX_PM_BCP {docEntry},'{GLAccount}'";
+                                break;
+                            case "003":
+                                if (!tblConfH2H.GetByKey("004")) throw new InvalidOperationException("No se han definido los datos para el banco Interbank");
+                                ipFPT = tblConfH2H.UserFields.Fields.Item("U_IP_FTP").Value;
+                                puertoFTP = Convert.ToInt32(tblConfH2H.UserFields.Fields.Item("U_PUERTO").Value);
+                                usuarioFTP = tblConfH2H.UserFields.Fields.Item("U_USUARIO").Value;
+                                passwordFTP = tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value;
+                                rutaFldINFTP = tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value;
+                                rutaLlavePrivada = tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PRV").Value;
+
+                                if (string.IsNullOrWhiteSpace(ipFPT)) throw new InvalidOperationException("No se ha definido la ip del banco Interbank");
+                                var sqlQryExt = $"select U_COD_EMPRESA,U_USUARIO from \"@EXD_PM_CNFUSUH2H\" where U_COD_BANCO = '003' and U_COD_SUCURSAL = '{codSucursal}'";
+                                recordset.DoQuery(sqlQryExt);
+                                usuarioFTP = recordset.Fields.Item(1).Value;
+                                var codEmpresa = recordset.Fields.Item(0).Value;
+
+                                //nombreArchivo = $"H2HH00003AAED010000000000000000000000001_{DateTime.Now.ToString("yyyyMMddHHmmss")}.txt";
+                                //rutaFisica += nombreArchivo;
+                                //rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
+
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_INTERBANK({docEntry},{codSucursal},'{GLAccount}')";
+                                else
+                                    qry = $"EXEC SBO_EXX_PM_BCP {docEntry},'{GLAccount}'";
+                                break;
+                            case "009":
+                                if (!tblConfH2H.GetByKey("003")) throw new InvalidOperationException("No se han definido los datos para el banco Scotia");
+                                ipFPT = tblConfH2H.UserFields.Fields.Item("U_IP_FTP").Value;
+                                puertoFTP = Convert.ToInt32(tblConfH2H.UserFields.Fields.Item("U_PUERTO").Value);
+                                usuarioFTP = tblConfH2H.UserFields.Fields.Item("U_USUARIO").Value;
+                                passwordFTP = tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value;
+                                rutaFldINFTP = tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value;
+                                rutaLlavePublica = tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PUB").Value;
+
+                                if (string.IsNullOrWhiteSpace(ipFPT)) throw new InvalidOperationException("No se ha definido la ip del banco Scotia");
+
+                                //nombreArchivo = $"P{(string.Concat("000000000", docEntry, codSucursal)).Substring(string.Concat("000000000", docEntry, codSucursal).Length - 9)}.txt";
+                                //rutaFisica += nombreArchivo;
+                                //rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
+
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_SCOTIABANK({docEntry},{codSucursal},'{GLAccount}')";
+                                else
+                                    qry = $"EXEC SBO_EXX_PM_BCP {docEntry},'{GLAccount}'";
+                                break;
+                            case "011":
+                                if (!tblConfH2H.GetByKey("002")) throw new InvalidOperationException("No se han definido los datos para el banco BBVA");
+                                ipFPT = tblConfH2H.UserFields.Fields.Item("U_IP_FTP").Value;
+                                puertoFTP = Convert.ToInt32(tblConfH2H.UserFields.Fields.Item("U_PUERTO").Value);
+                                usuarioFTP = tblConfH2H.UserFields.Fields.Item("U_USUARIO").Value;
+                                passwordFTP = tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value;
+                                rutaFldINFTP = tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value;
+                                rutaLlavePublica = tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PUB").Value;
+
+                                if (string.IsNullOrWhiteSpace(ipFPT)) throw new InvalidOperationException("No se ha definido la ip del banco BBVA");
+
+                                //nombreArchivo = $"BUSI0000H2H_PE_{DateTime.Today.ToString("yyyyMMdd")}001.M03";
+                                //rutaFisica += nombreArchivo;
+                                //rutaFldINFTP = Path.Combine(rutaFldINFTP, nombreArchivo);
+
+                                if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                                    qry = $"CALL EXD_SP_PM_H2H_DATOS_TXT_BBVA({docEntry},{codSucursal},'{GLAccount}')";
+                                else
+                                    qry = $"EXEC EXD_SP_PM_H2H_DATOS_TXT_BBVA {docEntry},{codSucursal},'{GLAccount}'";
                                 break;
                             default:
                                 throw new Exception($"Código de banco {codBanco} no soportado");
@@ -590,19 +672,59 @@ namespace SMC_APM.Controller
 
                 string valorLinea = string.Empty;
                 recordset.DoQuery(qry);
+                //Para BBVA obtengo el nombre desde la BD
+                if (codBanco == "002" || codBanco == "003" || codBanco == "009")
+                {
+                    rutaFisica += $"{recordset.Fields.Item(1).Value.ToString()}.txt";
+                    nombreArchivo = Path.GetFileName(rutaFisica);
+                }
+                else if (codBanco == "011")
+                {
+                    rutaFisica += $"{recordset.Fields.Item(1).Value.ToString()}.M03";
+                    nombreArchivo = Path.GetFileName(rutaFisica);
+                }
+                //Inicio la generacion del txt
                 using (StreamWriter archivo = new StreamWriter(rutaFisica, false, Encoding.GetEncoding(1252)))
                 {
                     while (!recordset.EoF)
                     {
                         valorLinea = recordset.Fields.Item(0).Value;
-
                         archivo.WriteLine(valorLinea.Remove(valorLinea.Length - 1));
                         recordset.MoveNext();
                     }
                     archivo.Close();
                     archivo.Dispose();
+
                 }
-                HostToHostManager.SendToFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaFisica, rutaFldINFTP);
+
+                var codeLogEnvio = GuardarEnvioH2HEnLog(docEntry, codBanco, codSucursal.ToString(), nombreArchivo);
+
+                //Encriptacion
+                if (codBanco == "011")
+                {
+                    var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileName(rutaFisica) + ".pgp");
+                    EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
+                    rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
+                    HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
+                }
+                else if (codBanco == "009")
+                {
+                    var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileNameWithoutExtension(rutaFisica) + ".gpg");
+                    EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
+                    rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
+                    HostToHostManager.SendToFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
+                }
+                else if (codBanco == "002")
+                {
+                    rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaFisica));
+                    HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaFisica, rutaFldINFTP);
+                }
+                else if (codBanco == "003")
+                {
+                    rutaFldINFTP = rutaFldINFTP + "/" + Path.GetFileName(rutaFisica);
+                    HostToHostManager.SendToSFTPWithKeySSH(ipFPT, puertoFTP, usuarioFTP, rutaLlavePrivada, rutaFisica, rutaFldINFTP);
+                }
+                ActualizarLogEstadoEnLogEnvio(codeLogEnvio, "EN");
             }
             catch { throw; }
         }
@@ -628,7 +750,50 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static int GenerarPagoACuenta(int docEntry, SBOPago pago)
+        public static void CrearAsientoAjusteRedondeo(int docEntryPM, int codSucursal, bool tieneSucursales)
+        {
+            var mntoRedondeo = 0.00;
+
+
+            var sqlQry = $"EXEC EXD_SP_PM_OBTENER_DIFERENCIA_ME '{docEntryPM}','{codSucursal}'";
+            if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
+                sqlQry = $"CALL EXD_SP_PM_OBTENER_DIFERENCIA_ME('{docEntryPM}','{codSucursal}')";
+
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF) mntoRedondeo = Convert.ToDouble(recSet.Fields.Item(0).Value);
+
+            if (mntoRedondeo != 0.00)
+            {
+                var asiento = (SAPbobsCOM.JournalEntries)Globales.Company.GetBusinessObject(BoObjectTypes.oJournalEntries);
+                asiento.ReferenceDate = DateTime.Today;
+                asiento.TaxDate = DateTime.Today;
+                asiento.DueDate = DateTime.Today;
+                asiento.Memo = "Asiento de ajuste de redondeo PM";
+
+                var ctaPte = ObtenerCodCuentaPuentePorSucursal(codSucursal, tieneSucursales);
+                var ctaRnd = ObtenerCodCuentaRedondeoPorSucursal(codSucursal, tieneSucursales);
+
+
+                //Cuenta redondeo
+                asiento.Lines.SetCurrentLine(0);
+                asiento.Lines.BPLID = codSucursal;
+                asiento.Lines.AccountCode = mntoRedondeo > 0 ? ctaRnd : ctaPte;
+                asiento.Lines.Debit = Math.Abs(mntoRedondeo);
+
+                //Cuenta puente
+                asiento.Lines.Add();
+                asiento.Lines.SetCurrentLine(1);
+                asiento.Lines.BPLID = codSucursal;
+                asiento.Lines.AccountCode = mntoRedondeo > 0 ? ctaPte : ctaRnd;
+                asiento.Lines.Credit = Math.Abs(mntoRedondeo);
+
+                var rslt = asiento.Add();
+                if (rslt != 0) throw new Exception(Globales.Company.GetLastErrorDescription());
+            }
+        }
+
+        public static int GenerarPagoACuenta(int docEntry, SBOPago pago, bool tieneSucursales)
         {
             var sboPayments = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
             var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
@@ -641,12 +806,13 @@ namespace SMC_APM.Controller
             sboPayments.DueDate = pago.FechaVencimiento;
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
+            sboPayments.DocRate = pago.TipoCambio;
             sboPayments.DocType = SAPbobsCOM.BoRcptTypes.rAccount;
             sboPayments.ProjectCode = pago.CodigoProyecto;
             switch (pago.MetodoPago.Tipo)
             {
                 case "CB": //Pago con cheque
-                    var sucursalBanco = ObtenerSucursaCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
+                    var sucursalBanco = ObtenerSucursalCtaBanco(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta);
                     sboPayments.Checks.AccounttNum = sucursalBanco.Item1;
                     sboPayments.Checks.BankCode = pago.MetodoPago.Banco;
                     sboPayments.Checks.Branch = sucursalBanco.Item2;
@@ -657,7 +823,7 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtChecks;
                         if (pago.Moneda == "SOL")
                             sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
@@ -678,7 +844,7 @@ namespace SMC_APM.Controller
                     sboPayments.CounterReference = sboPayments.TransferReference;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtBankTransfer;
                         if (pago.Moneda == "SOL")
                             sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
@@ -694,7 +860,7 @@ namespace SMC_APM.Controller
                     sboPayments.CashSum = pago.Monto;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtCash;
                         if (pago.Moneda == "SOL")
                             sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
@@ -729,16 +895,37 @@ namespace SMC_APM.Controller
             return int.TryParse(Globales.Company.GetNewObjectKey(), out rslt) ? rslt : 0;
         }
 
-        public static string ObtenerCodCuentaPuentePorSucursal(int codSucursal)
+        public static string ObtenerCodCuentaPuentePorSucursal(int codSucursal, bool tieneSucursales)
         {
-            var sqlQry = $"select TX0.\"AcctCode\" from OACT TX0 inner join OBPL TX1 on TX0.\"FormatCode\" = TX1.U_EXD_CTAPTEPGOMSV " +
+            var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '11'";
+            if (tieneSucursales)
+            {
+                sqlQry = $"select TX0.\"AcctCode\" from OACT TX0 inner join OBPL TX1 on TX0.\"FormatCode\" = TX1.U_EXD_CTAPTEPGOMSV " +
                 $"where TX1.\"BPLId\" = '{codSucursal}'";
+            }
+
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF)
                 return recSet.Fields.Item(0).Value;
             else
                 throw new InvalidOperationException($"No se ha definido la cuenta puenta para las sucursal cod ID:{codSucursal}");
+        }
+
+        public static string ObtenerCodCuentaRedondeoPorSucursal(int codSucursal, bool tieneSucursales)
+        {
+            var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '14'";
+            if (tieneSucursales)
+            {
+                sqlQry = $"select TX0.\"AcctCode\" from OACT TX0 inner join OBPL TX1 on TX0.\"FormatCode\" = TX1.U_EXD_CTARNDPM " +
+                $"where TX1.\"BPLId\" = '{codSucursal}'";
+            }
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF)
+                return recSet.Fields.Item(0).Value;
+            else
+                throw new InvalidOperationException($"No se ha definido la cuenta de redondeo para las sucursal cod ID:{codSucursal}");
         }
 
         public static int ObtenerSeriePagoPorSucursal(int codSucursal, SAPbouiCOM.DBDataSource dbsSource, string serieRetencion)
@@ -755,17 +942,21 @@ namespace SMC_APM.Controller
 
         private static string ObtenerNroOperacion(int docEntry, int codSucursal, string codBanco, string codCtaPago, string codMoneda)
         {
-            var sqlQry = $"select U_NRO_OPERACION from \"@EXP_PMP3\" where  \"DocEntry\" = '{docEntry}' and U_COD_SUCURSAL = '{codSucursal}' and U_COD_BANCO = '{codBanco}' and U_COD_CTAPAGO = '{codCtaPago}' and U_COD_MONEDA = '{codMoneda}'";
-            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
 
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            var sqlQry = $"select U_NRO_OPERACION from \"@EXP_PMP3\" where  \"DocEntry\" = '{docEntry}' and U_COD_SUCURSAL = '{codSucursal}' and U_COD_BANCO = '{codBanco}' and U_COD_CTAPAGO = '{codCtaPago}' and U_COD_MONEDA = '{codMoneda}'";
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF) return recSet.Fields.Item(0).Value.ToString();
             throw new InvalidOperationException($"No se han definido los números de operación para la sucursal: {codSucursal}, banco: {codBanco}");
         }
 
-        private static int ObtenerIDFlujoDeCaja(int codSucursal)
+        private static int ObtenerIDFlujoDeCaja(int codSucursal, bool tieneSucursales)
         {
-            var sqlQry = $"select TX1.\"U_EXD_CFWID\" from  OBPL TX1 where TX1.\"BPLId\" = '{codSucursal}' and coalesce(TX1.\"U_EXD_CFWID\",'-1') <> '-1'";
+            var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '15' and coalesce(U_VALOR,'') <> '' ";
+            if (tieneSucursales)
+            {
+                sqlQry = $"select TX1.\"U_EXD_CFWID\" from  OBPL TX1 where TX1.\"BPLId\" = '{codSucursal}' and coalesce(TX1.\"U_EXD_CFWID\",'-1') <> '-1'";
+            }
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF)
@@ -780,6 +971,39 @@ namespace SMC_APM.Controller
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
             return recSet.Fields.Item(0).Value == "Y";
+        }
+
+        private static string GuardarEnvioH2HEnLog(int docEntryPM, string codBanco, string codSucursal, string idArchivo)
+        {
+            var sqlQry = "select 'E'||right('00000000' || ltrim(right(coalesce(max(\"Code\"),'0'),8)+1),8) as \"Codigo\" from \"@EXD_PM_LOGENVHTH\"";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            var utEXD_PM_LOGENVHTH = Globales.Company.UserTables.Item("EXD_PM_LOGENVHTH");
+            utEXD_PM_LOGENVHTH.Code = recSet.Fields.Item(0).Value.ToString();
+            utEXD_PM_LOGENVHTH.Name = recSet.Fields.Item(0).Value.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_ID_PAGMSV").Value = docEntryPM.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_COD_BANCO").Value = codBanco.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_COD_SUCURSAL").Value = codSucursal.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_ID_ARCHIVO").Value = idArchivo.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_FECHA_ENVIO").Value = DateTime.Today;
+            var rslt = utEXD_PM_LOGENVHTH.Add();
+
+            if (rslt != 0) throw new Exception($"Error al guardar en log: {Globales.Company.GetLastErrorDescription()}");
+
+            return utEXD_PM_LOGENVHTH.Code;
+        }
+
+        private static void EncriptarArchivo(string rutaLLavePublica, string rutaOrigen, string rutaDestino)
+        {
+            var ENCRYPT_KEY = File.ReadAllBytes(rutaLLavePublica);
+            CryptoHelper.EncryptPgpFile(rutaOrigen, rutaDestino, ENCRYPT_KEY);
+        }
+
+        private static void ActualizarLogEstadoEnLogEnvio(string codeLog, string codEstado)
+        {
+            var sqlQry = $"update \"@EXD_PM_LOGENVHTH\" set \"U_ESTADO\" = '{codEstado}' where \"Code\" = '{codeLog}'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
         }
 
         #region Obsoleto

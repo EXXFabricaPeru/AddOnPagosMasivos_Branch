@@ -9,7 +9,8 @@ CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
 	tipoBanco varchar(3),
 	filtroBanco varchar(3),
 	codSucursal varchar(3),
-	codPrioridad varchar(50)
+	codPrioridad varchar(50),
+	codTipoDocumento varchar(5)
 )
 AS
 BEGIN
@@ -213,7 +214,7 @@ BEGIN
 		T1."DueDate"
 		,IFNULL(T0."U_EXC_ORIGEN",'') as "Origen"
 		,IFNULL(T0."PayBlock", 'N') AS "BloqueoPago"
-		,(SELECT CASE WHEN "InsTotal" <> "PaidToDate" THEN 'Y' ELSE 'N' END FROM PCH6 WHERE "DocEntry" = T0."DocEntry" AND UPPER(IFNULL("U_EXX_CONFTIPODET", 'No'))  = 'SI' ) AS "DetraccionPend"
+		,(SELECT CASE WHEN round("InsTotal") <> round("PaidToDate") THEN 'Y' ELSE 'N' END FROM PCH6 WHERE "DocEntry" = T0."DocEntry" AND UPPER(IFNULL("U_EXX_CONFTIPODET", 'No'))  = 'SI' ) AS "DetraccionPend"
 		,T1."InstlmntID" AS "NroCuota"
 		,0 AS "LineaAsiento"
 		,T0."JrnlMemo" AS "GlosaAsiento"
@@ -230,11 +231,11 @@ BEGIN
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
-		T0."Indicator" IN ('00','01','02','08','14','50','99','05','91','SA')
+		T0."Indicator" IN ('00','01','02','08','10','14','50','99','05','91','SA')
 		--T0."Indicator" IN ('01','02','03','08','DT','DO')
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
-		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') ='No'
+		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') = 'No'
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
@@ -246,7 +247,7 @@ BEGIN
 		(
 		
 		ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
-		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'FT-P'
+		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_NRO_CUOTA" = T1."InstlmntID" and TX0."U_TIPO_DOCUMENTO" = 'FT-P'
 		
 		and (ifnull((select max('Y') from "@EXP_OPMP" TT0 
 		inner join "@EXP_PMP1" TT1 on TT0."DocEntry" = TT1."DocEntry"
@@ -324,8 +325,8 @@ BEGIN
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
-				CASE :tipoBanco WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
-			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
+			CASE  R2."BankCode" WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
+			ELSE CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
 		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur" --beneficiario
@@ -407,7 +408,7 @@ BEGIN
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		--AND T1."DueDate" <= :fechaVencH
-		AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
+		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'NC-C')
@@ -626,8 +627,8 @@ BEGIN
 		,'')*/
 		(SELECT CASE T0."U_EXC_PAGBEN"
 			WHEN 'Y' THEN
-				CASE :tipoBanco WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
-			ELSE CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END
+				CASE R2."BankCode" WHEN R2."BankCode" THEN R2."Account" ELSE R2."U_EXM_INTERBANCARIA" END
+				ELSE CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END END
 		FROM OCRD R0
 		LEFT JOIN OCPR R1 ON R0."CardCode"=R1."CardCode" AND R1."U_EXC_BENEFI"='Y'
 		LEFT JOIN OCRB R2 ON R0."CardCode"=R2."CardCode" AND R1."Name"=R2."U_EXC_BENEFI" AND IFNULL(R2."UsrNumber1",'') = T0."DocCur"--:monedaLoc --beneficiario
@@ -672,6 +673,7 @@ BEGIN
 		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = T0."DocCur"--:monedaLoc --normal
 		WHERE R0."CardCode" = T0."CardCode")
 		AS "BankCode",
+		
 		(CASE 
 			WHEN DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) < 0 THEN 0 
 			ELSE DAYS_BETWEEN(T0."DocDueDate", :fechaVencH) 
@@ -871,7 +873,7 @@ BEGIN
 			
 		T3."LicTradNum" AS "RUC",
 
-		(SELECT CASE :tipoBanco WHEN R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END
+		(SELECT CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END 
 		FROM OCRD R0
 		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = IFNULL(T1."FCCurrency",'SOL')--:monedaLoc --normal
 		WHERE R0."CardCode" = T3."CardCode")
@@ -1061,15 +1063,18 @@ BEGIN
 		/*
 		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
-			and (T1."Credit" - 
+		and ((T1."Credit" - 
 		ifnull((select sum(TT0."ReconSum") from 
 		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0
+		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0 or ((T1."FCCredit" - 
+		ifnull((select sum(TT0."ReconSumFC") from 
+		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
+		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0))
 		
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",'SOL') = UPPER(:monedaExt))
 		AND T3."CardCode" like '%' || :CardCode || '%'
-		and T1."Credit">0
+		and ( T1."Credit" > 0 or T1."FCCredit" > 0)
 		and ifnull(T1."U_EXX_DETRACCION",'') <> 'Y'
 		/*AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'AS')*/
@@ -1090,7 +1095,7 @@ BEGIN
 		
 		) T0
 	WHERE
-		T0."Total" > 0 
+		T0."Total" > 0 and T0."Documento" = ifnull(nullif(:codTipoDocumento,'VR'),T0."Documento")
 		and T0."FechaVencimiento" between :fechaVencD and :fechaVencH
 		--and T0."BankCode" like '%'||:filtroBanco||'%' --se agrego nuevo
 		and T0."CodSucursal"	= ifnull(nullif(:codSucursal,'-1'),T0."CodSucursal")

@@ -57,7 +57,12 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "7",Name="Medio de pago tranferencia",Valor="999" },
                                 new { Code = "8",Name="Medio de pago cheque",Valor="999" },
                                 new { Code = "9",Name="Sucursales",Valor="N" },
-                                new { Code = "10",Name="Host to Host",Valor="N" },                               
+                                new { Code = "10",Name="Host to Host",Valor="N" },
+                                new { Code = "11",Name="Cta. puente",Valor="" },
+                                new { Code = "12",Name="Validar pago de detracciones",Valor="Y" },
+                                new { Code = "13",Name="Obt. serie pago desde ctas. banco propio",Valor="N" },
+                                new { Code = "14",Name="Cta. de ajuste por redondeo",Valor="" },
+                                new { Code = "15",Name="ID de flujo de caja",Valor="" }
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");
@@ -71,6 +76,24 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                     tblConfPM.Add();
                                 }
                             }
+
+                            var lstDocumentos = new List<dynamic>
+                            {
+                                new { Code = "VR",Name="Varios" },
+                                new { Code = "FT-P",Name="Factura de proveedores"},
+                                new { Code = "SP",Name="Pago borrador"},
+                            };
+                            //Establezco opciones por defecto
+                            var tblConfDocumentos = conexSBO.sboCompany.UserTables.Item("EXD_PM_TIPODOC");
+                            foreach (var item in lstDocumentos)
+                            {
+                                if (!tblConfDocumentos.GetByKey(item.Code))
+                                {
+                                    tblConfDocumentos.Code = item.Code;
+                                    tblConfDocumentos.Name = item.Name;
+                                    tblConfDocumentos.Add();
+                                }
+                            }
                             //inicia el addon
                             ctrPrincipal = new ctrPrincipal(conexSBO.sboApplication, conexSBO.sboCompany);
                             ctrPrincipal.iniciarAddon();
@@ -79,7 +102,7 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                             Application.Run();
                         }
                         else
-                            throw new InvalidOperationException("PM: No se encontro table de configuración");
+                            throw new InvalidOperationException("PM: No se encontro tabla de configuración");
                     }
                 }
             }

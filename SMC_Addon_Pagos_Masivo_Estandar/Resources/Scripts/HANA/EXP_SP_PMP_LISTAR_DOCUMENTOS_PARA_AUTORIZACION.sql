@@ -4,7 +4,8 @@ CREATE PROCEDURE EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION
 	IN fechaDesde date,
 	IN fechaHasta date,
 	IN cntAutorizaciones int,
-	IN ventana varchar(1)
+	IN ventana varchar(1),
+	IN tipoDocumento varchar(5)
 )
 AS
 BEGIN
@@ -12,15 +13,19 @@ BEGIN
 		'P' 						as "Accion",
 		T0."Creator"				as "Creador",
 		T0."CreateDate"				as "FechaCreacion",
-		'E'							as "TipoDocumento",
+		'E'							as "Ventana",
+		T3."U_TIPO_DOC"				as "TipoDocumento",
 		T0."DocEntry"				as "Codigo",
 		T0."DocNum"					as "NumDoc",
-		ifnull(T0."U_CNT_AUT",0)	as "CntActualAut"
+		ifnull(T0."U_CNT_AUT",0)	as "CntActualAut",
+		REPLICATE(' ',250)			as "Comentarios"
 	from "@EXD_OEPG" 	T0
 	,"@EXD_PM_CONFAUT"	T3
-	inner join "@EXD_PM_CONFAUT1"	T4 on T3."Code" = T4."Code"
+	inner join "@EXD_PM_CONFAUT1"	T4 on T3."Code" = T4."Code" 
 	where
-	T0."U_ESTADO" = 'E'
+	T0."U_TIPO_DOC" = T3."U_TIPO_DOC"
+	and T0."U_ESTADO" = 'E'
+	and T0."U_TIPO_DOC" = :tipoDocumento
 	and ifnull(T0."Canceled",'') != 'Y'
 	and 
 	(
@@ -37,16 +42,20 @@ BEGIN
 		'P' 						as "Accion",
 		T0."Creator"				as "Creador",
 		T0."CreateDate"				as "FechaCreacion",
-		'P'							as "TipoDocumento",
+		'P'							as "Ventana",
+		T1."U_TIPO_DOC"				as "TipoDocumento",
 		T0."DocEntry"				as "Codigo",
 		T0."DocNum"					as "NumDoc",
-		ifnull(T0."U_EXP_CNTAUT",0)	as "CntActualAut"
+		ifnull(T0."U_EXP_CNTAUT",0)	as "CntActualAut",
+		REPLICATE(' ',250)			as "Comentarios"
 	from "@EXP_OPMP" T0
 	,"@EXD_PM_CONFAUT"	T1
 	inner join "@EXD_PM_CONFAUT1"	T2 on T1."Code" = T2."Code"
-	where 
-	T0."U_EXP_ESTADO" = 'E'
+	where
+	T1.U_TIPO_DOC = 'VR'
+	and T0."U_EXP_ESTADO" = 'E'
 	and ifnull(T0."Canceled",'') != 'Y'
+	and T1.U_TIPO_DOC = @tipoDocumento
 	and
 	(
 	 	T2."U_CODAUTORI" = :codAutorizador or

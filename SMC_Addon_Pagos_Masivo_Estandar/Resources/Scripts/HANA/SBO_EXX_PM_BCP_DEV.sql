@@ -31,6 +31,7 @@ BEGIN
 		and T2."DocEntry" = :NroPM
 		and T1."U_EXP_COD_SUCURSAL" = :NroSC
 		and T1."U_EXP_CODCTABANCO" = :NroCT
+		and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 		group by T2."DocEntry",T1."U_EXP_COD_SUCURSAL",T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 	),
 
@@ -60,21 +61,23 @@ BEGIN
 		where T2."DocEntry" = :NroPM 
 		and T1."U_EXP_COD_SUCURSAL" = :NroSC
 		and T1."U_EXP_CODCTABANCO" = :NroCT
+		and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 		and T4."U_EXC_ACTIVO" = 'Y'
-	),
+	)
+	/*,
 	CTE_BENEF as
 	(
 		select 
 			'3'						as "TipoRegistro",
 			case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end						as "TipoDocumento",
 			(select TX0."FolioPref"||TX0."FolioNum" from OPCH TX0 where TX0."DocEntry" = T1."U_EXP_DOCENTRYDOC" and TX0."ObjType" = T1."U_EXP_TIPODOC")	as "NroDocAPagar",
-			0.01/*T0."DocTotal"*/			as "Importe"
+			0.01/*T0."DocTotal"*//*			as "Importe"
 		from 
 		"@EXP_PMP1"					T1 
 		inner join "@EXP_OPMP"		T2 on T1."DocEntry" = T2."DocEntry"
 		--inner join VPM2				T3 on T0."DocEntry"	= T3."DocNum" 
 		where T2."DocEntry" = :NroPM
-	)	
+	)*/
 	select 
 		"TipoRegistro"			||
 		lpad("CntDeAbonos",6,'0')		||

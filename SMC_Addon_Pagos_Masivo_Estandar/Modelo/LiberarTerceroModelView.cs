@@ -169,7 +169,7 @@ namespace SMC_APM.Modelo
                     try
                     {
 
-                        nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo);
+                        nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo, true);
                     }
                     catch (Exception ex)
                     {
@@ -475,7 +475,7 @@ namespace SMC_APM.Modelo
                     //oPagoEf.Checks.CheckSum = MontoCheques;
                     //oPagoEf.Checks.DueDate = FechaTransferencia;
 
-                    var sucursalBanco = PagoMasivoController.ObtenerSucursaCtaBanco(GetBankCode(Banco), CuentaCheque);
+                    var sucursalBanco = PagoMasivoController.ObtenerSucursalCtaBanco(GetBankCode(Banco), CuentaCheque);
                     oPagoEf.Checks.AccounttNum = sucursalBanco.Item1;
                     oPagoEf.Checks.BankCode = sucursalBanco.Item3;//GetBankCode(Banco);
                     oPagoEf.Checks.Branch = sucursalBanco.Item2;

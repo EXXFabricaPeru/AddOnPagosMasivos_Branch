@@ -331,6 +331,10 @@
 				<ColAlias>U_VENTANA</ColAlias>
 				<ColumnDesc>Ventana</ColumnDesc>
 			</row>
+      <row>
+        <ColAlias>U_TIPO_DOC</ColAlias>
+        <ColumnDesc>Tipo documento</ColumnDesc>
+      </row>
 			<row>
 				<ColAlias>U_CANTAUTO</ColAlias>
 				<ColumnDesc>Cnt. autorizadores</ColumnDesc>

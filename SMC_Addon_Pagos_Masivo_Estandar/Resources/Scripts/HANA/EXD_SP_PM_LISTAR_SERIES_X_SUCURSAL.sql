@@ -1,13 +1,30 @@
 CREATE PROCEDURE EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL()
 AS
 BEGIN
-	select 
-		T0."BPLId",
-		T0."BPLName",
-		coalesce(T0.U_EXX_RETPRO,'N') as "RetPro",
-		(select MAX(TX0."Series") from NNM1 TX0 where TX0."BPLId" = T0."BPLId" and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46') as "CodSerPago",
-		(select MAX(TX0."SeriesName") from NNM1 TX0 where TX0."BPLId" = T0."BPLId" and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46')  as "NomSerPago",
-		(select MAX(TX0."Series") from NNM1 TX0 where TX0."BPLId" = T0."BPLId" and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46') as "CodSerReten",
-		(select MAX(TX0."SeriesName") from NNM1 TX0 where TX0."BPLId" = T0."BPLId" and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46') as "NomSerReten"
-	from OBPL T0 order by 1;
-END
+	declare tieneSucursales varchar(1);
+	
+	select "MltpBrnchs" into tieneSucursales from OADM;
+
+	if :tieneSucursales = 'Y'
+	then
+		select 
+			T0."BPLId"						as "BPLId",
+			T0."BPLName"					as "BPLName",
+			coalesce(T0.U_EXX_RETPRO,'N')	as "RetPro",
+			(select MAX(TX0."Series") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(T0."BPLId",'0') and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "CodSerPago",
+			(select MAX(TX0."SeriesName") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(T0."BPLId",'0') and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N')  as "NomSerPago",
+			(select MAX(TX0."Series") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(T0."BPLId",'0') and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "CodSerReten",
+			(select MAX(TX0."SeriesName") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(T0."BPLId",'0') and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "NomSerReten"
+		from OBPL T0 order by 1;
+	else
+		select 
+			ifnull(MAX(T0."BPLId"),'0') as "BPLId",
+			ifnull(MAX(T0."BPLName"),'Principal') as "BPLName",
+			coalesce(MAX(T0.U_EXX_RETPRO),'N') as "RetPro",
+			(select MAX(TX0."Series") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(MAX(T0."BPLId"),'0') and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "CodSerPago",
+			(select MAX(TX0."SeriesName") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(MAX(T0."BPLId"),'0') and coalesce(TX0.U_EXC_CR,'') != 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N')  as "NomSerPago",
+			(select MAX(TX0."Series") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(MAX(T0."BPLId"),'0') and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "CodSerReten",
+			(select MAX(TX0."SeriesName") from NNM1 TX0 where ifnull(TX0."BPLId",'0') = ifnull(MAX(T0."BPLId"),'0') and coalesce(TX0.U_EXC_CR,'') = 'Y' and TX0."ObjectCode" = '46' and TX0."Locked"='N') as "NomSerReten"
+		from OBPL T0 order by 1;
+	end if;
+END;

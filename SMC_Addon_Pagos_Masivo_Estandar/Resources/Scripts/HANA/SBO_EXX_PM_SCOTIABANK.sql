@@ -1,38 +1,27 @@
-CREATE PROCEDURE SBO_EXX_PM_SCOTIABANK (
-docEntry int,codSucursal int, glaccount nvarchar(15)
+CREATE PROCEDURE SBO_EXX_PM_SCOTIABANK(
+docEntry int,codSucursal int, glaccount nvarchar(15), formatoScotia varchar(2)
 )
 
 AS
-RUCCineplex nvarchar(11);
+RUC nvarchar(11);
 factoring nvarchar(1);
-
 BEGIN
 
 -- Llenado de variables
-SELECT "TaxIdNum" INTO RUCCineplex FROM OADM;
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and ifnull("U_EXM_PMASIVO",'') = 'Y';
+SELECT "TaxIdNum" INTO RUC FROM OADM;
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount 
+AND "Branch" = :codSucursal AND ifnull("U_EXM_PMASIVO",'') = 'Y';
 
-IF :factoring='N' THEN
+
+
+
+IF ifnull(:factoring,'N') = 'N' THEN
 -- Estructura Pago Proveedores
 
-	SELECT
-	LEFT(A0."RUC"||replicate(' ',11),11)||
-	LEFT(A0."Razón Social"||replicate(' ',60),60)||
-	LEFT(A0."Nro. de Documento"||replicate(' ',14),14)||
-	LEFT(A0."Fecha Emisión Documento"||replicate(' ',8),8)||
-	RIGHT(replicate('0',11)||A0."Importe del Documento",11)||
-	LEFT(ifnull(A0."Forma de Pago",'')||replicate(' ',1),1)||
-	LEFT(A0."Oficina de Cuenta Abono SBP"||replicate(' ',3),3)||
-	LEFT(A0."Cuenta Abono SBP"||replicate(' ',7),7)||
-	LEFT(A0."Pago Único"||replicate(' ',1),1)||
-	LEFT(A0."Email de Proveedor"||replicate(' ',30),30)||
-	LEFT(A0."CCI"||replicate(' ',20),20)||
-	replicate(' ',9)
-	--LEFT(A0."Moneda"||replicate(' ',2),2)||
-	--LEFT(A0."Tipo de Pago"||replicate(' ',2),2)
-	||'|'
-		AS "Resultado"
-	FROM (
+	
+RSLT =	SELECT
+		*
+		FROM (
 		----- OPCH - PROVEEDORES -----
 		SELECT
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN	
@@ -45,7 +34,7 @@ IF :factoring='N' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -62,15 +51,19 @@ IF :factoring='N' THEN
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		T4."NumAtCard" 
-		AS "Nro. de Documento",
+		T4."NumAtCard" AS "Nro. de Documento",
 		TO_NVARCHAR(T4."TaxDate",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
 			WHEN 'CG' THEN '1'
 			WHEN 'TB' THEN
 				CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-					WHEN '009' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
+					WHEN '009' THEN (SELECT 
+										case "UsrNumber2" 
+											when 'C' then '2'  
+											when 'A' then '3'
+											else '1' end
+									FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
 					ELSE '4' END
 			ELSE replicate(' ',1) END AS "Forma de Pago",
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN
@@ -95,7 +88,7 @@ IF :factoring='N' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		INNER JOIN OPCH T4 ON T4."ObjType"=T1."U_EXP_TIPODOC" AND T4."DocEntry"=T1."U_EXP_DOCENTRYDOC"
 		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
@@ -122,7 +115,7 @@ IF :factoring='N' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -146,7 +139,12 @@ IF :factoring='N' THEN
 			WHEN 'CG' THEN '1'
 			WHEN 'TB' THEN
 				CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-					WHEN '009' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
+					WHEN '009' THEN (SELECT 
+										case "UsrNumber2" 
+											when 'C' then '2'  
+											when 'A' then '3'
+											else '1' end 
+									FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
 					ELSE '4' END
 			ELSE replicate(' ',1) END AS "Forma de Pago",
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN
@@ -171,7 +169,7 @@ IF :factoring='N' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		INNER JOIN ODPO T4 ON T4."ObjType"=T1."U_EXP_TIPODOC" AND T4."DocEntry"=T1."U_EXP_DOCENTRYDOC"
 		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
@@ -198,7 +196,7 @@ IF :factoring='N' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -215,15 +213,20 @@ IF :factoring='N' THEN
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		IFNULL(T4."NumAtCard",IFNULL(T4."FolioPref",'NC01')||'-'||IFNULL(T4."FolioNum", T4. "DocNum")) 
-		AS "Nro. de Documento",
+		IFNULL(T4."NumAtCard",IFNULL(T4."FolioPref",'NC01')||'-'||IFNULL(T4."FolioNum", T4. "DocNum")) AS "Nro. de Documento",
 		TO_NVARCHAR(T4."TaxDate",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
 			WHEN 'CG' THEN '1'
 			WHEN 'TB' THEN
 				CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-					WHEN '009' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
+					WHEN '009' THEN (SELECT 										
+										case "UsrNumber2" 
+											when 'C' then '2'  
+											when 'A' then '3'
+											else '1' 
+										end 
+									FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
 					ELSE '4' END
 			ELSE replicate(' ',1) END AS "Forma de Pago",
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN
@@ -248,7 +251,7 @@ IF :factoring='N' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		INNER JOIN ORIN T4 ON T4."ObjType"=T1."U_EXP_TIPODOC" AND T4."DocEntry"=T1."U_EXP_DOCENTRYDOC"
 		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
@@ -273,7 +276,7 @@ IF :factoring='N' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -290,15 +293,20 @@ IF :factoring='N' THEN
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		T1."U_EXP_DOCENTRYDOC" 
-		AS "Nro. de Documento",
+		T1."U_EXP_DOCENTRYDOC" AS "Nro. de Documento",
 		TO_NVARCHAR(T0."U_EXP_FECHA",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
 			WHEN 'CG' THEN '1'
 			WHEN 'TB' THEN
 				CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-					WHEN '009' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
+					WHEN '009' THEN (SELECT 										
+										case "UsrNumber2" 
+											when 'C' then '2'  
+											when 'A' then '3'
+											else '1' 
+										end 
+									FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
 					ELSE '4' END
 			ELSE replicate(' ',1) END AS "Forma de Pago",
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN
@@ -323,18 +331,52 @@ IF :factoring='N' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
-		WHERE T0."DocEntry"=:docEntry 
-		AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')--descomentar
-		AND T1."U_EXP_CODBANCO"='009' --descomentar
+		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
+		AND T1."U_EXP_CODBANCO"='009' 
 		AND T1."U_EXP_CODCTABANCO"=:glaccount
 		AND T1."U_EXP_COD_SUCURSAL"=:codSucursal
-		AND T1."U_EXP_TIPODOC" IN ('30','46','140') --descomentar
-		----AND T3."U_EXX_TIPODOCU"='6'
-		AND ((T1."U_EXP_MEDIODEPAGO"='TB' AND IFNULL(T1."U_EXP_NROCTAPROV",'')!='') OR (T1."U_EXP_MEDIODEPAGO"='CG'))--descomentar
-		AND T1."U_EXP_SLC_RETENCION"='N'--descomentar
+		AND T1."U_EXP_TIPODOC" IN ('30','46','140') --AND T3."U_EXX_TIPODOCU"='6'
+		AND ((T1."U_EXP_MEDIODEPAGO"='TB' AND IFNULL(T1."U_EXP_NROCTAPROV",'')!='') OR (T1."U_EXP_MEDIODEPAGO"='CG'))
+		AND T1."U_EXP_SLC_RETENCION"='N'
 	) A0;
+
+	IF :formatoScotia = 'PV' THEN	
+		select 
+			LEFT("RUC"||replicate(' ',11),11)||
+			LEFT("Razón Social"||replicate(' ',60),60)||
+			LEFT("Nro. de Documento"||replicate(' ',14),14)||
+			LEFT("Fecha Emisión Documento"||replicate(' ',8),8)||
+			RIGHT(replicate('0',11)||"Importe del Documento",11)||
+			LEFT(ifnull("Forma de Pago",'')||replicate(' ',1),1)||
+			LEFT("Oficina de Cuenta Abono SBP"||replicate(' ',3),3)||
+			LEFT("Cuenta Abono SBP"||replicate(' ',7),7)||
+			LEFT(/*A0."Pago Único"*/''||replicate(' ',1),2)||
+			LEFT("Email de Proveedor"||replicate(' ',50),50)--||
+			--LEFT(A0."CCI"||replicate(' ',20),20)||
+			--LEFT(A0."Moneda"||replicate(' ',2),2)||
+			--LEFT(A0."Tipo de Pago"||replicate(' ',2),2)
+			||'|'
+				AS "Resultado"
+		from :RSLT;	
+	ELSEIF :formatoScotia = 'HB' THEN	
+		select 
+			LEFT(LEFT("RUC",8)||replicate(' ',8),8)||
+			LEFT(LEFT("Razón Social",30)||replicate(' ',30),30)||
+			LEFT('ENTREGAS A RENDIR'||replicate(' ',20),20)||
+			LEFT("Fecha Emisión Documento"||replicate(' ',8),8)||
+			RIGHT(replicate('0',11)||"Importe del Documento",11)||
+			LEFT(ifnull("Forma de Pago",'')||replicate(' ',1),1)||
+			LEFT("Oficina de Cuenta Abono SBP"||replicate(' ',3),3)||
+			LEFT("Cuenta Abono SBP"||replicate(' ',7),7)||
+			LEFT(LEFT("RUC",8)||replicate(' ',8),8)	
+			--LEFT(A0."Moneda"||replicate(' ',2),2)||
+			--LEFT(A0."Tipo de Pago"||replicate(' ',2),2)
+			||'|'
+				AS "Resultado"
+		from :RSLT;	
+	END IF;
 
 ELSEIF :factoring='Y' THEN
 -- Estructura Orden de Pago Factoring
@@ -344,14 +386,10 @@ ELSEIF :factoring='Y' THEN
 	LEFT(A2."Nro. de Documento"||replicate(' ',14),14)|| -- posición de 72 a 85
 	LEFT(A2."Fecha Emisión Documento"||replicate(' ',8),8)|| -- posición de 86 a 93
 	RIGHT(replicate('0',11)||A2."Importe del Documento",11)|| -- posición de 94 a 104
-	LEFT(ifnull(A2."Forma de Pago",'')||replicate(' ',1),1)||
-	replicate(' ',11)||
-	LEFT(A2."Email de Proveedor"||replicate(' ',30),30)|| -- posición de 105 a 154
-	replicate(' ',20),20 ||
-	'F'||
-	LEFT(A2."Fecha Vencimiento Documento"||replicate(' ',8),8) -- posición de 155 a 162
-	--LEFT(A2."Moneda"||replicate(' ',2),2)|| -- posición de 163 a 164
-	--LEFT(A2."Tipo de Pago"||replicate(' ',2),2) -- posición de 165 a 166
+	LEFT(A2."Email de Proveedor"||replicate(' ',50),50)|| -- posición de 105 a 154
+	LEFT(A2."Fecha Vencimiento Documento"||replicate(' ',8),8)|| -- posición de 155 a 162
+	LEFT(A2."Moneda"||replicate(' ',2),2)|| -- posición de 163 a 164
+	LEFT(A2."Tipo de Pago"||replicate(' ',2),2) -- posición de 165 a 166
 	||'|'
 		AS "Resultado"
 	
@@ -368,7 +406,7 @@ ELSEIF :factoring='Y' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -418,7 +456,7 @@ ELSEIF :factoring='Y' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		INNER JOIN OPCH T4 ON T4."ObjType"=T1."U_EXP_TIPODOC" AND T4."DocEntry"=T1."U_EXP_DOCENTRYDOC"
 		INNER JOIN PCH6 T5 ON T4."DocEntry"=T5."DocEntry" AND T1."U_EXP_NMROCUOTA"=T5."InstlmntID"
@@ -444,7 +482,7 @@ ELSEIF :factoring='Y' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -494,7 +532,7 @@ ELSEIF :factoring='Y' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		INNER JOIN ODPO T4 ON T4."ObjType"=T1."U_EXP_TIPODOC" AND T4."DocEntry"=T1."U_EXP_DOCENTRYDOC"
 		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
@@ -520,7 +558,7 @@ ELSEIF :factoring='Y' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -595,7 +633,7 @@ ELSEIF :factoring='Y' THEN
 				END
 			ELSE
 				CASE T3."QryGroup26"
-					WHEN 'Y' THEN :RUCCineplex
+					WHEN 'Y' THEN :RUC
 					ELSE CASE IFNULL((SELECT IFNULL("U_EXC_BENEFI",'') FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV"),'')
 							WHEN '' THEN T3."LicTradNum"
 							ELSE (
@@ -620,7 +658,12 @@ ELSEIF :factoring='Y' THEN
 			WHEN 'CG' THEN '1'
 			WHEN 'TB' THEN
 				CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
-					WHEN '009' THEN (SELECT "UsrNumber2" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
+					WHEN '009' THEN (SELECT 
+										case "UsrNumber2" 
+											when 'C' then '2'  
+											when 'A' then '3'
+											else '1' end
+									FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV")
 					ELSE '4' END
 			ELSE replicate(' ',1) END AS "Forma de Pago",
 		CASE T1."U_EXP_MEDIODEPAGO" WHEN 'TB' THEN
@@ -645,7 +688,7 @@ ELSEIF :factoring='Y' THEN
 		
 		FROM "@EXP_OPMP" T0
 		INNER JOIN "@EXP_PMP1" T1 ON T0."DocEntry"=T1."DocEntry"
-		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount"
+		INNER JOIN DSC1 T2 ON T1."U_EXP_CODCTABANCO"=T2."GLAccount" and T2."Branch" = T1."U_EXP_COD_SUCURSAL"
 		INNER JOIN OCRD T3 ON T1."U_EXP_CARDCODE"=T3."CardCode"
 		WHERE T0."DocEntry"=:docEntry AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
 		AND T1."U_EXP_CODBANCO"='009' 

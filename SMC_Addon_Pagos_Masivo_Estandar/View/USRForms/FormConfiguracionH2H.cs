@@ -26,10 +26,16 @@ namespace SMC_APM.View.USRForms
         private SAPbouiCOM.Folder fldIBK = null;
         private SAPbouiCOM.UserDataSource udsFolder = null;
         private SAPbouiCOM.DBDataSource dbsCONFH2H = null;
+        private SAPbouiCOM.DataTable dtCONFUSUH2H = null;
+        private SAPbouiCOM.Matrix mtxUsuXSuc = null;
+
         public FormConfiguracionH2H(string id) : base(TYPE, MENU, id, PATH)
         {
             if (!UIFormFactory.FormUIDExists(id)) UIFormFactory.AddUSRForm(id, this);
             var tblConfH2H = Globales.Company.UserTables.Item("EXD_PM_CONFH2H");
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+
+
             if (!tblConfH2H.GetByKey("001"))
             {
                 tblConfH2H.Code = "001";
@@ -56,6 +62,15 @@ namespace SMC_APM.View.USRForms
             }
             dbsCONFH2H.Query(ObtenerConfPorBanco("00" + FLD_BCP));
             udsFolder.Value = FLD_BCP;
+
+            var sqlQry = "select \"BPLId\",\"BPLName\" from OBPL";
+            recSet.DoQuery(sqlQry);
+            while (!recSet.EoF)
+            {
+                mtxUsuXSuc.Columns.Item("Col_0").ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                recSet.MoveNext();
+            }
+
             Form.Update();
         }
 
@@ -68,7 +83,8 @@ namespace SMC_APM.View.USRForms
             this.fldIBK = (SAPbouiCOM.Folder)Form.Items.Item("Item_4").Specific;
             this.udsFolder = Form.DataSources.UserDataSources.Item("UD_FLD");
             this.dbsCONFH2H = Form.DataSources.DBDataSources.Item("@EXD_PM_CONFH2H");
-
+            this.dtCONFUSUH2H = Form.DataSources.DataTables.Item("DT_CONFUSU");
+            this.mtxUsuXSuc = (SAPbouiCOM.Matrix)Form.Items.Item("Item_22").Specific;
         }
 
         protected override void CargarEventos()
@@ -89,6 +105,8 @@ namespace SMC_APM.View.USRForms
                         tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value = dbsCONFH2H.GetValue("U_PASSWORD", 0);
                         tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value = dbsCONFH2H.GetValue("U_RUTA_FLD_IN", 0);
                         tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_OUT").Value = dbsCONFH2H.GetValue("U_RUTA_FLD_OUT", 0);
+                        tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PUB").Value = dbsCONFH2H.GetValue("U_RUTA_LLAVE_PUB", 0);
+                        tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PRV").Value = dbsCONFH2H.GetValue("U_RUTA_LLAVE_PRV", 0);
                         tblConfH2H.Update();
                     }
                     else
@@ -101,7 +119,38 @@ namespace SMC_APM.View.USRForms
                         tblConfH2H.UserFields.Fields.Item("U_PASSWORD").Value = dbsCONFH2H.GetValue("U_PASSWORD", 0);
                         tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_IN").Value = dbsCONFH2H.GetValue("U_RUTA_FLD_IN", 0);
                         tblConfH2H.UserFields.Fields.Item("U_RUTA_FLD_OUT").Value = dbsCONFH2H.GetValue("U_RUTA_FLD_OUT", 0);
+                        tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PUB").Value = dbsCONFH2H.GetValue("U_RUTA_LLAVE_PUB", 0);
+                        tblConfH2H.UserFields.Fields.Item("U_RUTA_LLAVE_PRV").Value = dbsCONFH2H.GetValue("U_RUTA_LLAVE_PRV", 0);
                         tblConfH2H.Add();
+                    }
+
+                    if (udsFolder.Value == FLD_IBK)
+                    {
+                        var tblConfUsuH2H = Globales.Company.UserTables.Item("EXD_PM_CNFUSUH2H");
+                        var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                        var sqlQry = "delete from \"@EXD_PM_CNFUSUH2H\" where U_COD_BANCO = '003'";
+                        recSet.DoQuery(sqlQry);
+                        mtxUsuXSuc.FlushToDataSource();
+                        var cnt = 1;
+                        for (int i = 0; i < dtCONFUSUH2H.Rows.Count; i++)
+                        {
+                            var codSuc = dtCONFUSUH2H.GetValue("CodSucursal", i);
+                            var codEmp = dtCONFUSUH2H.GetValue("CodEmpresa", i).Trim();
+                            var usuario = dtCONFUSUH2H.GetValue("Usuario", i).Trim();
+
+                            if (string.IsNullOrWhiteSpace(codEmp) || string.IsNullOrWhiteSpace(usuario)) continue;
+
+                            var codRegistro = $"B{FLD_IBK}" + cnt.ToString().PadLeft(3, '0');
+                            tblConfUsuH2H.Code = codRegistro;
+                            tblConfUsuH2H.Name = codRegistro;
+                            tblConfUsuH2H.UserFields.Fields.Item("U_COD_SUCURSAL").Value = codSuc.ToString();
+                            tblConfUsuH2H.UserFields.Fields.Item("U_COD_EMPRESA").Value = codEmp;
+                            tblConfUsuH2H.UserFields.Fields.Item("U_USUARIO").Value = usuario;
+                            tblConfUsuH2H.UserFields.Fields.Item("U_COD_BANCO").Value = "003";
+                            var rslt = tblConfUsuH2H.Add();
+                            if (rslt != 0) Globales.Aplication.StatusBar.SetText(Globales.Company.GetLastErrorDescription(), SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            cnt++;
+                        }
                     }
                 }
                 return true;
@@ -143,6 +192,12 @@ namespace SMC_APM.View.USRForms
                 {
                     dbsCONFH2H.Query(ObtenerConfPorBanco("00" + FLD_IBK));
                     Form.Update();
+                    var sqlQry = "EXEC EXD_SP_PM_H2H_OBTENER_DATOS_CONF_USUARIOS";
+                    if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                        sqlQry = "CALL EXD_SP_PM_H2H_OBTENER_DATOS_CONF_USUARIOS()";
+                    dtCONFUSUH2H.ExecuteQuery(sqlQry);
+                    mtxUsuXSuc.LoadFromDataSource();
+                    mtxUsuXSuc.AutoResizeColumns();
                 }
                 return true;
             }));

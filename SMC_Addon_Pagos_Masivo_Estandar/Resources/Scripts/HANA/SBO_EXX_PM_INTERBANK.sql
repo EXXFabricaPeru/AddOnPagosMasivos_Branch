@@ -6,7 +6,7 @@ AS
 factoring nvarchar(1);
 BEGIN
 -- Llenado de variables
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and ifnull("U_EXM_PMASIVO",'') = 'Y';
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and "Branch" = :codSucursal and ifnull("U_EXM_PMASIVO",'') = 'Y';
 
 IF :factoring='N' THEN
 
@@ -204,7 +204,7 @@ FROM (
 		END AS "103-117 (15)",
 	CASE T3."U_EXC_PAGBEN"
 		WHEN 'Y' THEN (SELECT LEFT(IFNULL("FirstName"||replicate(' ',60-LENGTH("Name")),replicate(' ',60)),60) FROM OCPR WHERE "CardCode"=T2."CardCode" AND "U_EXC_BENEFI"='Y')
-		ELSE T2."CardName"||replicate(' ',60-LENGTH(T2."CardName"))
+		ELSE LEFT(T2."CardName"||replicate(' ',60-LENGTH(T2."CardName")),60)
 		END AS "118-177 (60)",
 	replicate(' ',2) AS "178-179 (2)", -- solo pago CTS
 	replicate('0',15) AS "180-194 (15)", -- solo pago CTS
@@ -297,7 +297,7 @@ FROM (
 		END AS "103-117 (15)",
 	CASE T3."U_EXC_PAGBEN"
 		WHEN 'Y' THEN (SELECT LEFT(IFNULL("FirstName"||replicate(' ',60-LENGTH("Name")),replicate(' ',60)),60) FROM OCPR WHERE "CardCode"=T2."CardCode" AND "U_EXC_BENEFI"='Y')
-		ELSE T2."CardName"||replicate(' ',60-LENGTH(T2."CardName"))
+		ELSE LEFT(T2."CardName"||replicate(' ',60-LENGTH(T2."CardName")),60)
 		END AS "118-177 (60)",
 	replicate(' ',2) AS "178-179 (2)", -- solo pago CTS
 	replicate('0',15) AS "180-194 (15)", -- solo pago CTS
@@ -390,7 +390,7 @@ FROM (
 		END AS "103-117 (15)",
 	CASE T3."U_EXC_PAGBEN"
 		WHEN 'Y' THEN (SELECT LEFT(IFNULL("FirstName"||replicate(' ',60-LENGTH("Name")),replicate(' ',60)),60) FROM OCPR WHERE "CardCode"=T2."CardCode" AND "U_EXC_BENEFI"='Y')
-		ELSE T2."CardName"||replicate(' ',60-LENGTH(T2."CardName"))
+		ELSE LEFT(T2."CardName"||replicate(' ',60-LENGTH(T2."CardName")),60)
 		END AS "118-177 (60)",
 	replicate(' ',2) AS "178-179 (2)", -- solo pago CTS
 	replicate('0',15) AS "180-194 (15)", -- solo pago CTS
@@ -478,7 +478,7 @@ FROM (
 		WHEN '7' THEN '05'
 	ELSE '' END AS "101-102 (2)",
 	T2."LicTradNum"||replicate(' ',15-LENGTH(T2."LicTradNum")) AS "103-117 (15)",
-	T2."CardName"||replicate(' ',60-LENGTH(T2."CardName")) AS "118-177 (60)",
+	LEFT(T2."CardName"||replicate(' ',60-LENGTH(T2."CardName")),60) AS "118-177 (60)",
 	replicate(' ',2) AS "178-179 (2)", -- solo pago CTS
 	replicate('0',15) AS "180-194 (15)", -- solo pago CTS
 	replicate(' ',8) AS "195-200 (6)",

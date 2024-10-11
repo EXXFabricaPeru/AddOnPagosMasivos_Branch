@@ -953,6 +953,26 @@
       </row>
     </UserFieldsMD>
   </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COMEN_APROB</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Comentarios aprobación</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_OPMP</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -1525,6 +1545,42 @@
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP1</TableName>
         <EditSize>2</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_ESTADO_H2H</Name>
+        <Type>db_Alpha</Type>
+        <Size>2</Size>
+        <Description>Estado H2H</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>2</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_MENSAJE_H2H</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Mensaje H2H</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>250</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -2523,24 +2579,24 @@
       </row>
     </UserFieldsMD>
   </BO>
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>FECHA_VENH</Name>
-				<Type>db_Date</Type>
-				<Size>8</Size>
-				<Description>Fecha vencimiento hasta</Description>
-				<SubType>st_None</SubType>
-				<TableName>@EXD_OEPG</TableName>
-				<EditSize>8</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>FECHA_VENH</Name>
+        <Type>db_Date</Type>
+        <Size>8</Size>
+        <Description>Fecha vencimiento hasta</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_OEPG</TableName>
+        <EditSize>8</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -2664,6 +2720,44 @@
         <SubType>st_None</SubType>
         <TableName>@EXD_OEPG</TableName>
         <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COMEN_APROB</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Comentarios aprobación</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_OEPG</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>TIPO_DOC</Name>
+        <Type>db_Alpha</Type>
+        <Size>5</Size>
+        <Description>Tipo documento</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_OEPG</TableName>
+        <EditSize>5</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -3338,6 +3432,27 @@
       </row>
     </UserFieldsMD>
   </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>TIPO_DOC</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Tipo documento</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+        <LinkedTable>EXD_PM_TIPODOC</LinkedTable>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -4055,6 +4170,25 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>COD_CTAPAGO</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Código de cuenta de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP3</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>IP_FTP</Name>
         <Type>db_Alpha</Type>
         <Size>50</Size>
@@ -4181,22 +4315,289 @@
     </UserFieldsMD>
   </BO>
 
-	<BO>
-		<AdmInfo>
-			<Object>152</Object>
-			<Version>2</Version>
-		</AdmInfo>
-		<UserFieldsMD>
-			<row>
-				<Name>EXD_CFWID</Name>
-				<Type>db_Alpha</Type>
-				<Size>4</Size>
-				<Description>Código de flujo de caja</Description>
-				<SubType>st_None</SubType>
-				<TableName>OBPL</TableName>
-				<EditSize>4</EditSize>
-				<Mandatory>tNO</Mandatory>
-			</row>
-		</UserFieldsMD>
-	</BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXD_CFWID</Name>
+        <Type>db_Alpha</Type>
+        <Size>4</Size>
+        <Description>Código de flujo de caja</Description>
+        <SubType>st_None</SubType>
+        <TableName>OBPL</TableName>
+        <EditSize>4</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXD_CTARNDPM</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cuenta redondeo pago masivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>OBPL</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>ID_PAGMSV</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>ID Pago masivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_BANCO</Name>
+        <Type>db_Alpha</Type>
+        <Size>4</Size>
+        <Description>Código de banco</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>4</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>ID_ARCHIVO</Name>
+        <Type>db_Alpha</Type>
+        <Size>100</Size>
+        <Description>ID Archivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>100</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>ESTADO</Name>
+        <Type>db_Alpha</Type>
+        <Size>2</Size>
+        <Description>Estado</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>2</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>@EXD_PM_LOGENVHTH</TableID>
+        <AliasID>ESTADO</AliasID>
+        <Descr>Estado</Descr>
+        <TypeID>A</TypeID>
+        <SizeID>2</SizeID>
+        <EditSize>2</EditSize>
+        <Dflt>PE</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>PE</FldValue>
+        <Descr>Pendiente</Descr>
+      </row>
+      <row>
+        <FldValue>EN</FldValue>
+        <Descr>Enviado</Descr>
+      </row>
+      <row>
+        <FldValue>DS</FldValue>
+        <Descr>Descargado</Descr>
+      </row>
+      <row>
+        <FldValue>PR</FldValue>
+        <Descr>Procesado</Descr>
+      </row>
+      <row>
+        <FldValue>ER</FldValue>
+        <Descr>Error</Descr>
+      </row>
+    </UFD1>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>OBSERVACIONES</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Observaciones</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>FECHA_ENVIO</Name>
+        <Type>db_Date</Type>
+        <Size>8</Size>
+        <Description>Fecha de envio</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>8</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_SUCURSAL</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Código sucursal</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_BANCO</Name>
+        <Type>db_Alpha</Type>
+        <Size>6</Size>
+        <Description>Código de banco</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CNFUSUH2H</TableName>
+        <EditSize>6</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_SUCURSAL</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Código sucursal</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CNFUSUH2H</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_EMPRESA</Name>
+        <Type>db_Alpha</Type>
+        <Size>10</Size>
+        <Description>Código de empresa</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CNFUSUH2H</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>USUARIO</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Usuario</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CNFUSUH2H</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
 </BOM>

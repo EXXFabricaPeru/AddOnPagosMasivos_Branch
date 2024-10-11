@@ -232,5 +232,47 @@
       </row>
     </UserTablesMD>
   </BO>
+
+	<BO>
+		<AdmInfo>
+			<Object>153</Object>
+			<Version>2</Version>
+		</AdmInfo>
+		<UserTablesMD>
+			<row>
+				<TableName>EXD_PM_TIPODOC</TableName>
+				<TableDescription>PM: Conf. tipo documento</TableDescription>
+				<TableType>bott_NoObject</TableType>
+			</row>
+		</UserTablesMD>
+	</BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_LOGENVHTH</TableName>
+        <TableDescription>PM: Log envio H2H</TableDescription>
+        <TableType>bott_NoObject</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_CNFUSUH2H</TableName>
+        <TableDescription>PM: Conf. usuarios H2H</TableDescription>
+        <TableType>bott_NoObject</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
   
 </BOM>

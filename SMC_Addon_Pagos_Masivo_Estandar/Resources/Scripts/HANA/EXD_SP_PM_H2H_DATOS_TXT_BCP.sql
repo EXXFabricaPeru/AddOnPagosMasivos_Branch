@@ -1,10 +1,13 @@
 CREATE PROCEDURE EXD_SP_PM_H2H_DATOS_TXT_BCP
 (
 	NroPM int,
-	NroSC int
+	NroSC int,
+	NroCT varchar(50)
 )
 AS
 BEGIN
+	declare idEnvio int;
+	select count('A') into idEnvio from "@EXD_PM_LOGENVHTH" where U_COD_BANCO = '002' and U_FECHA_ENVIO = TO_DATE(NOW());
 	with CTE_CAB AS
 	(
 		select
@@ -14,19 +17,21 @@ BEGIN
 			'C'															as "TipoCtaCargo",
 			case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end	as "Moneda",
 			rpad(replace(T3."Account",'-',''),20,' ')					as "NroCtaCargo",
-			SUM(0.01)/*sum(T1."U_IMP_PAGO")*/							as "TotalPlanilla",
+			sum(TO_DECIMAL(T1."U_EXP_IMPORTE",16,2))					as "TotalPlanilla",
 			ifnull(T1."U_EXP_COMENTARIO",'')							as "Referencia",
-			'S'															as "FlagExoITF",
+			'N'															as "FlagExoITF",
 			''															as "TotalControl",
 			''															as "Filler",
-			T2."DocNum"													as "NroPlanilla",
+			''															as "NroPlanilla",
 			''															as "Estado"
 		from  
 		"@EXP_PMP1" 				T1
-		inner join "@EXP_OPMP" 		T2 on T1."DocEntry" = T2."DocEntry"
-		inner join DSC1 			T3 on T3."UsrNumber1" = T1."U_EXP_MONEDA"
-		where T3."BankCode" = '002' /*and ifnull(T3."UsrNumber2",'') = 'C'*/ and T2."DocEntry" = :NroPM
+		inner join "@EXP_OPMP" 		T2 on T1."DocEntry" 	= T2."DocEntry"
+		inner join DSC1 			T3 on T3."GLAccount"	= T1."U_EXP_CODCTABANCO" and T1."U_EXP_COD_SUCURSAL" = T3."Branch"
+		where T3."BankCode" = '002' 
+		and T2."DocEntry" = :NroPM
 		and T1."U_EXP_COD_SUCURSAL" = :NroSC
+		and T1."U_EXP_CODCTABANCO" = :NroCT
 		group by T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 	),
 
@@ -34,74 +39,77 @@ BEGIN
 	(
 		select 
 			'2'																		as "TipoRegistro",
-			case when T3."BankCode" != '002' then 'C' else 'B' end					as "TipoCuentaAbono",
-			ifnull(replace(T3."DflAccount",'-',''),'')								as "NroCtaAbono",
+			case when T3."BankCode" != '002' then 'B' else T4."UsrNumber2" end		as "TipoCuentaAbono",
+			case when T3."BankCode" != '002' 
+			then 
+				left(replace(T4."U_EXM_INTERBANCARIA",'-',''),20) 
+			else 
+				replace(T4."Account",'-','') end									as "NroCtaAbono",
 			'1'																		as "ModalidadDePago",
-			ifnull(T3."U_EXX_TIPODOCU",'') 											as "TipoDocumentoProv",
+			ifnull(case T3."U_EXX_TIPODOCU" 
+					when '4' then '3'
+					when '7' then '4'
+					else T3."U_EXX_TIPODOCU" end,'') 								as "TipoDocumentoProv",
 			T3."LicTradNum"															as "NroDocProv",
 			'   '																	as "CorrDocProv",
 			T3."CardName"															as "NombreProveedor",
-			ifnull(T1."U_EXP_COMENTARIO",'')										as "ReferenciaProveedor",
-			''																		as "ReferenciaEmpresa",
+			ifnull(T1."U_EXP_NROSUNAT",'')											as "ReferenciaProveedor",
+			T1."DocEntry"||'-'||T1."LineId"											as "ReferenciaEmpresa",
 			case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end			as "Moneda",
-			0.01/*T0."DocTotal"*/													as "Importe",
+			TO_DECIMAL(T1."U_EXP_IMPORTE",16,2)										as "Importe",
 			'S'																		as "Validar",
 			''																		as "Filler"
 		--from OVPM T0 
 		from "@EXP_PMP1"		T1 
-		inner join "@EXP_OPMP"	T2 on T1."DocEntry" = T2."DocEntry"
-		inner join OCRD			T3 on T1."U_EXP_CARDCODE" = T3."CardCode"
-		where T2."DocEntry" = :NroPM and T1."U_EXP_COD_SUCURSAL" = :NroSC
-	),
-	CTE_BENEF as
+		inner join "@EXP_OPMP"	T2 on T1."DocEntry" 		= T2."DocEntry"
+		inner join OCRD			T3 on T1."U_EXP_CARDCODE"	= T3."CardCode"
+		inner join OCRB			T4 on T3."CardCode"			= T4."CardCode" and T1."U_EXP_CODBANCOPROV" = T4."BankCode"
+		where 
+		T2."DocEntry" = :NroPM 
+		and T1."U_EXP_COD_SUCURSAL" = :NroSC 
+		and T1."U_EXP_CODCTABANCO" =:NroCT
+		and ifnull(T4."U_EXC_ACTIVO",'') = 'Y'  
+		and T4."UsrNumber1" = "U_EXP_MONEDA"
+	)	
+	select "Data",'P'||TO_VARCHAR(NOW(),'yyyyMMdd')||lpad(idEnvio+1,6,'0')||'P' as "Nombre" from 
 	(
 		select 
-			'3'						as "TipoRegistro",
-			case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end						as "TipoDocumento",
-			(select TX0."FolioPref"||TX0."FolioNum" from OPCH TX0 where TX0."DocEntry" = T1."U_EXP_DOCENTRYDOC" and TX0."ObjType" = T1."U_EXP_TIPODOC")	as "NroDocAPagar",
-			0.01/*T0."DocTotal"*/			as "Importe"
-		from 
-		"@EXP_PMP1"					T1 
-		inner join "@EXP_OPMP"		T2 on T1."DocEntry" = T2."DocEntry"
-		--inner join VPM2				T3 on T0."DocEntry"	= T3."DocNum" 
-		where T2."DocEntry" = :NroPM
-	)	
-	select 
-		"TipoRegistro"			||
-		lpad("CntDeAbonos",6,'0')		||
-		"FechaProceso"			||
-		"TipoCtaCargo"			||
-		"Moneda"				||
-		rpad("NroCtaCargo",20,' ')			||
-		lpad(round("TotalPlanilla",2),17,'0')			||
-		rpad(left("Referencia",40),40,' ')			||
-		"FlagExoITF"			||
-		lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim("NroCtaAbono"),10))) from CTE_PROV),15,'0')||
-		rpad("Filler",100,' ') ||
-		lpad("NroPlanilla",6,'0') ||
-		lpad((select count('A') from CTE_PROV),6,' ') ||
-		lpad('0',6,' ') ||
-		lpad("Estado",80,' ')
-		||'Z' as "Data"
-	from CTE_CAB
-	union all 
-	select 
-		"TipoRegistro"			||
-		"TipoCuentaAbono"		||
-		lpad("NroCtaAbono",20,' ') ||
-		"ModalidadDePago"		||
-		"TipoDocumentoProv"		||
-		rpad("NroDocProv",12,' ')			||
-		"CorrDocProv"			||
-		rpad(left("NombreProveedor",75),75,' ')		||
-		rpad(left("ReferenciaProveedor",40),40,' ')	||
-		rpad(left("ReferenciaEmpresa",20),20,' ')	||
-		"Moneda"				||
-		lpad(round("Importe",2),17,'0')				||
-		"Validar"||
-		lpad("Filler",100,' ')
-		||'Z' as "Data"
-	from CTE_PROV;
+			"TipoRegistro"			||
+			lpad("CntDeAbonos",6,'0')		||
+			"FechaProceso"			||
+			"TipoCtaCargo"			||
+			"Moneda"				||
+			rpad("NroCtaCargo",20,' ')			||
+			lpad(round("TotalPlanilla",2),17,'0')			||
+			rpad(left("Referencia",40),40,' ')			||
+			"FlagExoITF"			||
+			lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim("NroCtaAbono"),10))) from CTE_PROV),15,'0')||
+			rpad("Filler",100,' ') ||
+			lpad('',6,' ') ||
+			lpad('',6,' ') ||
+			lpad('',6,' ') ||
+			lpad("Estado",80,' ')
+			||'Z' as "Data"
+		from CTE_CAB
+		union all 
+		select 
+			"TipoRegistro"			||
+			"TipoCuentaAbono"		||
+			lpad(ifnull("NroCtaAbono",''),20,' ') ||
+			"ModalidadDePago"		||
+			"TipoDocumentoProv"		||
+			rpad("NroDocProv",12,' ')			||
+			"CorrDocProv"			||
+			rpad(left("NombreProveedor",75),75,' ')		||
+			rpad(left("ReferenciaProveedor",40),40,' ')	||
+			rpad(left("ReferenciaEmpresa",20),20,' ')	||
+			"Moneda"				||
+			lpad(round("Importe",2),17,'0')				||
+			"Validar"||
+			lpad("Filler",100,' ')
+			||'Z' as "Data"
+		from CTE_PROV
+	);
 	/*
 	union all 
 	select 

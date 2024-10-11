@@ -215,7 +215,7 @@ begin
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"						 
 		where  T0."U_FECHA_PAGO" = 		:fechaEscPago 
 		and T1."U_NRO_LINEA_AS" = T4."Line_ID" 
-		and T5."CardType" = 'S' and T4."DebCred" = 'C' AND T0."U_ESTADO" = 'A'
+		and /*T5."CardType" = 'S' and*/ T4."DebCred" = 'C' AND T0."U_ESTADO" = 'A'
 		and (select ifnull(max(TX0."U_EXP_ESTADO"),'') from "@EXP_PMP1" TX0 
 		--inner join OVPM TX1 on TX0."U_EXP_NROPGOEFEC" = TO_VARCHAR(TX1."DocEntry") 
 		where TX0."U_EXP_TIPODOC" = T4."ObjType" and TX0."U_EXP_DOCENTRYDOC" = T4."TransId" 
@@ -246,7 +246,7 @@ begin
 			T4."Line_ID"				as "NroLineaAsiento",
 			'0'							as "NroCuota",
 			T1."U_CUENTA_PROV"			as "NroCtaProveedor",
-			T1."U_BANCO_PROV"			as "CodBncProveedor",
+			T1."U_COD_BANCO"			as "CodBncProveedor",
 			T6."WTCode"					as "CodRetencion",
 			case when ifnull(T4."FCCurrency",'') = '' then 1 * (T6."WTAmnt" - T6."ApplAmnt")
 			else 1 * (T6."WTAmntFC" - T6."ApplAmntFC") end as "MontoRetencion",
@@ -261,7 +261,7 @@ begin
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"								 
-		where  T0."U_FECHA_PAGO" = :fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" and T5."CardType" = 'C' and T4."DebCred" = 'C' AND T0."U_ESTADO"='A'
+		where  T0."U_FECHA_PAGO" = :fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" /*and T5."CardType" = 'C'*/ and T4."DebCred" = 'C' AND T0."U_ESTADO"='A'
 	),
 	RSLT2 
 	AS

@@ -11,7 +11,7 @@ namespace SMC_APM.Controller
 {
     public class HostToHostManager
     {
-        public static bool SendToSFTP(string host, int port, string user, string pass, string pathFile)
+        public static bool SendToSFTP(string host, int port, string user, string pass, string pathFile, string rutaDestino)
         {
             var rspt = false;
             try
@@ -24,7 +24,38 @@ namespace SMC_APM.Controller
                 {
                     using (var fs = new FileStream(pathFile, FileMode.Open))
                     {
-                        sftp.UploadFile(fs, pathFile);
+                        sftp.UploadFile(fs, rutaDestino);
+                        rspt = true;
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("No se pudo conectar con el servicio FTP");
+                }
+                //}
+            }
+            catch
+            {
+                throw;
+            }
+            return rspt;
+        }
+
+        public static bool SendToSFTPWithKeySSH(string host, int port, string user, string rutaLlave, string pathFile, string rutaDestino)
+        {
+            var rspt = false;
+            try
+            {
+                var privateKey = new PrivateKeyFile(rutaLlave);
+                var sftp = new SftpClient(host, port, user, privateKey);
+
+                sftp.Connect();
+
+                if (sftp.IsConnected)
+                {
+                    using (var fs = new FileStream(pathFile, FileMode.Open))
+                    {
+                        sftp.UploadFile(fs, rutaDestino);
                         rspt = true;
                     }
                 }
