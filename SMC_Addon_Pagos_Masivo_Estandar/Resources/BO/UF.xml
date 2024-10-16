@@ -2762,7 +2762,24 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>MONTO_MINIMO</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Monto minimo</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_OEPG</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -3303,7 +3320,25 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>SALDO</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Saldo</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
   <BO>
     <AdmInfo>
       <Object>152</Object>

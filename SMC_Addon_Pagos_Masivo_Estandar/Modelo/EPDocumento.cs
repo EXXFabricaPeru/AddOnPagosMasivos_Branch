@@ -24,6 +24,7 @@ namespace SMC_APM.Modelo
         public double Total { get; set; }
         public string CodigoRetencion { get; set; }
         public double Retencion { get; set; }
+        public double Saldo { get; set; }
         public double TotalPagar { get; set; }
         public string RUC { get; set; }
         public string Cuenta { get; set; }

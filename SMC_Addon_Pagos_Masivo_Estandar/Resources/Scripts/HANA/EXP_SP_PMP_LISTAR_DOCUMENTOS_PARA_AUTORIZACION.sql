@@ -55,7 +55,7 @@ BEGIN
 	T1.U_TIPO_DOC = 'VR'
 	and T0."U_EXP_ESTADO" = 'E'
 	and ifnull(T0."Canceled",'') != 'Y'
-	and T1.U_TIPO_DOC = @tipoDocumento
+	and T1.U_TIPO_DOC = :tipoDocumento
 	and
 	(
 	 	T2."U_CODAUTORI" = :codAutorizador or

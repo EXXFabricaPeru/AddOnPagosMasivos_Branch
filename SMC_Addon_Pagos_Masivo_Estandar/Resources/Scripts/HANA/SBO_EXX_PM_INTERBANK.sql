@@ -127,7 +127,7 @@ FROM (
 	AND T1."U_EXP_CODBANCO"='003' 
 	AND T1."U_EXP_CODCTABANCO"=:glaccount
 	AND T1."U_EXP_COD_SUCURSAL"=:codSucursal
-	AND T1."U_EXP_TIPODOC"='18' AND T3."Indicator" IN ('00','01','02','14','50','99','05','91','SA')
+	AND T1."U_EXP_TIPODOC"='18' AND T3."Indicator" IN ('00','01','02','10','14','50','99','05','91','SA')
 	AND IFNULL(T1."U_EXP_NROCTAPROV",'')!='' AND T1."U_EXP_MEDIODEPAGO" IN ('TB','CG')
 	AND T1."U_EXP_SLC_RETENCION"='N'
 	----- FIN -----

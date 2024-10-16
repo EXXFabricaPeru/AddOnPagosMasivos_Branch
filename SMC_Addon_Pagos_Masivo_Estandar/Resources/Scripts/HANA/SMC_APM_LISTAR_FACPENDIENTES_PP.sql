@@ -10,11 +10,30 @@ CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
 	filtroBanco varchar(3),
 	codSucursal varchar(3),
 	codPrioridad varchar(50),
-	codTipoDocumento varchar(5)
+	codTipoDocumento varchar(5),
+	montoMinimo decimal(16,8)
 )
 AS
 BEGIN
-	SELECT 
+	declare tipoCambioP decimal(18,6);
+	
+	select "Rate" into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
+	
+	PAG_PAR = select sum(U_TOTAL_PAGO) as "MONTO",U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS 
+	from "@EXD_OEPG" T0 inner join "@EXD_EPG1" T1 on T0."DocEntry" = T1."DocEntry"
+	where ifnull("Canceled",'') <> 'Y'	
+	and ifnull((select max('Y') from "@EXP_PMP1" TX0 inner join "@EXP_OPMP" TX1 on TX0."DocEntry" = TX1."DocEntry"
+	where T0."DocEntry" = TX0.U_EXP_COD_ESCENARIOPAGO
+	and T1.U_NRO_CUOTA 		= TX0.U_EXP_NMROCUOTA 
+	and T1.U_NRO_LINEA_AS 	= TX0.U_EXP_ASNROLINEA 
+	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
+	and (case T1.U_TIPO_DOCUMENTO 
+		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
+	and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN('','OK') 
+	),'') <> 'Y'
+	group by U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS;
+	
+	DOCS = SELECT 
 		'N' as "Slc",
 		T0."CodSucursal",
 		ROW_NUMBER() OVER(ORDER BY T0."FechaVencimiento" DESC) AS "FILA",
@@ -48,9 +67,15 @@ BEGIN
 		--(select TX0."Account" from DSC1 TX0 inner join OACT TX1 on TX0."GLAccount" = TX1."AcctCode" where TX0."BankCode" = case when :tipoBanco = '000' then T0."BankCode" else :tipoBanco end and TX1."ActCurr" = T0."DocCur" and TX0."Branch" = T0."CodSucursal" and ifnull(T0."BankCode",'') != '') as "NroCtaPago",
 		T0."DocCur",
 		T0."Total",
-		T0."CodigoRetencion",
+		case when T0."Retencion" > 0 then T0."CodigoRetencion" else '' end as "CodigoRetencion",
 		T0."Retencion",
-		T0."TotalPagar",
+		
+		T0."TotalPagar" - ifnull((select MONTO from :PAG_PAR TX0 where TX0.U_TIPO_DOCUMENTO = T0."Documento"
+		and TX0.U_DOCENTRY = T0."DocEntry" and TX0.U_NRO_CUOTA = T0."NroCuota" and TX0.U_NRO_LINEA_AS = T0."LineaAsiento"),0) as "Saldo",
+		
+		T0."TotalPagar" - ifnull((select MONTO from :PAG_PAR TX0 where TX0.U_TIPO_DOCUMENTO = T0."Documento"
+		and TX0.U_DOCENTRY = T0."DocEntry" and TX0.U_NRO_CUOTA = T0."NroCuota" and TX0.U_NRO_LINEA_AS = T0."LineaAsiento"),0) as "TotalPagar",
+
 		T0."RUC",
 		T0."Cuenta",
 		T0."CuentaMoneda",
@@ -69,12 +94,12 @@ BEGIN
 		*/
 		T0."BloqueoPago",
 		IFNULL(T0."DetraccionPend", 'N') AS "DetraccionPend"
-		,"NroCuota"
-		,"LineaAsiento"
-		,"GlosaAsiento"
-		,"CardCodeFactoring" 
-		,"CardNameFactoring" 
-		,"CodPrioridad"
+		,T0."NroCuota"
+		,T0."LineaAsiento"
+		,T0."GlosaAsiento"
+		,T0."CardCodeFactoring" 
+		,T0."CardNameFactoring" 
+		,T0."CodPrioridad"
 	FROM 
 		(SELECT
 		T0."DocEntry",
@@ -242,7 +267,8 @@ BEGIN
 		
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 									--WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'FT-P' AND "U_EXP_NROCUOTA"=T1."InstlmntID")
-						
+			
+			/*			
 		AND 
 		(
 		
@@ -261,7 +287,7 @@ BEGIN
 		) = 'N' 
 		
 		OR T0."U_CP_VARESC"='Y')
-								
+			*/					
 
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		AND IFNULL(T0."U_EXX_NUMEREND",'')=''
@@ -902,7 +928,7 @@ BEGIN
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T0."DueDate"
 		,'' as "Origen"
-		,'N' AS "BloqueoPago"
+		,T1."PayBlock" AS "BloqueoPago"
 		,'N' AS "DetraccionPend"
 		,0 AS "NroCuota"
 		,T1."Line_ID" AS "LineaAsiento"
@@ -1040,7 +1066,7 @@ BEGIN
 		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
 		T0."DueDate"
 		,'' as "Origen"
-		,'N' AS "BloqueoPago"
+		,T1."PayBlock" AS "BloqueoPago"
 		,'N' AS "DetraccionPend"
 		,0 AS "NroCuota"
 		,T1."Line_ID" AS "LineaAsiento"
@@ -1102,4 +1128,11 @@ BEGIN
 		and ifnull(T0."CodPrioridad",'') like '%'||:codPrioridad||'%'
 	ORDER BY 
 		T0."FechaVencimiento" desc;  
+	
+	select * from :DOCS TT0 inner join  
+	(
+		select "CodSucursal","CardCode" from :DOCS 	
+		group by "CodSucursal","CardCode" 
+		having sum(case when "DocCur" = 'SOL' then "TotalPagar" else "TotalPagar" * ifnull(tipoCambioP,1) end ) > ifnull(:montoMinimo,0.00)
+	) AS TT1 on  TT0."CodSucursal" = TT1."CodSucursal" and TT0."CardCode" = TT1."CardCode" and TT0."TotalPagar" > 0;
 END;

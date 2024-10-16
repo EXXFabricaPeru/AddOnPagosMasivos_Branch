@@ -397,6 +397,7 @@ namespace SMC_APM.View.USRForms
                                 Total = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Total"))?.Value),
                                 CodigoRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("CodigoRetencion"))?.Value,
                                 Retencion = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Retencion"))?.Value),
+                                Saldo = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Saldo"))?.Value),
                                 TotalPagar = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("TotalPagar"))?.Value),
                                 RUC = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("RUC"))?.Value,
                                 Cuenta = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Cuenta"))?.Value,
@@ -842,8 +843,8 @@ namespace SMC_APM.View.USRForms
                 {
                     if (e.ColUID == "fTotalP")
                     {
-                        var total = Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotal", e.Row)).Value);
-                        var totalPagar = Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", e.Row)).Value);
+                        var total = Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("Col_13", e.Row)).Value);
+                        var totalPagar = double.TryParse(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", e.Row)).Value, out var totalPagarAux) ? totalPagarAux : 0.00;
                         var totMonLoc = 0.00;
                         var totMonExt = 0.00;
 
@@ -901,6 +902,29 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_VALIDATE, mtxFact.Item.UniqueID, e =>
+            {
+                if (e.BeforeAction)
+                {
+                    if (e.BeforeAction)
+                    {
+                        if (e.ColUID == "fTotalP")
+                        {
+                            var total = Convert.ToDouble(((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_15", e.Row)).Value);
+                            var totalPagar = double.TryParse(((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("fTotalP", e.Row)).Value, out var totalPagarAux) ? totalPagarAux : 0.00;
+
+                            if (totalPagar <= 0 || totalPagar > total)
+                            {
+                                Globales.Aplication.StatusBar.SetText("Ingrese un monto valido", SAPbouiCOM.BoMessageTime.bmt_Short);
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                }
+                return true;
+            }));
+
             //DataEvents **
             Eventos.Add(new EventoData(SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD, this.Form.TypeEx, e =>
             {
@@ -943,6 +967,7 @@ namespace SMC_APM.View.USRForms
                         Atraso = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_ATRASO"))?.Value ?? "",
                         Documento = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TIPO_DOCUMENTO"))?.Value ?? "",
                         Total = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TOTAL"))?.Value),
+                        Saldo = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_SALDO"))?.Value),
                         TotalPagar = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TOTAL_PAGO"))?.Value),
                         Retencion = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_RETENCION"))?.Value),
                         CodSucursal = Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_COD_SUCURSAL"))?.Value),
@@ -1031,6 +1056,7 @@ namespace SMC_APM.View.USRForms
                             new Cell{ ColumnUid = "Total", Value = d.Total.ToString() },
                             new Cell{ ColumnUid = "CodigoRetencion", Value = d.CodigoRetencion },
                             new Cell{ ColumnUid = "Retencion", Value = d.Retencion.ToString() },
+                            new Cell{ ColumnUid = "Saldo", Value = d.Saldo.ToString() },
                             new Cell{ ColumnUid = "TotalPagar", Value = d.TotalPagar.ToString() },
                             new Cell{ ColumnUid = "RUC", Value = d.RUC },
                             new Cell{ ColumnUid = "Cuenta", Value = d.Cuenta },
@@ -1087,6 +1113,7 @@ namespace SMC_APM.View.USRForms
                             new CellDBS{ Uid = "U_TOTAL", Value = d.Total.ToString() },
                             new CellDBS{ Uid = "U_COD_RETENCION", Value = d.CodigoRetencion },
                             new CellDBS{ Uid = "U_RETENCION", Value = d.Retencion.ToString() },
+                            new CellDBS{ Uid = "U_SALDO", Value = d.Saldo.ToString() },
                             new CellDBS{ Uid = "U_TOTAL_PAGO", Value = d.TotalPagar.ToString() },
                             new CellDBS{ Uid = "U_GLOSA_ASIENTO", Value = d.GlosaAsiento },
                             new CellDBS{ Uid = "U_ATRASO", Value = d.Atraso },
