@@ -362,6 +362,16 @@ namespace SMC_APM.Controladores
                                     break;
                             }
                             break;
+                        case "1281":
+                            switch (activeForm.TypeEx)
+                            {
+                                case "FrmPMP":
+                                    ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).HabilitarControlesEnModoBuscar();
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
                     }
                     var menuSBO = sboApplication.Menus.Item(pVal.MenuUID);
                     if (menuSBO != null && menuSBO.String.Contains("EXD_PM_CONFAUT")) new Form_EXD_PM_CONFAUT(activeForm.UniqueID);

@@ -363,19 +363,17 @@ namespace SMC_APM.View.USRForms
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                         Matrix.FlushToDataSource();
                         var pgoDS = dbsPMP1.GetAsXML();
+                        var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS);
                         var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS, dbsPMP2, esAgenteRetenedor, esHostToHost);
-                        var estado = string.Empty;
+                        //var estado = string.Empty;
                         var msjError = string.Empty;
-                        var nroPago = 0;
-                        var cntDocXPgo = lstPagos.Count();
-                        var cntPgoEjec = 0;
-                        var cntErrores = 0;
-                        var progressBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
+                        //var cntDocXPgo = lstPagos.Count();
+                        //var progressBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
                         var docEntryForm = Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry"));
                         try
                         {
                             Form.GetItem("btnGenPag").Enabled = false;
-                            GenerarPagosAsync(docEntryForm, progressBar, lstPagos);
+                            GenerarPagosAsync(docEntryForm, null, lstBancos, lstPagos);
 
                             /*
                             Task.Factory.StartNew(() =>
@@ -791,6 +789,7 @@ namespace SMC_APM.View.USRForms
 
         private void HabilitarControlesPorEstado(string codEstado)
         {
+            Form.Items.Item("Item_27").Enabled = false;
             //codEstado = (codEstado == "" && tieneAutorizaciones) ? codEstado : (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE ? "P" : "A");
             Form.Items.Item("edtFocus").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
             Form.Items.Item("btnGrbEnv").Enabled = false;
@@ -802,6 +801,7 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("Item_12").Enabled = false;
             //Form.Items.Item("Item_16").Enabled = false;
             //Form.Items.Item("Item_17").Enabled = false;
+            Form.Items.Item("Item_18").Enabled = false;
             Form.Items.Item("Item_20").Enabled = false;
             Form.Items.Item("Item_26").Enabled = false;
             Form.Items.Item("Item_31").Enabled = false;
@@ -823,6 +823,7 @@ namespace SMC_APM.View.USRForms
                 Form.Items.Item("Item_12").Enabled = true;
                 //Form.Items.Item("Item_16").Enabled = true;
                 //Form.Items.Item("Item_17").Enabled = true;
+                Form.Items.Item("Item_18").Enabled = true;
                 Form.Items.Item("Item_26").Enabled = true;
                 Form.Items.Item("Item_31").Enabled = true;
                 Form.Items.Item("Item_33").Enabled = true;
@@ -846,9 +847,11 @@ namespace SMC_APM.View.USRForms
                     switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
                     {
                         case "1":
+                            Form.Items.Item("Item_18").Enabled = true;
                             Form.Items.Item("btnGenTXT").Enabled = true;
                             break;
                         case "2":
+                            Form.Items.Item("Item_18").Enabled = true;
                             Form.Items.Item("Item_34").Enabled = false;
                             Form.Items.Item("btnGenTXT").Enabled = true;
                             Form.Items.Item("btnGenPag").Enabled = true;
@@ -860,16 +863,20 @@ namespace SMC_APM.View.USRForms
                     switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
                     {
                         case "0":
+                            Form.Items.Item("Item_18").Enabled = true;
                             Form.Items.Item("btnGenTXT").Enabled = true;
                             break;
                         case "1":
+                            Form.Items.Item("Item_18").Enabled = true;
                             Form.Items.Item("btnGenTXT").Enabled = true;
                             //Form.Items.Item("btnGenPag").Enabled = true;
-                            Form.Items.Item("Item_34").Enabled = true;
+                            Form.Items.Item("Item_34").Enabled = true;                           
                             break;
-                        case "2":
+                        case "2":                         
+                            Form.Items.Item("Item_33").Enabled = true;
                             Form.Items.Item("Item_34").Enabled = true;
                             Form.Items.Item("Item_31").Enabled = true;
+                            Form.Items.Item("Item_18").Enabled = true;
                             Form.Items.Item("btnGenPag").Enabled = true;
                             break;
                     }
@@ -879,12 +886,13 @@ namespace SMC_APM.View.USRForms
 
         private void ActualizarDatosCreacionPago(string nroPagoEfec, string estado, string msjError, int docEntry, int lineId)
         {
-            /*
+
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
             var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}', \"U_EXP_ESTADO\" = '{estado}', " +
                 $"\"U_EXP_MSJERROR\" = '{msjError.Replace("'", "")}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
             recSet.DoQuery(sqlQry);
-            */
+
+            /*
             var mtxDocs = Form.GetMatrix("Item_12");
             for (int i = 0; i < mtxDocs.RowCount; i++)
             {
@@ -896,110 +904,97 @@ namespace SMC_APM.View.USRForms
                     break;
                 }
             }
+            */
         }
 
-        private async void GenerarPagosAsync(int docEntryForm, SAPbouiCOM.ProgressBar progressBar, IEnumerable<SBOPago> lstPagos)
+        private async void GenerarPagosAsync(int docEntryForm, SAPbouiCOM.ProgressBar progressBar, IEnumerable<dynamic> lstBancos, IEnumerable<SBOPago> lstPagos)
         {
             Globales.Aplication.StatusBar.SetText("Iniciando generación de pagos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
-            Globales.Company.StartTransaction();
-            var ejecucionOK = await Task.Run(() => GenerarPagosDocumentos(docEntryForm, lstPagos));
-            if (ejecucionOK)
+            var existenErrores = false;
+            var cnds = (SAPbouiCOM.Conditions)Globales.Aplication.CreateObject(BoCreatableObjectType.cot_Conditions);
+            var cnd = cnds.Add();
+            cnd.Alias = "DocEntry";
+            cnd.Operation = BoConditionOperation.co_EQUAL;
+            cnd.CondVal = docEntryForm.ToString();
+
+            foreach (var banc in lstBancos)
             {
-                //Globales.Aplication.Menus.Item("1304").Activate();
-                Form.GetMatrix("Item_12").FlushToDataSource();
-                var rslt = await Task.Run(() => GenerarPagosCuentaBanco(docEntryForm));
-                //Globales.Aplication.Menus.Item("1304").Activate();
-                if (rslt)
+                //banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco
+                var lstPagosAux = lstPagos.Where(p => p.CodSucursal == banc.Sucursal && p.MetodoPago.Banco == banc.Banco && p.MetodoPago.Cuenta == banc.CtaBanco);
+                //Globales.Company.StartTransaction();
+                Globales.Aplication.StatusBar.SetText($"Iniciando generacion de pagos de la sucursal: { banc.Sucursal}, banco: {banc.Banco}, moneda: {banc.Moneda}", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                var ejecucionOK = await Task.Run(() => GenerarPagosDocumentos(docEntryForm, lstPagosAux));
+                if (ejecucionOK)
                 {
-                    try
+                    dbsPMP1.Query(cnds);
+                    Form.GetMatrix("Item_12").LoadFromDataSource();
+                    
+                    //Globales.Aplication.Menus.Item("1304").Activate();
+                    //Form.GetMatrix("Item_12").FlushToDataSource();
+                    var rslt = await Task.Run(() => GenerarPagosCuentaBanco(docEntryForm, banc.Sucursal, banc.Banco, banc.CtaBanco));
+                    dbsPMP1.Query(cnds);
+                    Form.GetMatrix("Item_12").LoadFromDataSource();
+                    //Form.GetMatrix("Item_12").LoadFromDataSource();
+                    if (rslt)
                     {
-                        Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_Commit);
-
-                        if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
-                        Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                        /*Diferencia de tipo de cambio*/
-
-                        if (!Globales.Company.InTransaction) Globales.Company.StartTransaction();
-                        rslt = await Task.Run(() => GenerarAsientoDiferenciaTipoDeCambio(docEntryForm));
-                        if (rslt)
+                        try
                         {
-                            if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_Commit);
-                            Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-                            dbsOPMP.SetValueExt("Status", "C");
-                            if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
-                            Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                            Globales.Aplication.Menus.Item("1304").Activate();
+                            /*Diferencia de tipo de cambio*/
+                            rslt = await Task.Run(() => GenerarAsientoDiferenciaTipoDeCambio(docEntryForm, banc.Sucursal, banc.CtaBanco));
+                            if (rslt)
+                            {
+                                //if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_Commit);
+                                Globales.Aplication.StatusBar.SetText($"Pagos generados correctamente...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                            }
+                            else
+                            {
+                                //if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
+
+                                existenErrores = true;                           
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
-                            Form.GetItem("btnGenPag").Enabled = true;
+                            existenErrores = true;
+                            //if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
+                            Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
+                            //Form.GetMatrix("Item_12").LoadFromDataSource();
+                            //Form.GetMatrix("Item_12").LoadFromDataSourceEx();                           
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
-                        Globales.Aplication.StatusBar.SetText(ex.Message, SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-                        Globales.Aplication.Menus.Item("1304").Activate();
-                        Form.GetItem("btnGenPag").Enabled = true;
+                        existenErrores = true;
+                        Globales.Aplication.StatusBar.SetText($"Se produjeron errores al ejecutar los pagos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);                      
                     }
                 }
                 else
                 {
-                    if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
-                    var vendorPayment = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oVendorPayments);
-                    var idPago = 0;
-                    //Limpio el ID de los pagos OK          
-                    for (int i = 0; i < Matrix.RowCount; i++)
-                    {
-                        if (((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_17", i + 1)).Value == "OK"
-                            && ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_33", i + 1)).Value == "OK")
-                        {
-                            idPago = Convert.ToInt32(Matrix.GetCellSpecific("Col_16", i + 1).Value);
-                            if (!vendorPayment.GetByKey(idPago))
-                            {
-                                Matrix.SetCellWithoutValidation(i + 1, "Col_16", null);
-                                Matrix.SetCellWithoutValidation(i + 1, "Col_17", null);
-                            }
+                    existenErrores = true;
+                    //Globales.Aplication.Menus.Item("1304").Activate();
+                    dbsPMP1.Query(cnds);
+                    Form.GetMatrix("Item_12").LoadFromDataSource();
+                    //if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                    //Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    Globales.Aplication.StatusBar.SetText($"Se produjeron errores al ejecutar los pagos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);                  
 
-                            idPago = Convert.ToInt32(Matrix.GetCellSpecific("Col_32", i + 1).Value);
-                            if (!vendorPayment.GetByKey(idPago))
-                            {
-                                Matrix.SetCellWithoutValidation(i + 1, "Col_32", null);
-                                Matrix.SetCellWithoutValidation(i + 1, "Col_33", null);
-                            }
-                        }
-                    }
-                    Globales.Aplication.StatusBar.SetText($"Proceso finalizado con errores", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-                    Form.GetItem("btnGenPag").Enabled = true;
                 }
+                //Matrix.LoadFromDataSource();
+            }
+            Form.GetItem("btnGenPag").Enabled = true;
+            //progressBar.Stop();
+            if (!existenErrores)
+            {
+                Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                dbsOPMP.SetValueExt("Status", "C");
+                if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
             }
             else
             {
-                if (Globales.Company.InTransaction) Globales.Company.EndTransaction(SAPbobsCOM.BoWfTransOpt.wf_RollBack);
-                var vendorPayment = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oVendorPayments);
-                var idPago = 0;
-                //Limpio el ID de los pagos OK          
-                for (int i = 0; i < Matrix.RowCount; i++)
-                {
-                    if (((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_17", i + 1)).Value == "OK")
-                    {
-                        idPago = Convert.ToInt32(Matrix.GetCellSpecific("Col_16", i + 1).Value);
-                        if (!vendorPayment.GetByKey(idPago))
-                        {
-                            Matrix.SetCellWithoutValidation(i + 1, "Col_16", null);
-                            Matrix.SetCellWithoutValidation(i + 1, "Col_17", null);
-                        }
-                    }
-                }
-                if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
-                Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                Globales.Aplication.StatusBar.SetText($"Proceso finalizado con errores", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-                Form.GetItem("btnGenPag").Enabled = true;
-                //Globales.Aplication.Menus.Item("1304").Activate();
+                Globales.Aplication.StatusBar.SetText($"Se produjeron errores al ejecutar los pagos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
             }
-            progressBar.Stop();
-            //Matrix.LoadFromDataSource();
+            Globales.Aplication.Menus.Item("1304").Activate();
         }
 
         private bool GenerarPagosDocumentos(int docEntryForm, IEnumerable<SBOPago> lstPagos)
@@ -1081,7 +1076,7 @@ namespace SMC_APM.View.USRForms
             return ejecucionOK;
         }
 
-        private bool GenerarPagosCuentaBanco(int docEntryForm)
+        private bool GenerarPagosCuentaBanco(int docEntryForm, int sucursal, string banco, string codCtaBanco)
         {
             var estado = string.Empty;
             var msjError = string.Empty;
@@ -1102,47 +1097,52 @@ namespace SMC_APM.View.USRForms
             var fechaPago = DateTime.ParseExact(dbsOPMP.GetValue("U_EXP_FECHAPAGO", 0).Trim(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
             var tipoDeCambio = Convert.ToDouble(dbsOPMP.GetValueExt("U_EXP_TIPODECAMBIO"));
 
-            var lstPagos = _dsrXmlDBDataSource.Rows.Where(r => r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO")).Value == "OK"
-            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO2")).Value != "OK").GroupBy(g => new
-            {
-                Sucursal = Convert.ToInt32(g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value),
-                MedioDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MEDIODEPAGO")).Value,
-                MonedaDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA")).Value,
-                Banco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value,
-                CtaBanco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value
-            }).Select(s => new SBOPago
-            {
-                CodSerieSBO = codSlcSucursal != -1 ? codSeriePago : PagoMasivoController.ObtenerSeriePagoPorSucursal(s.Key.Sucursal, dbsPMP2, "N"),
-                CodSucursal = s.Key.Sucursal,
-                Moneda = s.Key.MonedaDePago,
-                FechaContabilizacion = fechaPago,
-                FechaDocumento = fechaPago,
-                FechaVencimiento = fechaPago,
-                TipoCambio = tipoDeCambio,
-                Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
-                ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Cells.FirstOrDefault(c => c.Uid == "LineId").Value)),
-                MetodoPago = new SBOMetodoPago
-                {
-                    Tipo = s.Key.MedioDePago,
-                    Pais = "PE",
-                    Banco = s.Key.Banco,
-                    Cuenta = s.Key.CtaBanco,
-                    Referencia = "001",
-                },
-                Detalle = s.Select(s1 => new SBOPagoDetalle
-                {
-                    CodigoCuenta = PagoMasivoController.ObtenerCodCuentaPuentePorSucursal(s.Key.Sucursal, tieneSucursales),
-                    Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
-                    MontoAPagar = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
-                }).Take(1)
-            });
+            var lstPagosPrev = _dsrXmlDBDataSource.Rows.Where(r =>
+            r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_SLC_PAGO")).Value == "Y"
+            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value == sucursal.ToString()
+            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value == banco
+            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value == codCtaBanco);
 
-            foreach (var pago in lstPagos)
+            if (lstPagosPrev.All(p => p.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO")).Value == "OK"
+              && p.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO2")).Value != "OK"))
             {
+                var pago = lstPagosPrev.GroupBy(g => new
+                {
+                    Sucursal = Convert.ToInt32(g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value),
+                    MedioDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MEDIODEPAGO")).Value,
+                    MonedaDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA")).Value,
+                    Banco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value,
+                    CtaBanco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value
+                }).Select(s => new SBOPago
+                {
+                    CodSerieSBO = codSlcSucursal != -1 ? codSeriePago : PagoMasivoController.ObtenerSeriePagoPorSucursal(s.Key.Sucursal, dbsPMP2, "N"),
+                    CodSucursal = s.Key.Sucursal,
+                    Moneda = s.Key.MonedaDePago,
+                    FechaContabilizacion = fechaPago,
+                    FechaDocumento = fechaPago,
+                    FechaVencimiento = fechaPago,
+                    TipoCambio = tipoDeCambio,
+                    Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                    ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Cells.FirstOrDefault(c => c.Uid == "LineId").Value)),
+                    MetodoPago = new SBOMetodoPago
+                    {
+                        Tipo = s.Key.MedioDePago,
+                        Pais = "PE",
+                        Banco = s.Key.Banco,
+                        Cuenta = s.Key.CtaBanco,
+                        Referencia = "001",
+                    },
+                    Detalle = s.Select(s1 => new SBOPagoDetalle
+                    {
+                        CodigoCuenta = PagoMasivoController.ObtenerCodCuentaPuentePorSucursal(s.Key.Sucursal, tieneSucursales),
+                        Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                        MontoAPagar = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                    }).Take(1)
+                }).FirstOrDefault();
+
                 var nroPago = 0;
                 try
                 {
-
                     if (obtSeriesPagoDesdeCBP)
                     {
                         pago.CodSerieSBO = ObtenerCodSeriePagoPorCuentaMoneda(pago.MetodoPago.Banco, pago.MetodoPago.Cuenta, pago.Moneda);
@@ -1163,31 +1163,25 @@ namespace SMC_APM.View.USRForms
                         ActualizarDatosCreacionPagoCuenta(string.Empty, "ER", ex.Message, Convert.ToInt32(dbsOPMP.GetValueExt("DocEntry")), nroLinea);
                     }
                 }
+
             }
             return ejecucionOK;
         }
 
-        private bool GenerarAsientoDiferenciaTipoDeCambio(int docEntryForm)
+        private bool GenerarAsientoDiferenciaTipoDeCambio(int docEntryForm, int sucursal, string codCtaBanco)
         {
             var rslt = true;
-            var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
-            var strXMLDTDocs = dbsPMP1.GetAsXML();
-            var _dsrXmlDBDataSource = (XMLDBDataSource)_xmlSerializer.Deserialize(new StringReader(strXMLDTDocs));
 
-            var lstSucursales = _dsrXmlDBDataSource.Rows.Where(r => r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO")).Value == "OK"
-            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO2")).Value == "OK").Select(r => Convert.ToInt32(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value)).Distinct();
-            foreach (var sucursal in lstSucursales)
+            try
             {
-                try
-                {
-                    PagoMasivoController.CrearAsientoAjusteRedondeo(docEntryForm, sucursal, tieneSucursales);
-                }
-                catch (Exception ex)
-                {
-                    rslt = false;
-                    Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                }
+                PagoMasivoController.CrearAsientoAjusteRedondeo(docEntryForm, sucursal, codCtaBanco, tieneSucursales);
             }
+            catch (Exception ex)
+            {
+                rslt = false;
+                Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+            }
+
             return rslt;
         }
 
@@ -1215,12 +1209,13 @@ namespace SMC_APM.View.USRForms
 
         private void ActualizarDatosCreacionPagoCuenta(string nroPagoEfec, string estado, string msjError, int docEntry, int lineId)
         {
-            /*
+
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
             var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC2\" = '{nroPagoEfec}', \"U_EXP_ESTADO2\" = '{estado}', " +
                 $"\"U_EXP_MSJERROR\" = '{msjError.Replace("'", "")}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
             recSet.DoQuery(sqlQry);
-            */
+
+            /*
             var mtxDocs = Form.GetMatrix("Item_12");
             for (int i = 0; i < mtxDocs.RowCount; i++)
             {
@@ -1237,6 +1232,7 @@ namespace SMC_APM.View.USRForms
                     break;
                 }
             }
+            */
         }
 
         public void AnularPagosConError()
@@ -1286,6 +1282,11 @@ namespace SMC_APM.View.USRForms
                 throw new Exception($"No se ha definido la serie de pago para el banco {codBanco} y moneda {codMoneda}");
             }
             return Convert.ToInt32(recSet.Fields.Item(0).Value);
+        }
+
+        public void HabilitarControlesEnModoBuscar()
+        {
+            Form.Items.Item("Item_27").Enabled = true;
         }
     }
 }

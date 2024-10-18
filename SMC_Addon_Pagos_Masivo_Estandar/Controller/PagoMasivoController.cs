@@ -750,14 +750,14 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static void CrearAsientoAjusteRedondeo(int docEntryPM, int codSucursal, bool tieneSucursales)
+        public static void CrearAsientoAjusteRedondeo(int docEntryPM, int codSucursal, string codCtaBanco, bool tieneSucursales)
         {
             var mntoRedondeo = 0.00;
 
 
-            var sqlQry = $"EXEC EXD_SP_PM_OBTENER_DIFERENCIA_ME '{docEntryPM}','{codSucursal}'";
+            var sqlQry = $"EXEC EXD_SP_PM_OBTENER_DIFERENCIA_ME '{docEntryPM}','{codSucursal}','{codCtaBanco}'";
             if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                sqlQry = $"CALL EXD_SP_PM_OBTENER_DIFERENCIA_ME('{docEntryPM}','{codSucursal}')";
+                sqlQry = $"CALL EXD_SP_PM_OBTENER_DIFERENCIA_ME('{docEntryPM}','{codSucursal}','{codCtaBanco}')";
 
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
