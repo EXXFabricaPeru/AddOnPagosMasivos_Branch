@@ -297,10 +297,10 @@ begin
 		T0."NroDocumentoSN",
 		T0."NroCtaProveedor",
 		T0."CodBncProveedor",
-		T0."CodRetencion",
+		case when ifnull(T0."MontoRetencion",0) > 0 then T0."CodRetencion" else '' end "CodRetencion",
 		ifnull(T0."MontoRetencion",0) as "MontoRetencion",
-		ifnull((select max('Y') from RSLT2 TX0 where ifnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
-		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') as "AplSerieRetencion",
+		case when ifnull(T0."MontoRetencion",0) > 0 then  ifnull((select max('Y') from RSLT2 TX0 where ifnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
+		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') else 'N' end as "AplSerieRetencion",
 		T0."TCDocumento",
 		T0."GlosaAsiento",
 		T0."CardCodeFacto",

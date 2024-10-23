@@ -37,14 +37,15 @@ namespace SMC_APM.View.USRForms
 
         // Controles
         private SAPbouiCOM.ComboBox cmbBancos = null;
-        private SAPbouiCOM.ComboBox cmbMonedaLoc = null;
-        private SAPbouiCOM.ComboBox cmbMonedaExt = null;
-        private SAPbouiCOM.ComboBox cmbCtaMonedaLoc = null;
-        private SAPbouiCOM.ComboBox cmbCtaMonedaExt = null;
+        //private SAPbouiCOM.ComboBox cmbMonedaLoc = null;
+        //private SAPbouiCOM.ComboBox cmbMonedaExt = null;
+        //private SAPbouiCOM.ComboBox cmbCtaMonedaLoc = null;
+        //private SAPbouiCOM.ComboBox cmbCtaMonedaExt = null;
         private SAPbouiCOM.ComboBox cmbSeries = null;
         private SAPbouiCOM.ComboBox cmbSucursales = null;
         private SAPbouiCOM.ComboBox cmbPrioridad = null;
         private SAPbouiCOM.ComboBox cmbTipoDocumento = null;
+        private SAPbouiCOM.ComboBox cmbAutorizarPor = null;
 
         private SAPbouiCOM.Button btnBuscar = null;
         private SAPbouiCOM.Button btnAgregar = null;
@@ -99,8 +100,8 @@ namespace SMC_APM.View.USRForms
                 currencies.Browser.Recordset = recSet;
                 while (!currencies.Browser.EoF)
                 {
-                    cmbMonedaLoc.ValidValues.Add(currencies.Code, currencies.Name);
-                    cmbMonedaExt.ValidValues.Add(currencies.Code, currencies.Name);
+                    //cmbMonedaLoc.ValidValues.Add(currencies.Code, currencies.Name);
+                    //cmbMonedaExt.ValidValues.Add(currencies.Code, currencies.Name);
                     if (tieneSucursales)
                     {
                         mtxFact.Columns.Item("Col_8").ValidValues.Add(currencies.Code, currencies.Code);
@@ -130,7 +131,7 @@ namespace SMC_APM.View.USRForms
                 recSet.DoQuery("select \"Code\",\"Name\" from \"@EXD_PM_TIPODOC\"");
                 while (!recSet.EoF)
                 {
-                    cmbTipoDocumento.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    cmbAutorizarPor.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                     recSet.MoveNext();
                 }
 
@@ -168,14 +169,15 @@ namespace SMC_APM.View.USRForms
             udsTOTAL_USD = Form.GetUserDataSource("UD_TOT_USD");
 
             cmbBancos = Form.GetComboBox("Item_14");
-            cmbMonedaLoc = Form.GetComboBox("Item_15");
-            cmbMonedaExt = Form.GetComboBox("Item_17");
-            cmbCtaMonedaLoc = Form.GetComboBox("cmbBanco");
-            cmbCtaMonedaExt = Form.GetComboBox("Item_12");
+            //cmbMonedaLoc = Form.GetComboBox("Item_15");
+            //cmbMonedaExt = Form.GetComboBox("Item_17");
+            //cmbCtaMonedaLoc = Form.GetComboBox("cmbBanco");
+            //cmbCtaMonedaExt = Form.GetComboBox("Item_12");
             cmbSeries = Form.GetComboBox("Item_23");
             cmbSucursales = Form.GetComboBox("Item_11");
             cmbPrioridad = Form.GetComboBox("Item_19");
             cmbTipoDocumento = Form.GetComboBox("Item_32");
+            cmbAutorizarPor = Form.GetComboBox("Item_13");
 
             btnBuscar = Form.GetButton("btnBuscar");
             btnAgregar = Form.GetButton("btnAgg");
@@ -202,14 +204,15 @@ namespace SMC_APM.View.USRForms
 
         private void PrepareFormOnSucursales()
         {
-            Form.Items.Item("lblBank").Visible = false;
+            /*
+            //Form.Items.Item("lblBank").Visible = false;
             Form.Items.Item("Item_13").Visible = false;
-            Form.Items.Item("cmbBanco").Visible = false;
+            //Form.Items.Item("cmbBanco").Visible = false;
             Form.Items.Item("Item_12").Visible = false;
-            Form.Items.Item("lblMoneda").Visible = false;
-            Form.Items.Item("Item_16").Visible = false;
-            Form.Items.Item("Item_15").Visible = false;
-            Form.Items.Item("Item_17").Visible = false;
+            //Form.Items.Item("lblMoneda").Visible = false;
+            //Form.Items.Item("Item_16").Visible = false;
+            //Form.Items.Item("Item_15").Visible = false;
+            //Form.Items.Item("Item_17").Visible = false;       
             Form.Items.Item("Item_3").Visible = true;
             Form.Items.Item("Item_11").Visible = true;
             Form.Items.Item("Item_18").Top = Form.Items.Item("Item_1").Top;
@@ -222,6 +225,7 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("Item_32").Top = Form.Items.Item("Item_19").Top + Form.Items.Item("Item_19").Height + 1;
             Form.Items.Item("Item_33").Top = Form.Items.Item("Item_31").Top + Form.Items.Item("Item_31").Height + 1;
             Form.Items.Item("Item_34").Top = Form.Items.Item("Item_32").Top + Form.Items.Item("Item_32").Height + 1;
+            */
         }
 
         protected override void CargarEventos()
@@ -236,8 +240,8 @@ namespace SMC_APM.View.USRForms
                     var codBanco = dbsEXD_OEPG.GetValueExt("U_COD_BANCO");
                     var codMndLoc = sboBob.GetLocalCurrency().Fields.Item(0).Value.ToString();
                     dctMonedasPorCuenta = new Dictionary<string, string>();
-                    while (cmbCtaMonedaLoc.ValidValues.Count > 0) cmbCtaMonedaLoc.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
-                    while (cmbCtaMonedaExt.ValidValues.Count > 0) cmbCtaMonedaExt.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                    //while (cmbCtaMonedaLoc.ValidValues.Count > 0) cmbCtaMonedaLoc.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
+                    //while (cmbCtaMonedaExt.ValidValues.Count > 0) cmbCtaMonedaExt.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
 
                     dbsEXD_OEPG.SetValueExt("U_CTA_BANCO_ML", null);
                     dbsEXD_OEPG.SetValueExt("U_CTA_BANCO_ME", null);
@@ -249,15 +253,17 @@ namespace SMC_APM.View.USRForms
                     recSet.DoQuery(qry);
                     if (!recSet.EoF)
                     {
-                        cmbCtaMonedaLoc.ValidValues.Add("", "");
-                        cmbCtaMonedaExt.ValidValues.Add("", "");
+                        //cmbCtaMonedaLoc.ValidValues.Add("", "");
+                        //cmbCtaMonedaExt.ValidValues.Add("", "");
                         while (!recSet.EoF)
                         {
                             dctMonedasPorCuenta[recSet.Fields.Item(0).Value] = recSet.Fields.Item("Moneda").Value;
+                            /*
                             if (recSet.Fields.Item("Moneda").Value == codMndLoc)
-                                cmbCtaMonedaLoc.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                                //cmbCtaMonedaLoc.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                             else
-                                cmbCtaMonedaExt.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                                //cmbCtaMonedaExt.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                            */
                             recSet.MoveNext();
                         }
                     }
@@ -265,6 +271,7 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
+            /*
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_COMBO_SELECT, cmbCtaMonedaLoc.Item.UniqueID, e =>
             {
                 if (!e.BeforeAction)
@@ -301,6 +308,7 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+        
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_COMBO_SELECT, cmbCtaMonedaExt.Item.UniqueID, e =>
             {
@@ -337,6 +345,7 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+            */
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, btnBuscar.Item.UniqueID, e =>
             {
@@ -354,7 +363,13 @@ namespace SMC_APM.View.USRForms
                         var codSucursal = dbsEXD_OEPG.GetValueExt("U_COD_SUCURSAL");
                         var codPrioridad = dbsEXD_OEPG.GetValueExt("U_COD_PRIORIDAD");
                         var codTipoDocumento = dbsEXD_OEPG.GetValueExt("U_TIPO_DOC");
+                        var codAutorizarPor = dbsEXD_OEPG.GetValueExt("U_AUTORIZAR_POR");
                         var montoMinimo = Convert.ToDouble(dbsEXD_OEPG.GetValueExt("U_MONTO_MINIMO"));
+
+                        var tipoDocFiltro = codAutorizarPor;
+                        if (codAutorizarPor == "VR")
+                            if (codTipoDocumento != "NN")
+                                tipoDocFiltro = codTipoDocumento;
 
                         if (!tieneSucursales && monedaLoc.Equals("XZY") && monedaExt.Equals("XZY"))
                         {
@@ -364,9 +379,9 @@ namespace SMC_APM.View.USRForms
                         }
                         dttFac.Rows.Clear();
                         mtxFact.LoadFromDataSourceEx();
-                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{codTipoDocumento}','{montoMinimo}'";
+                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{tipoDocFiltro}','{montoMinimo}'";
                         if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
-                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{codTipoDocumento}','{montoMinimo}')";
+                            qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{tipoDocFiltro}','{montoMinimo}')";
                         dttFac.ExecuteQuery(qry);
                         if (dttFac.Rows.Count == 1 && string.IsNullOrWhiteSpace(dttFac.GetValue("CardCode", 0).ToString()))
                         {
@@ -431,6 +446,7 @@ namespace SMC_APM.View.USRForms
                             lstDocumentosNuevos.AddRange(lstDocumentosNuevosAux);
                         }
 
+                        lstDocumentos.RemoveAll(d => d.EstadoExt == "P");
                         var lstSeleccionados = lstDocumentos.Where(d => d.EstadoExt == "S").ToList();
                         var lstSeleccionadosPendientes = lstDocumentos.Where(d => d.EstadoExt == "P").ToList();
 
@@ -550,7 +566,7 @@ namespace SMC_APM.View.USRForms
                 {
                     if (Form.Mode != SAPbouiCOM.BoFormMode.fm_ADD_MODE)
                     {
-                        var tipoDocumento = dbsEXD_OEPG.GetValueExt("U_TIPO_DOC");
+                        var tipoDocumento = dbsEXD_OEPG.GetValueExt("U_AUTORIZAR_POR");
                         if (!TieneModeloAutorizacion(tipoDocumento))
                         {
                             Globales.Aplication.StatusBar.SetText("El tipo de documento seleccionado no tiene un modelo de autorización, no se puede enviar a aprobación", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
@@ -878,6 +894,18 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_COMBO_SELECT, cmbAutorizarPor.Item.UniqueID, e =>
+            {
+                if (!e.BeforeAction)
+                {
+                    Form.Items.Item("Item_34").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    dbsEXD_OEPG.SetValueExt("U_TIPO_DOC", "NN");
+                    Form.Items.Item("Item_32").Enabled = dbsEXD_OEPG.GetValueExt("U_AUTORIZAR_POR").Equals("VR");
+                    btnBuscar.Item.Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                }
+                return true;
+            }));
+
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_DOUBLE_CLICK, mtxFact.Item.UniqueID, e =>
             {
                 if (e.BeforeAction && e.Row == 0 && e.ColUID == "lSelect")
@@ -1007,7 +1035,8 @@ namespace SMC_APM.View.USRForms
             dbsEXD_OEPG.SetValueExt("U_FECHA_VENC", DateTime.Today.ToString("yyyyMMdd"));
             dbsEXD_OEPG.SetValueExt("U_FECHA_VENH", DateTime.Today.ToString("yyyyMMdd"));
             dbsEXD_OEPG.SetValueExt("U_COD_SUCURSAL", "-1");
-            dbsEXD_OEPG.SetValueExt("U_TIPO_DOC", "VR");
+            dbsEXD_OEPG.SetValueExt("U_AUTORIZAR_POR", "VR");
+            dbsEXD_OEPG.SetValueExt("U_TIPO_DOC", "NN");
             dbsEXD_OEPG.SetValueExt("U_MONTO_MINIMO", "0.00");
             cmbSeries.ValidValues.LoadSeries(Form.BusinessObject.Type, SAPbouiCOM.BoSeriesMode.sf_Add);
             if (cmbSeries.ValidValues.Count > 0) cmbSeries.Select(0, SAPbouiCOM.BoSearchKey.psk_Index);
@@ -1161,7 +1190,7 @@ namespace SMC_APM.View.USRForms
             var activar = estado == "P" || estado == "R" || Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.GetItem("txtFecha").Enabled = activar;
             Form.GetItem("Item_14").Enabled = activar;
-            Form.GetItem("cmbBanco").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            //Form.GetItem("cmbBanco").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.GetItem("Item_12").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.GetItem("Item_5").Enabled = activar;
             Form.GetItem("Item_23").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
@@ -1173,7 +1202,9 @@ namespace SMC_APM.View.USRForms
             Form.GetItem("btnBuscar").Enabled = activar;
             Form.GetItem("Item_11").Enabled = activar;
             Form.GetItem("Item_19").Enabled = activar;
-            Form.GetItem("Item_32").Enabled = activar;
+            Form.GetItem("Item_32").Enabled = activar && dbsEXD_OEPG.GetValueExt("U_AUTORIZAR_POR").Equals("VR"); ;
+            Form.GetItem("Item_34").Enabled = activar;
+            Form.GetItem("Item_13").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
 
             Form.GetItem("mtxFact").Enabled = activar;
             Form.GetItem("mtxSelect").Enabled = activar;

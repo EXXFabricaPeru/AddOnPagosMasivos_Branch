@@ -17,7 +17,7 @@ AS
 BEGIN
 	declare tipoCambioP decimal(18,6);
 	
-	select "Rate" into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
+	select ifnull(max("Rate"),1) into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
 	
 	PAG_PAR = select sum(U_TOTAL_PAGO) as "MONTO",U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS 
 	from "@EXD_OEPG" T0 inner join "@EXD_EPG1" T1 on T0."DocEntry" = T1."DocEntry"
@@ -29,7 +29,7 @@ BEGIN
 	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
 	and (case T1.U_TIPO_DOCUMENTO 
 		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
-	and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN('','OK') 
+	and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK') 
 	),'') <> 'Y'
 	group by U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS;
 	

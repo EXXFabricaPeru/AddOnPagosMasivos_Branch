@@ -2787,6 +2787,24 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>AUTORIZAR_POR</Name>
+        <Type>db_Alpha</Type>
+        <Size>5</Size>
+        <Description>Autorizar por</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_OEPG</TableName>
+        <EditSize>5</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>DOCENTRY</Name>
         <Type>db_Numeric</Type>
         <Size>11</Size>
