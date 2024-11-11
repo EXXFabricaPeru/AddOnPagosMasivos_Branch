@@ -25,7 +25,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref"|| '-'||T4."FolioNum" as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -37,12 +37,15 @@ begin
 			T1."U_CUENTA_PROV"			as "NroCtaProveedor",
 			T1."U_COD_BANCO"			as "CodBncProveedor",
 			T7."WTCode"					as "CodRetencion",
-			case when T4."DocCur" = :mndLoc then 1 * (T7."WTAmnt" - T7."ApplAmnt")
-			else 1 * (T7."WTAmntFC" - T7."ApplAmntFC") end as "MontoRetencion",
+			T1."U_RETENCION"/*case when T4."DocCur" = :mndLoc then 1 * (T7."WTAmnt" - T7."ApplAmnt")
+			else 1 * (T7."WTAmntFC" - T7."ApplAmntFC") end*/ as "MontoRetencion",
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -68,7 +71,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref" ||'-'||T4."FolioNum" as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -85,7 +88,10 @@ begin
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -109,7 +115,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref"||'-'||T4."FolioNum" as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -125,7 +131,10 @@ begin
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"	
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -149,7 +158,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'140'						as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			T4."U_EXX_NUMEREND" 		as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -165,7 +174,10 @@ begin
 			0							as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -186,9 +198,9 @@ begin
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
-			T1."U_DOCENTRY"			as "DocEntryDocumento",
+			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			T4."Ref2" 					as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
@@ -205,7 +217,10 @@ begin
 			T4."FCCredit"/(case when T4."Credit" = 0 then 1 else T4."Credit" end) as "TCDocumento",
 			(select TX0."Memo" from OJDT TX0 where TX0."TransId" = T4."TransId")	as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -236,7 +251,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'24'						as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			(select max(TX0."U_EXX_NUMEREND") from ORCT TX0 where TX0."TransId" = T4."TransId")	as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
@@ -253,7 +268,10 @@ begin
 			T4."FCCredit"/(case when T4."Credit" = 0 then 1 else T4."Credit" end) as "TCDocumento",
 			(select TX0."Memo" from OJDT TX0 where TX0."TransId" = T4."TransId")	as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"	as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"	as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"	as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -291,7 +309,7 @@ begin
 		T0."CardCode",
 		T0."CardName",
 		T0."Moneda",
-		T0."Importe",
+		T0."Importe" - case when T0."AplicaRetencion" = 'Y' then ifnull(T0."MontoRetencion",0) else 0.00 end as "Importe",
 		T0."NroCuota",
 		T0."NroLineaAsiento",
 		T0."NroDocumentoSN",
@@ -304,7 +322,10 @@ begin
 		T0."TCDocumento",
 		T0."GlosaAsiento",
 		T0."CardCodeFacto",
-		T0."CardNameFacto"
+		T0."CardNameFacto",
+		T0."AfectoRetencion",
+		T0."TieneRetencion",
+		T0."AplicaRetencion"
 	from RSLT1 T0 where (ifnull((select max('Y') from "@EXP_PMP1" TX0 
 	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
 	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"

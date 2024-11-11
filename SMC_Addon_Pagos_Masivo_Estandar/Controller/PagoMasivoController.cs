@@ -113,7 +113,10 @@ namespace SMC_APM.Controller
                     TCDocumento = Convert.ToDouble(dc["TCDocumento"]),
                     GlosaAsiento = dc["GlosaAsiento"],
                     CardCodeFactoring = dc["CardCodeFacto"],
-                    CardNameFactoring = dc["CardNameFacto"]
+                    CardNameFactoring = dc["CardNameFacto"],
+                    AfectoRetencion = dc["AfectoRetencion"],
+                    AplicaRetencion = dc["AplicaRetencion"],
+                    TieneRetencion = dc["TieneRetencion"]
                 };
             });
             return rslt;
@@ -287,6 +290,20 @@ namespace SMC_APM.Controller
                     break;
 
                 case "NN"://Pago en Efectivo
+
+                    if (pago.MontoRetencion > 0)
+                    {
+                        var owht = (SAPbobsCOM.WithholdingTaxCodes)Globales.Company.GetBusinessObject(BoObjectTypes.oWithholdingTaxCodes);
+                        owht.GetByKey("RIGV");
+                        sboPayments.TransferAccount = owht.Account;
+                        sboPayments.TransferDate = pago.FechaContabilizacion;
+                        sboPayments.TransferReference = pago.Moneda == mndLoc ? pago.MetodoPago.Referencia : pago.MetodoPago.ReferenciaME;
+                        sboPayments.TransferSum = pago.MontoRetencion;
+                        if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
+                            sboPayments.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
+
+                    }
+
                     sboPayments.CashAccount = ObtenerCodCuentaPuentePorSucursal(pago.CodSucursal, tieneSucursales);
                     sboPayments.CashSum = pago.Monto;
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
@@ -302,8 +319,8 @@ namespace SMC_APM.Controller
                 sboPayments.Invoices.DocEntry = d.IdDocumento;
                 sboPayments.Invoices.DocLine = d.IdLinea;
                 sboPayments.Invoices.InstallmentId = d.NroCuota;
-                sboPayments.Invoices.SumApplied = d.MonedaDoc.Equals(mndLoc) ? d.MontoAPagar : default(double);
-                sboPayments.Invoices.AppliedFC = !d.MonedaDoc.Equals(mndLoc) ? d.MontoAPagar : default(double);
+                sboPayments.Invoices.SumApplied = d.MonedaDoc.Equals(mndLoc) ? (d.MontoAPagar + d.ImpRetencionAux) : default(double);
+                sboPayments.Invoices.AppliedFC = !d.MonedaDoc.Equals(mndLoc) ? (d.MontoAPagar + d.ImpRetencionAux) : default(double);
                 row++;
             });
 
@@ -399,12 +416,13 @@ namespace SMC_APM.Controller
                     CodSucursal = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_COD_SUCURSAL")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value,
-                    AplSerieRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLSRERTN")).FirstOrDefault()?.Element("value").Value,
+                    AplicaRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLICA_RETENCION")).FirstOrDefault()?.Element("value").Value,
                     CardCodeFactoring = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CARDCODE_FACTO")).FirstOrDefault()?.Element("value").Value,
+
                 }).Select(s => new SBOPago
                 {
                     CodSucursal = Convert.ToInt32(s.Key.CodSucursal),
-                    CodSerieSBO = codSlcSucursal == -1 ? ObtenerSeriePagoPorSucursal(Convert.ToInt32(s.Key.CodSucursal), dbsSre, s.Key.AplSerieRetencion) : (s.Key.AplSerieRetencion == "Y" && esAgenteRetenedor ? codSerieRtcn : codSeriePago),
+                    CodSerieSBO = codSlcSucursal == -1 ? ObtenerSeriePagoPorSucursal(Convert.ToInt32(s.Key.CodSucursal), dbsSre, s.Key.AplicaRetencion) : (s.Key.AplicaRetencion == "Y" && esAgenteRetenedor ? codSerieRtcn : codSeriePago),
                     CodigoSN = s.Key.CardCode,
                     Moneda = s.Key.MonedaPago,
                     FechaContabilizacion = fechaPago,
@@ -412,8 +430,13 @@ namespace SMC_APM.Controller
                     FechaVencimiento = fechaPago,
                     TipoCambio = Convert.ToDouble(tipoDeCambio),
                     Monto = s.Sum(sm => (Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+
                     /*- Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/)),
                     //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
+                    MontoRetencion = s.Sum(sm => (
+                    sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value == "N" ?
+                    Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value) : 0.00)),
+                    AplicaRetencion = s.Key.AplicaRetencion,
                     MetodoPago = new SBOMetodoPago
                     {
                         Tipo = s.Key.MedioDePago,
@@ -432,8 +455,11 @@ namespace SMC_APM.Controller
                         MonedaDoc = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_MONEDA")).FirstOrDefault()?.Element("value").Value,
                         MontoAPagar = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
                         /*- Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value)*/,
-                        LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)
+                        LineaPgoMsv = Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value),
                         //MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
+                        TieneRetencion = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value,
+                        ImpRetencionAux = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value == "N" ?
+                        Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value) : 0.00
                     })
                 });
             }
@@ -702,17 +728,18 @@ namespace SMC_APM.Controller
                 //Encriptacion
                 if (codBanco == "011")
                 {
-                    var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileName(rutaFisica) + ".pgp");
-                    EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
-                    rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
-                    HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
+                    //var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileName(rutaFisica) + ".pgp");
+                    //EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
+                    rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaFisica));
+                    //HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
+                    HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaFisica, rutaFldINFTP);
                 }
                 else if (codBanco == "009")
                 {
                     var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileNameWithoutExtension(rutaFisica) + ".gpg");
                     EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
                     rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
-                    HostToHostManager.SendToFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
+                    HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
                 }
                 else if (codBanco == "002")
                 {
@@ -846,10 +873,12 @@ namespace SMC_APM.Controller
                     {
                         sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtBankTransfer;
+                        /*
                         if (pago.Moneda == "SOL")
-                            sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
+                            sboPayments.PrimaryFormItems.AmountLC = pago.Monto;                    
                         else
                             sboPayments.PrimaryFormItems.AmountFC = pago.Monto;
+                        */
                     }
                     if (tblConf.GetByKey("7") && !string.IsNullOrWhiteSpace(tblConf.UserFields.Fields.Item("U_VALOR").Value))
                         sboPayments.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
@@ -871,8 +900,10 @@ namespace SMC_APM.Controller
                         sboPayments.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = tblConf.UserFields.Fields.Item("U_VALOR").Value;
                     break;
             }
+            var nroLineaPago = 0;
             pago.Detalle.All(d =>
             {
+                sboPayments.AccountPayments.SetCurrentLine(nroLineaPago);
                 sboPayments.AccountPayments.AccountCode = d.CodigoCuenta;
                 sboPayments.AccountPayments.AccountName = d.NumeroCuenta;
                 sboPayments.AccountPayments.GrossAmount = d.Monto;
@@ -887,6 +918,7 @@ namespace SMC_APM.Controller
                 //sboPayments.AccountPayments.UserFields.Fields.Item("U_CCH_SERIE").Value = d.CCHSerie;
                 //sboPayments.AccountPayments.UserFields.Fields.Item("U_CCH_CORRLTV").Value = d.CCHCorrelativo;
                 sboPayments.AccountPayments.Add();
+                nroLineaPago++;
                 return true;
             });
 
@@ -1089,6 +1121,31 @@ namespace SMC_APM.Controller
             archivo.Dispose();
 
             Process.Start(nombre);
+        }
+
+        public static void QuitarRetencionDocumento(SBOPago sboPago)
+        {
+            var document = (SAPbobsCOM.Documents)Globales.Company.GetBusinessObject(BoObjectTypes.oPurchaseInvoices);
+
+            if (sboPago.AplicaRetencion != "N") return;
+
+            sboPago.Detalle.ToList().ForEach(d =>
+            {
+                if (d.TipoDocumento == 18 && d.TieneRetencion == "Y")
+                {
+                    document.GetByKey(d.IdDocumento);
+                    document.WithholdingTaxData.SetCurrentLine(0);
+                    if (document.DocCurrency.Equals("SOL"))
+                        document.WithholdingTaxData.WTAmount = 0.00;
+                    else
+                        document.WithholdingTaxData.WTAmountFC = 0.00;
+                    var rslt = document.Update();
+                    if (rslt != 0)
+                    {
+                        throw new InvalidOperationException(Globales.Company.GetLastErrorDescription());
+                    }
+                }
+            });
         }
 
         #endregion

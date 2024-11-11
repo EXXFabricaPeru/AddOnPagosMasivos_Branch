@@ -980,6 +980,25 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>EXP_FORMA_SCOTIA</Name>
+        <Type>db_Alpha</Type>
+        <Size>2</Size>
+        <Description>Formato TXT Scotia</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_OPMP</TableName>
+        <EditSize>2</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>EXP_COD_ESCENARIOPAGO</Name>
         <Type>db_Alpha</Type>
         <Size>10</Size>
@@ -1581,6 +1600,96 @@
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP1</TableName>
         <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_AFECTO_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Afecto a retención</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_TIENE_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Tiene retención</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_APLICA_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Aplica retención</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_IMPORTE_AUX</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Importe auxiliar</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_APL_RETENCION_AUX</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Aplica retención aux</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>1</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -3356,7 +3465,61 @@
       </row>
     </UserFieldsMD>
   </BO>
-  
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>AFECTO_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Afecto a retención</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>TIENE_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Tiene retención</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>APLICA_RETENCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Aplica retencion</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
   <BO>
     <AdmInfo>
       <Object>152</Object>

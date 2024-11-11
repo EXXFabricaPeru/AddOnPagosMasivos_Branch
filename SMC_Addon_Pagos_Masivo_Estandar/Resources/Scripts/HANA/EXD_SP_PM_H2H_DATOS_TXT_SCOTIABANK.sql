@@ -25,7 +25,7 @@ BEGIN
 			rpad(replace(T0."U_EXP_NROCTAPROV",'-','')||'01',20,' ')			as "CuentaAbono",
 			TO_VARCHAR(now(),'yyyyMMdd')										as "FechaFact",
 			TO_VARCHAR(now(),'yyyyMMdd')										as "FechaVencFact",
-			rpad(T0."U_EXP_NROSUNAT",20,' ')									as "NumeroFact",
+			rpad(ifnull(T0."U_EXP_NROSUNAT",''),20,' ')									as "NumeroFact",
 			lpad(floor(T0."U_EXP_IMPORTE"),9,'0')||
 			right(REPLACE(TO_VARCHAR(mod(round(T0."U_EXP_IMPORTE",2),1)),'.',''),2)								as "ImporteNeto",
 			'77'																as "ModuloRaiz",

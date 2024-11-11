@@ -56,7 +56,7 @@ namespace SMC_APM.View.USRForms
         {
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_CLICK, mtxSucursales.Item.UniqueID, e =>
             {
-                if (e.BeforeAction && e.ColUID == "Col_1")
+                if (e.BeforeAction && e.Row > 0 && e.ColUID == "Col_1")
                 {
                     var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                     var codSucursal = _dbsPMP2.GetValue("U_COD_SUCURSAL", e.Row - 1).Trim();
@@ -70,7 +70,7 @@ namespace SMC_APM.View.USRForms
                         recSet.MoveNext();
                     }
                 }
-                else if (e.BeforeAction && e.ColUID == "Col_2")
+                else if (e.BeforeAction && e.Row > 0 && e.ColUID == "Col_2")
                 {
                     var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                     var codSucursal = _dbsPMP2.GetValue("U_COD_SUCURSAL", e.Row - 1).Trim();

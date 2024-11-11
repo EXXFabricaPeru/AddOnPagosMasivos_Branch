@@ -51,7 +51,7 @@ RSLT =	SELECT
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		T4."NumAtCard" AS "Nro. de Documento",
+		T1."U_EXP_NROSUNAT" AS "Nro. de Documento",
 		TO_NVARCHAR(T4."TaxDate",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
@@ -132,7 +132,7 @@ RSLT =	SELECT
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		T4."NumAtCard" AS "Nro. de Documento",
+		T1."U_EXP_NROSUNAT" AS "Nro. de Documento",
 		TO_NVARCHAR(T4."TaxDate",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
@@ -213,7 +213,7 @@ RSLT =	SELECT
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		IFNULL(T4."NumAtCard",IFNULL(T4."FolioPref",'NC01')||'-'||IFNULL(T4."FolioNum", T4. "DocNum")) AS "Nro. de Documento",
+		T1."U_EXP_NROSUNAT" AS "Nro. de Documento",
 		TO_NVARCHAR(T4."TaxDate",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"
@@ -293,7 +293,7 @@ RSLT =	SELECT
 				FROM OCRB C0
 				INNER JOIN OCPR C1 ON C0."CardCode"=C1."CardCode" AND C0."CardCode"=T3."CardCode" AND C0."U_EXC_BENEFI"=C1."Name" AND C1."U_EXC_BENEFI"='Y')
 			END AS "Razón Social",
-		T1."U_EXP_DOCENTRYDOC" AS "Nro. de Documento",
+		T1."U_EXP_NROSUNAT" AS "Nro. de Documento",
 		TO_NVARCHAR(T0."U_EXP_FECHA",'YYYYMMDD') AS "Fecha Emisión Documento",
 		REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(11)),',',''),'.','') AS "Importe del Documento",
 		CASE T1."U_EXP_MEDIODEPAGO"

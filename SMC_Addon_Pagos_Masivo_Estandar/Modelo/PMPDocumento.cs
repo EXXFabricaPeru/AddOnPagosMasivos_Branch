@@ -37,6 +37,9 @@ namespace SMC_APM.Modelo
         public string GlosaAsiento { get; set; }
         public string CardCodeFactoring { get; set; }
         public string CardNameFactoring { get; set; }
+        public string AfectoRetencion { get; set; }
+        public string TieneRetencion { get; set; }
+        public string AplicaRetencion { get; set; }
     }
 }
 

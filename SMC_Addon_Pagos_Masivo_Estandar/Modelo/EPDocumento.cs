@@ -47,5 +47,8 @@ namespace SMC_APM.Modelo
         public string NroCtaPago { get; set; }
         public string CodCtaPago { get; set; }
         public string CodPrioridad { get; set; }
+        public string AfectoRetencion { get; set; }
+        public string TieneRetencion { get; set; }
+        public string AplicaRetencion { get; set; }
     }
 }

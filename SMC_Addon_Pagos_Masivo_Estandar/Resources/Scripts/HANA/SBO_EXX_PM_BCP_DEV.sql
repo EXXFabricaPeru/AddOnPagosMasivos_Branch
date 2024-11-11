@@ -43,12 +43,15 @@ BEGIN
 			ifnull(replace(case when T4."BankCode" = '002' 
 			then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')				as "NroCtaAbono",
 			'1'																			as "ModalidadDePago",
-			ifnull(T3."U_EXX_TIPODOCU",'') 												as "TipoDocumentoProv",
+			ifnull(case T3."U_EXX_TIPODOCU" 
+			when '4' then '3'
+			when '7' then '4'
+			else T3."U_EXX_TIPODOCU" END,'') 												as "TipoDocumentoProv",
 			T3."LicTradNum"																as "NroDocProv",
 			'   '																		as "CorrDocProv",
 			T3."CardName"																as "NombreProveedor",
-			ifnull(T1."U_EXP_COMENTARIO",'')											as "ReferenciaProveedor",
-			''																			as "ReferenciaEmpresa",
+			ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaProveedor",
+			ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaEmpresa",
 			case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end				as "Moneda",
 			TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)											as "Importe",
 			'S'																			as "Validar",

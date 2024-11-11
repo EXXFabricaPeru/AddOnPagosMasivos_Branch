@@ -16,10 +16,18 @@ CREATE PROCEDURE SMC_APM_LISTAR_FACPENDIENTES_PP
 AS
 BEGIN
 	declare tipoCambioP decimal(18,6);
+	declare montoMinimoRET decimal(19,6);
 	
 	select ifnull(max("Rate"),1) into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
+	select ifnull(max(U_EXX_MONTOMIN),0.00) into montoMinimoRET from OWHT where "WTCode" = 'RIGV';
 	
-	PAG_PAR = select sum(U_TOTAL_PAGO) as "MONTO",U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS 
+	PAG_PAR = select 
+		sum(case when ifnull(U_COD_RETENCION,'') <> '' and ifnull(U_TOTAL,0) <> ifnull(U_TOTAL_PAGO,0) then ifnull(U_TOTAL_PAGO,0) + ifnull(U_RETENCION,0) else ifnull(U_TOTAL_PAGO,0) end) as "MONTO" 
+		,U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS 
+	from 
+	(
+	select 
+		U_TOTAL,U_TOTAL_PAGO,U_RETENCION,U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS,U_COD_RETENCION
 	from "@EXD_OEPG" T0 inner join "@EXD_EPG1" T1 on T0."DocEntry" = T1."DocEntry"
 	where ifnull("Canceled",'') <> 'Y'	
 	and ifnull((select max('Y') from "@EXP_PMP1" TX0 inner join "@EXP_OPMP" TX1 on TX0."DocEntry" = TX1."DocEntry"
@@ -29,8 +37,26 @@ BEGIN
 	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
 	and (case T1.U_TIPO_DOCUMENTO 
 		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
-	and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK') 
+	/*and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK')*/ 
 	),'') <> 'Y'
+	
+	union all 
+	
+	select 
+		U_TOTAL,U_TOTAL_PAGO,U_RETENCION,U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS,U_COD_RETENCION
+	from "@EXD_OEPG" T0 inner join "@EXD_EPG1" T1 on T0."DocEntry" = T1."DocEntry"
+	where ifnull("Canceled",'') <> 'Y'	
+	and ifnull((select max('Y') from "@EXP_PMP1" TX0 inner join "@EXP_OPMP" TX1 on TX0."DocEntry" = TX1."DocEntry"
+	where T0."DocEntry" = TX0.U_EXP_COD_ESCENARIOPAGO
+	and T1.U_NRO_CUOTA 		= TX0.U_EXP_NMROCUOTA 
+	and T1.U_NRO_LINEA_AS 	= TX0.U_EXP_ASNROLINEA 
+	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
+	and (case T1.U_TIPO_DOCUMENTO 
+		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
+	and ifnull(TX0.U_EXP_ESTADO,'') <> 'OK'
+	/*and TX1."Status" = 'C'and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK')*/  
+	),'') = 'Y'
+	)AS TT  
 	group by U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS;
 	
 	DOCS = SELECT 
@@ -100,6 +126,9 @@ BEGIN
 		,T0."CardCodeFactoring" 
 		,T0."CardNameFactoring" 
 		,T0."CodPrioridad"
+		,case when ifnull(T0."CodigoRetencion",'') = 'RIGV'							then 'Y' else 'N' end as "AfectoRetencion"
+		,case when ifnull(T0."CodigoRetencion",'') = 'RIGV' and T0."Retencion" > 0	then 'Y' else 'N' end as "TieneRetencion"
+		,case when ifnull(T0."CodigoRetencion",'') = 'RIGV' and ("Total" * "DocRate") > :montoMinimoRET	then 'Y' else 'N' end as "AplicaRetencion"
 	FROM 
 		(SELECT
 		T0."DocEntry",
@@ -110,6 +139,7 @@ BEGIN
 		T0."CardName",
 		T0."NumAtCard",
 		T0."DocCur",
+		T0."DocRate",
 		CAST( 
 		(CASE 
 			WHEN T0."DocCur" in ('USD','EUR') 
@@ -150,13 +180,13 @@ BEGIN
 		CAST((CASE 	WHEN T0."DocCur" in ('USD','EUR') THEN 
 							CASE (SELECT "WTCode" FROM PCH5 WHERE "AbsEntry" = T0."DocEntry")
 								--WHEN 'RT4C' THEN (T1."InsTotalFC" - T1."PaidFC") - ((T1."InsTotalFC"/(T1."InsTotalFC" - T1."PaidFC")) * (T4."WTAmntFC" - T4."ApplAmntFC"))
-								WHEN 'RIGV' THEN (T1."InsTotalFC"-T1."WTSumFC")-(T1."PaidFC"-T1."WTAppliedF")
+								WHEN 'RIGV' THEN (T1."InsTotalFC"/*-T1."WTSumFC"*/)-(T1."PaidFC"/*-T1."WTAppliedF"*/)
 								ELSE T1."InsTotalFC" - T1."PaidFC"--+ T0."WTSumFC" - T4."ApplAmntFC"
 							END
 						ELSE 
 							CASE (SELECT "WTCode" FROM PCH5 WHERE "AbsEntry" = T0."DocEntry")
 								--WHEN 'RT4C' THEN(T1."InsTotal" - T1."PaidToDate") - ((T1."InsTotal" /(T1."InsTotal" - T1."PaidToDate")) * (T4."WTAmnt" - T4."ApplAmnt")) 
-								WHEN 'RIGV' THEN  (T1."InsTotal"-T1."WTSum")-(T1."PaidToDate"-T1."WTApplied") 
+								WHEN 'RIGV' THEN  (T1."InsTotal"/*-T1."WTSum"*/)-(T1."PaidToDate"/*-T1."WTApplied"*/) 
 								ELSE T1."InsTotal" - T1."PaidToDate"-- + T0."WTSum" - T4."ApplAmnt"
 							END
 			END)AS DECIMAL(16,2)) AS "TotalPagar",
@@ -303,6 +333,7 @@ BEGIN
 		T0."CardName",
 		IFNULL(T0."NumAtCard",IFNULL("FolioPref",'NC01')||'-'||IFNULL("FolioNum", "DocNum")) as "NumAtCard",
 		T0."DocCur",
+		T0."DocRate",
 		CAST( 
 		(CASE 
 			WHEN T0."DocCur" in ('USD','EUR') 
@@ -454,6 +485,7 @@ BEGIN
 		T0."CardName",
 		T0."NumAtCard",
 		T0."DocCur",
+		T0."DocRate",
 		CAST( 
 		(CASE 
 			WHEN T0."DocCur" in ('USD','EUR') 
@@ -606,6 +638,7 @@ BEGIN
 		T0."CardName",
 		T0."NumAtCard",
 		T0."DocCur",
+		T0."DocRate",
 		CAST( 
 		(CASE 
 			WHEN T0."DocCur" in ('USD','EUR') 
@@ -756,9 +789,9 @@ BEGIN
 		T0."DocDueDate" AS "FechaVencimiento",
 		T0."CardCode",
 		T0."CardName",
-		T0."DocType" as "NumAtCard",
+		T0."U_EXX_NUMEREND" as "NumAtCard",
 		T0."DocCurr",
-		
+		T0."DocRate",
 		CAST( 
 		(CASE 
 			WHEN T0."DocCurr" in ('USD','EUR') 
@@ -859,10 +892,10 @@ BEGIN
 		T1."DueDate" AS "FechaVencimiento",
 		T3."CardCode",
 		T3."CardName",
-		'' as "NumAtCard",
+		(select max(TX0."U_EXX_NUMEREND") from ORCT TX0 where TX0."TransId" = T0."TransId") as "NumAtCard",
 		--T0."TransCurr"
-		IFNULL(T1."FCCurrency",'SOL')
-		,
+		IFNULL(T1."FCCurrency",'SOL'),
+		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/T1."Credit" end,
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
@@ -976,10 +1009,10 @@ BEGIN
 		T1."DueDate" AS "FechaVencimiento",
 		T3."CardCode",
 		T3."CardName",
-		'AS'||'-'||T0."Number" as "NumAtCard",
+		T0."Ref2" 	as "NumAtCard",
 		--T0."TransCurr"
-		ifnull(T1."FCCurrency",'SOL')
-		,
+		ifnull(T1."FCCurrency",'SOL'),
+		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/T1."Credit" end,
 		CAST( 
 		(CASE 
 			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 

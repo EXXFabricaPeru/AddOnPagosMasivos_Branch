@@ -69,6 +69,7 @@ namespace SMC_APM.View.USRForms
 
         private bool esSeleccionarTodo = false;
 
+
         public FormEscenarioPago(string id) : base(TYPE, MENU, id, PATH)
         {
             try
@@ -196,6 +197,14 @@ namespace SMC_APM.View.USRForms
             mtxFact.Columns.Item("Col_12").Visible = false;
             mtxSelc.Columns.Item("Col_8").Visible = false;
             mtxSelc.Columns.Item("Col_10").Visible = false;
+
+            mtxFact.Columns.Item("Col_16").Visible = false;
+            mtxFact.Columns.Item("Col_17").Visible = false;
+            mtxFact.Columns.Item("Col_18").Visible = false;
+
+            mtxSelc.Columns.Item("Col_14").Visible = false;
+            mtxSelc.Columns.Item("Col_15").Visible = false;
+            mtxSelc.Columns.Item("Col_16").Visible = false;
 
             mtxFact.CommonSetting.FixedColumnsCount = 2;
             mtxSelc.CommonSetting.FixedColumnsCount = 2;
@@ -434,6 +443,9 @@ namespace SMC_APM.View.USRForms
                                 CodCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("CodCtaPago"))?.Value,
                                 NroCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("NroCtaPago"))?.Value,
                                 CodPrioridad = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("CodPrioridad"))?.Value,
+                                AfectoRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("AfectoRetencion"))?.Value,
+                                TieneRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("TieneRetencion"))?.Value,
+                                AplicaRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("AplicaRetencion"))?.Value,
                                 EstadoExt = "P"
                             }).ToList();
 
@@ -518,6 +530,7 @@ namespace SMC_APM.View.USRForms
                             var docNum = r.Cells.FirstOrDefault(c => c.ColumnUid == "DocNum").Value;
                             var codCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "CodCtaPago").Value;
                             var nroCtaPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NroCtaPago").Value;
+                            var montoRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid == "Retencion").Value;
 
                             var doc = lstDocumentos.FirstOrDefault(d => d.DocEntry == docEntry
                             && d.Documento == documento
@@ -539,6 +552,7 @@ namespace SMC_APM.View.USRForms
                             doc.NroCtaPago = nroCtaPago;
                             doc.Cuenta = r.Cells.FirstOrDefault(c => c.ColumnUid == "Cuenta")?.Value;
                             doc.TotalPagar = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid == "TotalPagar").Value);
+                            doc.Retencion = Convert.ToDouble(montoRetencion);
                         }
                         catch (Exception ex)
                         {
@@ -938,14 +952,39 @@ namespace SMC_APM.View.USRForms
                     {
                         if (e.ColUID == "fTotalP")
                         {
+                            Form.Freeze(true);
                             var total = Convert.ToDouble(((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_15", e.Row)).Value);
                             var totalPagar = double.TryParse(((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("fTotalP", e.Row)).Value, out var totalPagarAux) ? totalPagarAux : 0.00;
+
 
                             if (totalPagar <= 0 || totalPagar > total)
                             {
                                 Globales.Aplication.StatusBar.SetText("Ingrese un monto valido", SAPbouiCOM.BoMessageTime.bmt_Short);
+                                Form.Freeze(false);
                                 return false;
                             }
+
+                            var codRetencion = ((SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_0", e.Row)).Value;
+                            if (!string.IsNullOrWhiteSpace(codRetencion))
+                            {
+                                if (total < 700 && (total != totalPagar))
+                                {
+                                    Globales.Aplication.StatusBar.SetText("En documentos con retencion menores a 700, el pago debe ser igual al saldo", SAPbouiCOM.BoMessageTime.bmt_Short);
+                                    Form.Freeze(false);
+                                    return false;
+                                }
+
+                                var owht = (SAPbobsCOM.WithholdingTaxCodes)Globales.Company.GetBusinessObject(BoObjectTypes.oWithholdingTaxCodes);
+                                owht.GetByKey(codRetencion);
+                                var tasaNetaRetencion = (owht.Rate / 118);
+
+
+                                ((SAPbouiCOM.EditText)mtxFact.Columns.Item("fReten").Cells.Item(e.Row).Specific).Value = (totalPagar * tasaNetaRetencion).ToString();
+                                mtxFact.FlushToDataSource();
+                                mtxFact.LoadFromDataSourceEx();
+                            }
+
+                            Form.Freeze(false);
                         }
                     }
                     return true;
@@ -1004,6 +1043,9 @@ namespace SMC_APM.View.USRForms
                         CodBancoPago = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_COD_BANCO_PAGO"))?.Value ?? "",
                         NomBancoPago = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_NOM_BANCO_PAGO"))?.Value ?? "",
                         CodPrioridad = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_COD_PRIORIDAD"))?.Value ?? "",
+                        AfectoRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_AFECTO_RETENCION"))?.Value ?? "",
+                        TieneRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TIENE_RETENCION"))?.Value ?? "",
+                        AplicaRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_APLICA_RETENCION"))?.Value ?? "",
                         RUC = string.Empty,
                         CuentaMoneda = string.Empty,
                         Estado = string.Empty,
@@ -1104,6 +1146,9 @@ namespace SMC_APM.View.USRForms
                             new Cell{ ColumnUid = "GlosaAsiento", Value = d.GlosaAsiento },
                             new Cell{ ColumnUid = "CardCodeFactoring", Value = d.CardCodeFactoring },
                             new Cell{ ColumnUid = "CardNameFactoring", Value = d.CardNameFactoring },
+                            new Cell{ ColumnUid = "AfectoRetencion", Value = d.AfectoRetencion },
+                            new Cell{ ColumnUid = "TieneRetencion", Value = d.TieneRetencion },
+                            new Cell{ ColumnUid = "AplicaRetencion", Value = d.AplicaRetencion },
 
                         }.ToArray()
             }).ToArray();
@@ -1152,7 +1197,10 @@ namespace SMC_APM.View.USRForms
                             new CellDBS{ Uid = "U_NOM_PROV_FACTO", Value = d.CardNameFactoring },
                             new CellDBS{ Uid = "U_TIPO_DOCUMENTO", Value = d.Documento },
                             new CellDBS{ Uid = "U_COD_SUCURSAL", Value = d.CodSucursal.ToString()},
-                            new CellDBS{ Uid = "U_COD_PRIORIDAD", Value = d.CodPrioridad.ToString()}
+                            new CellDBS{ Uid = "U_COD_PRIORIDAD", Value = d.CodPrioridad.ToString()},
+                            new CellDBS{ Uid = "U_AFECTO_RETENCION", Value = d.AfectoRetencion },
+                            new CellDBS{ Uid = "U_TIENE_RETENCION", Value = d.TieneRetencion},
+                            new CellDBS{ Uid = "U_APLICA_RETENCION", Value = d.AplicaRetencion}
                         }.ToArray()
             }).ToArray();
 
@@ -1188,6 +1236,7 @@ namespace SMC_APM.View.USRForms
         private void HabiltarControlesPorEstado(string estado)
         {
             var activar = estado == "P" || estado == "R" || Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.GetItem("Item_24").Enabled = false;
             Form.GetItem("txtFecha").Enabled = activar;
             Form.GetItem("Item_14").Enabled = activar;
             //Form.GetItem("cmbBanco").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
@@ -1226,6 +1275,11 @@ namespace SMC_APM.View.USRForms
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
             return !recSet.EoF;
+        }
+
+        public void HabilitarControlesEnModoBuscar()
+        {
+            Form.Items.Item("Item_24").Enabled = true;
         }
     }
 }

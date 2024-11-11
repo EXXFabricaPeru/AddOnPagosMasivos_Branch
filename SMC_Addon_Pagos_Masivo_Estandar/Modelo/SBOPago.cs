@@ -21,10 +21,12 @@ namespace SMC_APM.Modelo
         public string Referencia { get; set; }
         public double GastosBancarios { get; set; }
         public double Monto { get; set; }
+        public double MontoRetencion { get; set; }
         public string CuentaControl { get; set; }
         public string CodigoProyecto { get; set; }
         public string CorrelativoRendicion { get; set; }
         public string CuentaCheque { get; set; }
+        public string AplicaRetencion { get; set; }
         public SBOMetodoPago MetodoPago { get; set; }
         public IEnumerable<SBOPagoDetalle> Detalle { get; set; }
         public IEnumerable<int> ExtLineasDS { get; set; }
@@ -49,6 +51,8 @@ namespace SMC_APM.Modelo
         public string CentroCosto4 { get; set; }
         public string CentroCosto5 { get; set; }
         public int LineaPgoMsv { get; set; }
+        public string TieneRetencion { get; set; }
+        public double ImpRetencionAux { get; set; }
 
     }
 

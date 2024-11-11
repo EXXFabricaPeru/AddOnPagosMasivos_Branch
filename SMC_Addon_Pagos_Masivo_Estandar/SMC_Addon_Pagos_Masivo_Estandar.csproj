@@ -304,6 +304,9 @@
     <Content Include="Resources\Img\CFL.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Scripts\HANA\EXD_SP_PMP_CALCULAR_APLICA_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Scripts\HANA\EXD_SP_PM_H2H_DATOS_TXT_BBVA.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

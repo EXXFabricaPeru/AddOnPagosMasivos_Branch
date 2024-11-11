@@ -38,14 +38,14 @@ BEGIN
 	CTE_PROV AS
 	(
 		select 
-			'2'																		as "TipoRegistro",
-			case when T3."BankCode" != '002' then 'B' else T4."UsrNumber2" end		as "TipoCuentaAbono",
-			case when T3."BankCode" != '002' 
+			'2'																				as "TipoRegistro",
+			case when T1."U_EXP_CODBANCO" != '002' then 'B' else T4."UsrNumber2" end		as "TipoCuentaAbono",
+			case when T1."U_EXP_CODBANCO" != '002' 
 			then 
-				left(replace(T4."U_EXM_INTERBANCARIA",'-',''),20) 
+				left(replace(T1."U_EXP_NROCTAPROV",'-',''),20) 
 			else 
-				replace(T4."Account",'-','') end									as "NroCtaAbono",
-			'1'																		as "ModalidadDePago",
+				replace(T1."U_EXP_NROCTAPROV",'-','') end									as "NroCtaAbono",
+			'1'																				as "ModalidadDePago",
 			ifnull(case T3."U_EXX_TIPODOCU" 
 					when '4' then '3'
 					when '7' then '4'

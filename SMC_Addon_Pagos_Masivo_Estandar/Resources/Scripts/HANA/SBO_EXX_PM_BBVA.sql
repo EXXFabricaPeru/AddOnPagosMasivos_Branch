@@ -135,7 +135,7 @@ SELECT
 	WHEN 
 		'CG' THEN replicate(' ',20)
 	ELSE
-		CASE (SELECT "BankCode" FROM OCRB WHERE "CardCode" = T1."U_EXP_CARDCODE" AND "Account"=T1."U_EXP_NROCTAPROV") WHEN :bankCode THEN
+		CASE T1."U_EXP_CODBANCOPROV" WHEN :bankCode THEN
 				/*
 				REPLACE(
 				LEFT(LEFT(REPLACE(T1."U_EXP_NROCTAPROV",'-',''),3)
@@ -169,9 +169,9 @@ SELECT
 		ELSE 'F' END
 	WHEN 'CG' THEN 'F'
 	ELSE ' ' END AS "093-093(1)",--Tipo de documetno
-	rpad(coalesce(T4."NumAtCard",T5."NumAtCard",TO_VARCHAR(T6."TransId"),TO_VARCHAR(T7."DocEntry")),12,' ') AS "094-105(12)",--Número de documento
+	rpad(coalesce(left(T1."U_EXP_NROSUNAT",12),''),12,' ') AS "094-105(12)",--Número de documento
 	'N' as "106-106(1)",--Abono Agrupado - S=Abono Agrupado N=Abono Individual
-	rpad(coalesce(T4."NumAtCard",T5."NumAtCard",TO_VARCHAR(T6."TransId"),TO_VARCHAR(T7."DocEntry")),40,' ')  as "107-146(40)",--Referencia-Opcional
+	rpad(coalesce(left(T1."U_EXP_NROSUNAT",12),''),40,' ')  as "107-146(40)",--Referencia-Opcional
 	replicate(' ',1)  as "147-147(1)",--Indicador de aviso -opcional
 	replicate(' ',50)  as "148-197(50)",--Medio de aviso-opcional
 	rpad(left(LIMPIA_CADENA(T1."U_EXP_CARDNAME"),30),30,' ')  as "198-227(30)",--Persona Contacto - opcional

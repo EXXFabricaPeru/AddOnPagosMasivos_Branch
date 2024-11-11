@@ -256,7 +256,7 @@ namespace SMC_APM.Controladores
             BubbleEvent = true;
             try
             {
-                var activeForm = sboApplication.Forms.ActiveForm;
+
                 if (pVal.BeforeAction)
                 {
                     switch (pVal.MenuUID)
@@ -323,6 +323,7 @@ namespace SMC_APM.Controladores
                             formConfiguracionH2H = new FormConfiguracionH2H(FormConfiguracionH2H.TYPE + DateTime.Now.ToString("hhmmss"));
                             break;
                         case "1284":
+                            var activeForm = sboApplication.Forms.ActiveForm;
                             switch (activeForm.TypeEx)
                             {
                                 case "FrmPMP":
@@ -331,14 +332,15 @@ namespace SMC_APM.Controladores
                             }
                             break;
                         case "1286":
-                            switch (activeForm.TypeEx)
+                            var activeForm2 = sboApplication.Forms.ActiveForm;
+                            switch (activeForm2.TypeEx)
                             {
                                 case "FrmPMP":
                                     var rslt = sboApplication.MessageBox("Al realizar esta acción el estado del formulario cambiará a Cerrado, y se liberarán los documentos con errores para ser procesados en otro escenario de pago \n ¿Desea proceder con esta acción?", 1, "SI", "NO");
                                     if (rslt != 1) BubbleEvent = false;
                                     else
                                     {
-                                        ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).AnularPagosConError();
+                                        ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm2.UniqueID)).AnularPagosConError();
                                     }
                                     break;
                             }
@@ -350,6 +352,7 @@ namespace SMC_APM.Controladores
                     switch (pVal.MenuUID)
                     {
                         case "1282":
+                            var activeForm = sboApplication.Forms.ActiveForm;
                             switch (activeForm.TypeEx)
                             {
                                 case "FrmPMP":
@@ -363,18 +366,30 @@ namespace SMC_APM.Controladores
                             }
                             break;
                         case "1281":
-                            switch (activeForm.TypeEx)
+                            var activeForm2 = sboApplication.Forms.ActiveForm;
+                            switch (activeForm2.TypeEx)
                             {
                                 case "FrmPMP":
-                                    ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).HabilitarControlesEnModoBuscar();
+                                    ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm2.UniqueID)).HabilitarControlesEnModoBuscar();
+                                    break;
+                                case "FrmEP":
+                                    ((FormEscenarioPago)UIFormFactory.GetFormByUID(activeForm2.UniqueID)).HabilitarControlesEnModoBuscar();
                                     break;
                                 default:
                                     break;
                             }
                             break;
                     }
-                    var menuSBO = sboApplication.Menus.Item(pVal.MenuUID);
-                    if (menuSBO != null && menuSBO.String.Contains("EXD_PM_CONFAUT")) new Form_EXD_PM_CONFAUT(activeForm.UniqueID);
+
+                    if (sboApplication.Menus.Exists(pVal.MenuUID))
+                    {
+                        var menuSBO = sboApplication.Menus.Item(pVal.MenuUID);
+                        if (menuSBO != null && menuSBO.String.Contains("EXD_PM_CONFAUT"))
+                        {
+                            var activeForm = sboApplication.Forms.ActiveForm;
+                            new Form_EXD_PM_CONFAUT(activeForm.UniqueID);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

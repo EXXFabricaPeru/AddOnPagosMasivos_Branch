@@ -23,9 +23,9 @@ BEGIN
 	,"@EXD_PM_CONFAUT"	T3
 	inner join "@EXD_PM_CONFAUT1"	T4 on T3."Code" = T4."Code" 
 	where
-	T0."U_TIPO_DOC" = T3."U_TIPO_DOC"
+	T0."U_AUTORIZAR_POR" = T3."U_TIPO_DOC"
 	and T0."U_ESTADO" = 'E'
-	and T0."U_TIPO_DOC" = :tipoDocumento
+	and T0."U_AUTORIZAR_POR" = :tipoDocumento
 	and ifnull(T0."Canceled",'') != 'Y'
 	and 
 	(
