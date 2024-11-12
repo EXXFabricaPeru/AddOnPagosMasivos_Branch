@@ -27,6 +27,7 @@ namespace SMC_APM.View.USRForms
         private SAPbouiCOM.DBDataSource dbsPMP1 = null;
         private SAPbouiCOM.DBDataSource dbsPMP2 = null;
         private SAPbouiCOM.DBDataSource dbsPMP3 = null;
+        private SAPbouiCOM.DBDataSource dbsPMP4 = null;
         private SAPbobsCOM.UserTable utblConf = null;
         private bool esAgenteRetenedor = true;
         private bool esTerceroRetenedor = true;
@@ -48,8 +49,10 @@ namespace SMC_APM.View.USRForms
                 dbsPMP1 = Form.DataSources.DBDataSources.Item("@EXP_PMP1");
                 dbsPMP2 = Form.DataSources.DBDataSources.Item("@EXP_PMP2");
                 dbsPMP3 = Form.DataSources.DBDataSources.Item("@EXP_PMP3");
+                dbsPMP4 = Form.DataSources.DBDataSources.Item("@EXP_PMP4");
                 utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
 
+                dbsPMP4.Clear();
                 // Deshabilito la opcion de restablecer
                 Form.EnableMenu("1285", false);
                 // Deshabilito la opcion de cancelar
@@ -307,6 +310,18 @@ namespace SMC_APM.View.USRForms
                     Matrix.AutoResizeColumns();
                     Form.GetUserDataSource("UD_TOTAL").Value = lstDocumentos.Where(d => d.Moneda == "SOL").Sum(d => d.Importe).ToString();
                     Form.GetUserDataSource("UD_TOT_USD").Value = lstDocumentos.Where(d => d.Moneda == "USD").Sum(d => d.Importe).ToString();
+
+                    //Agrego los bancos de la consulta
+                    var nroLinea = 0;
+                    dbsPMP4.Clear();
+                    var lstBancos = lstDocumentos.Select(d => d.CodBanco).Distinct();
+                    foreach (var bco in lstBancos)
+                    {
+                        dbsPMP4.InsertRecord(nroLinea);
+                        dbsPMP4.Offset = nroLinea;
+                        dbsPMP4.SetValue("U_COD_BANCO", nroLinea, bco);
+                        nroLinea++;
+                    }
                 }
                 return true;
             }));
@@ -703,6 +718,23 @@ namespace SMC_APM.View.USRForms
                     {
                         Globales.Aplication.StatusBar.SetText(ex.Message, BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
                         return false;
+                    }
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_37", e =>
+            {
+                if (!e.BeforeAction)
+                {                   
+                    var formUID = string.Concat(FormMetodoEnvBanco.TYPE, new Random().Next(0, 1000));
+                    if (!UIFormFactory.FormUIDExists(formUID))
+                    {
+                        actualizoNroOpe = true;
+                        UIFormFactory.AddUSRForm(formUID, new FormMetodoEnvBanco(formUID, dbsPMP4, () =>
+                        {
+                            Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                        }));
                     }
                 }
                 return true;

@@ -211,6 +211,7 @@
     <Compile Include="View\USRForms\FormConfiguracionH2H.cs" />
     <Compile Include="View\USRForms\FormEscenarioPago.cs" />
     <Compile Include="View\USRForms\FormLiberarTercero.cs" />
+    <Compile Include="View\USRForms\FormMetodoEnvBanco.cs" />
     <Compile Include="View\USRForms\FormNumeroDeOperacion.cs" />
     <Compile Include="View\USRForms\FormPagoMasivo.cs" />
     <Compile Include="View\USRForms\FormSeriesPorSucursal.cs" />
@@ -272,6 +273,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\FrmConfH2H.srf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\FrmMetEnvBanco.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\FrmPMNroOpe.srf">
