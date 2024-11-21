@@ -35,10 +35,12 @@ namespace SMC_APM.View.USRForms
         private bool tieneSucursales = false;
         private bool actualizoNroOpe = false;
         private bool esHostToHost = false;
+        private Dictionary<string, string> dcMetodoEnvPorBanco = null;
 
         public FormPagoMasivo(string id) : base(TYPE, MENU, id, PATH)
         {
             if (!UIFormFactory.FormUIDExists(id)) UIFormFactory.AddUSRForm(id, this);
+            dcMetodoEnvPorBanco = new Dictionary<string, string>();
         }
 
         protected override void CargarFormularioInicial()
@@ -73,7 +75,7 @@ namespace SMC_APM.View.USRForms
                     if (utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y")
                     {
                         esHostToHost = true;
-                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Caption = "Enviar H2H";
+                        ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Caption = "Gen. TXT / Env. H2H";
                         ((SAPbouiCOM.Button)Form.Items.Item("btnGenTXT").Specific).Item.Description = "H2H";
                     }
                     else
@@ -290,7 +292,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_NMROCUOTA", lineNum, doc.NroCuota);
                         dbsPMP1.SetValue("U_EXP_NRODOCUMENTOSN", lineNum, doc.NroDocumentoSN);
                         dbsPMP1.SetValue("U_EXP_APLSRERTN", lineNum, doc.AplSreRetencion);
-                        dbsPMP1.SetValue("U_EXP_ESTADO", lineNum, string.Empty);
+                        dbsPMP1.SetValue("U_EXP_ESTADO", lineNum, " ");
                         dbsPMP1.SetValue("U_EXP_NROCTAPROV", lineNum, doc.NroCtaProveedor);
                         dbsPMP1.SetValue("U_EXP_CODBANCOPROV", lineNum, doc.CodBncProveedor.ToString());
                         dbsPMP1.SetValue("U_EXP_CODRETENCION", lineNum, doc.CodRetencion);
@@ -299,7 +301,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_GLOSAASIENTO", lineNum, doc.GlosaAsiento);
                         dbsPMP1.SetValue("U_EXP_CARDCODE_FACTO", lineNum, doc.CardCodeFactoring);
                         dbsPMP1.SetValue("U_EXP_CARDNAME_FACTO", lineNum, doc.CardNameFactoring);
-                        dbsPMP1.SetValue("U_EXP_ESTADO2", lineNum, string.Empty);
+                        dbsPMP1.SetValue("U_EXP_ESTADO2", lineNum, " ");
                         dbsPMP1.SetValue("U_EXP_AFECTO_RETENCION", lineNum, doc.AfectoRetencion);
                         dbsPMP1.SetValue("U_EXP_TIENE_RETENCION", lineNum, doc.TieneRetencion);
                         dbsPMP1.SetValue("U_EXP_APLICA_RETENCION", lineNum, doc.AplicaRetencion);
@@ -382,6 +384,7 @@ namespace SMC_APM.View.USRForms
 
                     if (rslt == 1)
                     {
+
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                         Matrix.FlushToDataSource();
                         var pgoDS = dbsPMP1.GetAsXML();
@@ -531,11 +534,12 @@ namespace SMC_APM.View.USRForms
                     var cntErr = 0;
                     var tipoEnvio = Form.Items.Item("btnGenTXT").Description;
                     if (Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Items.Item("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                    /*
                     if (tipoEnvio == "H2H" && dbsOPMP.GetValueExt("U_EXP_ENVIADO_H2H") == "Y")
                     {
                         Globales.Aplication.MessageBox("Estos documentos ya se enviaron a Host to Host, esperando respuesta de los bancos...");
                         return true;
-                    }
+                    }*/
                     Globales.Aplication.StatusBar.SetText("Iniciando generación de archivos para bancos", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                     Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                     Matrix.FlushToDataSource();
@@ -546,6 +550,13 @@ namespace SMC_APM.View.USRForms
                     var pgrssBar = (SAPbouiCOM.ProgressBar)Globales.Aplication.StatusBar.CreateProgressBar(null, 1, false);
                     var formatoScotia = dbsOPMP.GetValueExt("U_EXP_FORMA_SCOTIA");
 
+                    var EXP_PMP4 = Form.GetDBDataSource("@EXP_PMP4");
+                    dcMetodoEnvPorBanco.Clear();
+                    for (int i = 0; i < EXP_PMP4.Size; i++)
+                    {
+                        dcMetodoEnvPorBanco.Add(EXP_PMP4.GetValue("U_COD_BANCO", i), EXP_PMP4.GetValue("U_COD_METODO", i));
+                    }
+
                     try
                     {
                         foreach (var banc in lstBancos)
@@ -553,15 +564,17 @@ namespace SMC_APM.View.USRForms
                             try
                             {
                                 var codPais = ObtenerPaisBanco(banc.Banco, banc.CtaBanco);
-                                if (tipoEnvio == "TXT")
+                                var metodoEnvio = dcMetodoEnvPorBanco[banc.Banco];
+                                if (esHostToHost && metodoEnvio == "2")
                                 {
-                                    PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais, formatoScotia);
-                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                    if (PagoMasivoController.ValidaArchivoH2HEstado(docEntry, banc.Banco, banc.Sucursal, "EN")) continue;
+                                    PagoMasivoController.GenerarTXTH2H(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
+                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
                                 else
                                 {
-                                    PagoMasivoController.GenerarTXTH2H(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
-                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                                    PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais, formatoScotia);
+                                    Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
                             }
                             catch (Exception ex)
@@ -726,14 +739,14 @@ namespace SMC_APM.View.USRForms
             Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_37", e =>
             {
                 if (!e.BeforeAction)
-                {                   
+                {
                     var formUID = string.Concat(FormMetodoEnvBanco.TYPE, new Random().Next(0, 1000));
                     if (!UIFormFactory.FormUIDExists(formUID))
                     {
                         actualizoNroOpe = true;
                         UIFormFactory.AddUSRForm(formUID, new FormMetodoEnvBanco(formUID, dbsPMP4, () =>
                         {
-                            Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                            if (Form.Mode == BoFormMode.fm_OK_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                         }));
                     }
                 }
@@ -765,6 +778,7 @@ namespace SMC_APM.View.USRForms
                     }
                     Form.GetUserDataSource("UD_TOTAL").Value = totPgoMsv.ToString();
                     Form.GetUserDataSource("UD_TOT_USD").Value = totPgoMsvUSD.ToString();
+
                     HabilitarControlesPorEstado(estadoDoc);
                 }
                 return true;
@@ -1006,16 +1020,34 @@ namespace SMC_APM.View.USRForms
         {
             Globales.Aplication.StatusBar.SetText("Iniciando generación de pagos...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
             var existenErrores = false;
+            var pendienteRespuestaH2H = false;
             var cnds = (SAPbouiCOM.Conditions)Globales.Aplication.CreateObject(BoCreatableObjectType.cot_Conditions);
             var cnd = cnds.Add();
             cnd.Alias = "DocEntry";
             cnd.Operation = BoConditionOperation.co_EQUAL;
             cnd.CondVal = docEntryForm.ToString();
 
+            var EXP_PMP4 = Form.GetDBDataSource("@EXP_PMP4");
+            dcMetodoEnvPorBanco.Clear();
+            for (int i = 0; i < EXP_PMP4.Size; i++)
+            {
+                dcMetodoEnvPorBanco.Add(EXP_PMP4.GetValue("U_COD_BANCO", i), EXP_PMP4.GetValue("U_COD_METODO", i));
+            }
+
             foreach (var banc in lstBancos)
             {
+                pendienteRespuestaH2H = false;
                 //banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco
                 var lstPagosAux = lstPagos.Where(p => p.CodSucursal == banc.Sucursal && p.MetodoPago.Banco == banc.Banco && p.MetodoPago.Cuenta == banc.CtaBanco);
+                if (dcMetodoEnvPorBanco[banc.Banco] == "2")
+                {
+                    if (!PagoMasivoController.ValidaArchivoH2HEstado(docEntryForm, banc.Banco, banc.Sucursal, "PR"))
+                    {
+                        pendienteRespuestaH2H = true;
+                        continue;
+                    }
+                    lstPagosAux = lstPagos.Where(p => p.CodSucursal == banc.Sucursal && p.MetodoPago.Banco == banc.Banco && p.MetodoPago.Cuenta == banc.CtaBanco && p.EstadoH2H == "OK");
+                }
                 //Globales.Company.StartTransaction();
                 Globales.Aplication.StatusBar.SetText($"Iniciando generacion de pagos de la sucursal: { banc.Sucursal}, banco: {banc.Banco}, moneda: {banc.Moneda}", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
                 var ejecucionOK = await Task.Run(() => GenerarPagosDocumentos(docEntryForm, lstPagosAux));
@@ -1080,10 +1112,17 @@ namespace SMC_APM.View.USRForms
             //progressBar.Stop();
             if (!existenErrores)
             {
-                Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
-                dbsOPMP.SetValueExt("Status", "C");
-                if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
-                Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                if (pendienteRespuestaH2H)
+                {
+                    Globales.Aplication.StatusBar.SetText($"Pendiente la respuesta de los envios H2H...", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Warning);
+                }
+                else
+                {
+                    Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
+                    dbsOPMP.SetValueExt("Status", "C");
+                    if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
+                    Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                }
             }
             else
             {
@@ -1195,6 +1234,7 @@ namespace SMC_APM.View.USRForms
 
             var lstPagosPrev = _dsrXmlDBDataSource.Rows.Where(r =>
             r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_SLC_PAGO")).Value == "Y"
+            && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_ESTADO_H2H"))?.Value != "ER"
             && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value == sucursal.ToString()
             && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value == banco
             && r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value == codCtaBanco);
@@ -1392,11 +1432,12 @@ namespace SMC_APM.View.USRForms
 
             var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
             var strXMLDTDocs = dbsPMP1.GetAsXML();
-            var xr = XmlReader.Create(new StringReader(strXMLDTDocs));
+            var xr = XmlReader.Create(new StringReader(strXMLDTDocs), new XmlReaderSettings { IgnoreWhitespace = false });
 
             var _dsrXmlDBDataSource = (XMLDBDataSource)_xmlSerializer.Deserialize(xr);
 
             _dsrXmlDBDataSource.Rows = _dsrXmlDBDataSource.Rows.ToList().Where(r => r.Cells.FirstOrDefault(c => c.Uid == "U_EXP_SLC_PAGO").Value == "Y").ToArray();
+
 
             if (_dsrXmlDBDataSource.Rows.Length == 0) throw new Exception("Debe seleccionar al menos un documento para el pago masivo");
 

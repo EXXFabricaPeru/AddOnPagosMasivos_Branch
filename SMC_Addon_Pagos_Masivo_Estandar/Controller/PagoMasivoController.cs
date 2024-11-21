@@ -392,7 +392,7 @@ namespace SMC_APM.Controller
                 var refTransfME = dbsCab.GetValue("U_EXP_NROREF_ME", 0).Trim();
                 xDoc = XDocument.Parse((string)obj);
                 IEnumerable<XElement> xElements = null;
-                if (esHostToHost)
+                if (false)
                 {
                     xElements = xDoc.XPathSelectElements("dbDataSources/rows/row").Where(w => w.Descendants("cell")
                     .Any(a => a.Element("uid").Value.Equals("U_EXP_SLC_PAGO") && a.Element("value").Value.Equals("Y"))
@@ -418,7 +418,7 @@ namespace SMC_APM.Controller
                     CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value,
                     AplicaRetencion = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_APLICA_RETENCION")).FirstOrDefault()?.Element("value").Value,
                     CardCodeFactoring = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CARDCODE_FACTO")).FirstOrDefault()?.Element("value").Value,
-
+                    EstadoH2H = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_ESTADO_H2H")).FirstOrDefault()?.Element("value").Value
                 }).Select(s => new SBOPago
                 {
                     CodSucursal = Convert.ToInt32(s.Key.CodSucursal),
@@ -437,6 +437,7 @@ namespace SMC_APM.Controller
                     sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value == "N" ?
                     Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value) : 0.00)),
                     AplicaRetencion = s.Key.AplicaRetencion,
+                    EstadoH2H = s.Key.EstadoH2H,
                     MetodoPago = new SBOMetodoPago
                     {
                         Tipo = s.Key.MedioDePago,
@@ -1036,6 +1037,15 @@ namespace SMC_APM.Controller
             var sqlQry = $"update \"@EXD_PM_LOGENVHTH\" set \"U_ESTADO\" = '{codEstado}' where \"Code\" = '{codeLog}'";
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
+        }
+
+        public static bool ValidaArchivoH2HEstado(int codPM, string codBanco, int codSucursal, string estado)
+        {
+            var sqlQry = $"select 'E' from \"@EXD_PM_LOGENVHTH\" where U_ID_PAGMSV = '{codPM}' and U_COD_BANCO = '{codBanco}' and U_COD_SUCURSAL = '{codSucursal}' and U_ESTADO = '{estado}'";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+
+            return !recSet.EoF;
         }
 
         #region Obsoleto

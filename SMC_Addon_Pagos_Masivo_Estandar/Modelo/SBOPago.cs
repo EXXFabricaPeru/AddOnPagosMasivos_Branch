@@ -27,6 +27,7 @@ namespace SMC_APM.Modelo
         public string CorrelativoRendicion { get; set; }
         public string CuentaCheque { get; set; }
         public string AplicaRetencion { get; set; }
+        public string EstadoH2H { get; set; }
         public SBOMetodoPago MetodoPago { get; set; }
         public IEnumerable<SBOPagoDetalle> Detalle { get; set; }
         public IEnumerable<int> ExtLineasDS { get; set; }

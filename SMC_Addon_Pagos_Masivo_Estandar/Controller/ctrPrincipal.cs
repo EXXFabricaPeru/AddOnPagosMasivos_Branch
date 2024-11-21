@@ -435,7 +435,7 @@ namespace SMC_APM.Controladores
             BubbleEvent = true;
             try
             {
-                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV"
+                if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV" || pVal.FormTypeEx == FormMetodoEnvBanco.TYPE
                     || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE || pVal.FormTypeEx == FormNumeroDeOperacion.TYPE || pVal.FormTypeEx == "EXD_PM_CONFAUT")
                 {
                     IUSAP uiForm = null;

@@ -23,12 +23,15 @@ namespace SMC_APM.View.USRForms
         public FormMetodoEnvBanco(string id, SAPbouiCOM.DBDataSource dbsPMP4, Action pmAction) : base(TYPE, MENU, id, PATH)
         {
             _dbsPMP4Main = dbsPMP4;
+            _pmAction = pmAction;
+            _dbsPMP4.Clear();
             var position = 0;
             for (int i = 0; i < _dbsPMP4Main.Size; i++)
             {
                 _dbsPMP4.InsertRecord(position);
                 _dbsPMP4.Offset = position;
                 _dbsPMP4.SetValue("U_COD_BANCO", position, _dbsPMP4Main.GetValue("U_COD_BANCO", i));
+                _dbsPMP4.SetValue("U_COD_METODO", position, _dbsPMP4Main.GetValue("U_COD_METODO", i));
                 position++;
             }
             mtxBancos.LoadFromDataSource();
@@ -36,13 +39,26 @@ namespace SMC_APM.View.USRForms
 
         protected override void CargarEventos()
         {
-            mtxBancos = (SAPbouiCOM.Matrix)Form.Items.Item("Item_0").Specific;
-            _dbsPMP4 = Form.DataSources.DBDataSources.Item("@EXP_PMP4");
+            Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_ITEM_PRESSED, "1", e =>
+            {
+                if (e.BeforeAction && Form.Mode == SAPbouiCOM.BoFormMode.fm_UPDATE_MODE)
+                {
+                    mtxBancos.FlushToDataSource();
+                    for (int i = 0; i < _dbsPMP4.Size; i++)
+                    {
+                        _dbsPMP4Main.SetValue("U_COD_BANCO", i, _dbsPMP4.GetValue("U_COD_BANCO", i));
+                        _dbsPMP4Main.SetValue("U_COD_METODO", i, _dbsPMP4.GetValue("U_COD_METODO", i));
+                    }
+                    _pmAction();
+                }
+                return true;
+            }));
         }
 
         protected override void CargarFormularioInicial()
         {
-
+            mtxBancos = (SAPbouiCOM.Matrix)Form.Items.Item("Item_0").Specific;
+            _dbsPMP4 = Form.DataSources.DBDataSources.Item("@EXP_PMP4");
         }
     }
 }
