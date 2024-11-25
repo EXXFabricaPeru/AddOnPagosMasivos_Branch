@@ -75,12 +75,12 @@ namespace SMC_APM.Controller
                     , recordset.Fields.Item(2).Value, recordset.Fields.Item(3).Value);
         }
 
-        public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha, int codSucursal)
+        public static IEnumerable<PMPDocumento> ListarDocumentosParaPagos(string fecha, int codSucursal, string codPrioridad, int tipoDocumento)
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"EXEC EXP_SP_PMP_ListarDocumentosPorFecha '{fecha}','{codSucursal}'";
+            var sqlQry = $"EXEC EXP_SP_PMP_ListarDocumentosPorFecha '{fecha}','{codSucursal}','{codPrioridad}','{tipoDocumento}'";
             if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                sqlQry = $"CALL EXP_SP_PMP_ListarDocumentosPorFecha('{fecha}','{codSucursal}')";
+                sqlQry = $"CALL EXP_SP_PMP_ListarDocumentosPorFecha('{fecha}','{codSucursal}','{codPrioridad}','{tipoDocumento}')";
             var rslt = QueryResultManager.executeQueryAsType(sqlQry, dc =>
             {
                 return new PMPDocumento

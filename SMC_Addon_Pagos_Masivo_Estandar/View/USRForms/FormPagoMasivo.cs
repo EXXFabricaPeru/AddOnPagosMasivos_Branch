@@ -162,6 +162,15 @@ namespace SMC_APM.View.USRForms
 
                 tieneSucursales = (adminInfo.EnableBranches == SAPbobsCOM.BoYesNoEnum.tYES);
 
+                var cmbPrioridad = Form.GetComboBox("Item_37");
+                cmbPrioridad.ValidValues.Add(string.Empty, string.Empty);
+                recSet.DoQuery("select \"Code\",\"Name\" from \"@EXX_PRIPAG\"");
+                while (!recSet.EoF)
+                {
+                    cmbPrioridad.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    recSet.MoveNext();
+                }
+
                 /*
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -202,6 +211,8 @@ namespace SMC_APM.View.USRForms
             dbsOPMP.SetValue("U_EXP_ESTADOEJEC", 0, "0");
             dbsOPMP.SetValue("U_EXP_TIPODECAMBIO", 0, sboBOB.GetCurrencyRate("USD", DateTime.Today).Fields.Item(0).Value.ToString());
             dbsOPMP.SetValue("U_EXP_FORMA_SCOTIA", 0, "PV");
+            dbsOPMP.SetValue("U_EXP_COD_PRIORIDAD", 0, "");
+            dbsOPMP.SetValue("U_EXP_TIPO_DOCUMENTO", 0, "0");
             dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValue("Series", 0).Trim(), Form.BusinessObject.Type).ToString());
             Form.GetUserDataSource("UD_TOTAL").Value = "0.00";
             Form.GetUserDataSource("UD_TOT_USD").Value = "0.00";
@@ -258,7 +269,9 @@ namespace SMC_APM.View.USRForms
                 {
                     var fecha = dbsOPMP.GetValue("U_EXP_FECHA", 0).Trim();
                     var codSucursal = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_COD_SUCURSAL").Trim());
-                    var lstDocumentos = PagoMasivoController.ListarDocumentosParaPagos(fecha, codSucursal);
+                    var codPrioridad = dbsOPMP.GetValueExt("U_EXP_COD_PRIORIDAD");
+                    var tipoDocumento = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_TIPO_DOCUMENTO"));
+                    var lstDocumentos = PagoMasivoController.ListarDocumentosParaPagos(fecha, codSucursal, codPrioridad, tipoDocumento);
                     var lineNum = 0;
 
                     dbsPMP1.Clear();
@@ -858,6 +871,8 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("btnGrbEnv").Enabled = false;
             Form.Items.Item("Item_1").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_22").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.Items.Item("Item_37").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.Items.Item("Item_39").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("btnLstDocs").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_3").Enabled = false;
             Form.Items.Item("Item_5").Enabled = false;
