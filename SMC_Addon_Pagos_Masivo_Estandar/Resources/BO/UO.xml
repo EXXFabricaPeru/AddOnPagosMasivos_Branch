@@ -30,6 +30,9 @@
       <row>
         <TableName>EXP_PMP3</TableName>
       </row>
+      <row>
+        <TableName>EXP_PMP4</TableName>
+      </row>
 		</UDO1>
 		<UDO2>
 			<row>

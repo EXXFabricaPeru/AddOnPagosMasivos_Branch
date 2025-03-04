@@ -13,6 +13,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml.XPath;
@@ -116,7 +117,9 @@ namespace SMC_APM.Controller
                     CardNameFactoring = dc["CardNameFacto"],
                     AfectoRetencion = dc["AfectoRetencion"],
                     AplicaRetencion = dc["AplicaRetencion"],
-                    TieneRetencion = dc["TieneRetencion"]
+                    TieneRetencion = dc["TieneRetencion"],
+                    CodPrioridad = dc["CodPrioridad"],
+                    NroLineaEP = Convert.ToInt32(dc["NroLineaEP"])
                 };
             });
             return rslt;
@@ -245,10 +248,12 @@ namespace SMC_APM.Controller
         public static int GenerarPagoEfectuadoSBO(SBOPago pago, bool tieneSucursales)
         {
             var row = 0;
+            var sn = (SAPbobsCOM.BusinessPartners)Globales.Company.GetBusinessObject(BoObjectTypes.oBusinessPartners);
             var sboPayments = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(BoObjectTypes.oVendorPayments);
             var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
             var tblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
             var mndLoc = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
+            sn.GetByKey(pago.CodigoSN);
             sboPayments.BPLID = pago.CodSucursal;
             sboPayments.Series = pago.CodSerieSBO;
             sboPayments.CardCode = pago.CodigoSN;
@@ -257,7 +262,8 @@ namespace SMC_APM.Controller
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
             if (pago.Moneda != mndLoc) sboPayments.DocRate = pago.TipoCambio;
-            sboPayments.DocType = pago.CodigoSN.StartsWith("C") ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
+            sboPayments.DocType = (sn.CardType == BoCardTypes.cCustomer) ? BoRcptTypes.rCustomer : BoRcptTypes.rSupplier;
+            sboPayments.CounterReference = pago.Referencia;
             //if (pago.ObjType == 24) sboPayments.CheckAccount = ((EL.Pago)documento).CuentaCheque;
             sboPayments.Remarks = "";
             sboPayments.JournalRemarks = "";
@@ -724,9 +730,8 @@ namespace SMC_APM.Controller
 
                 }
 
-                var codeLogEnvio = GuardarEnvioH2HEnLog(docEntry, codBanco, codSucursal.ToString(), nombreArchivo);
-
-                //Encriptacion
+                var codeLogEnvio = GuardarEnvioH2HEnLog(docEntry, codBanco, codSucursal.ToString(), codMoneda, nombreArchivo);
+                //Envio a SFTP bancos           
                 if (codBanco == "011")
                 {
                     //var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileName(rutaFisica) + ".pgp");
@@ -737,7 +742,7 @@ namespace SMC_APM.Controller
                 }
                 else if (codBanco == "009")
                 {
-                    var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.GetFileNameWithoutExtension(rutaFisica) + ".gpg");
+                    var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.ChangeExtension(rutaFisica, ".gpg"));
                     EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
                     rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
                     HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
@@ -834,7 +839,12 @@ namespace SMC_APM.Controller
             sboPayments.DueDate = pago.FechaVencimiento;
             sboPayments.TaxDate = pago.FechaDocumento;
             sboPayments.DocCurrency = pago.Moneda;
-            sboPayments.DocRate = pago.TipoCambio;
+
+            if (sboBOB.GetLocalCurrency().Fields.Item(0).Value != pago.Moneda)
+            {
+                sboPayments.DocRate = pago.TipoCambio;
+            }
+
             sboPayments.DocType = SAPbobsCOM.BoRcptTypes.rAccount;
             sboPayments.ProjectCode = pago.CodigoProyecto;
             switch (pago.MetodoPago.Tipo)
@@ -973,9 +983,8 @@ namespace SMC_APM.Controller
             return Convert.ToInt32(rslt);
         }
 
-        private static string ObtenerNroOperacion(int docEntry, int codSucursal, string codBanco, string codCtaPago, string codMoneda)
+        public static string ObtenerNroOperacion(int docEntry, int codSucursal, string codBanco, string codCtaPago, string codMoneda)
         {
-
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             var sqlQry = $"select U_NRO_OPERACION from \"@EXP_PMP3\" where  \"DocEntry\" = '{docEntry}' and U_COD_SUCURSAL = '{codSucursal}' and U_COD_BANCO = '{codBanco}' and U_COD_CTAPAGO = '{codCtaPago}' and U_COD_MONEDA = '{codMoneda}'";
             recSet.DoQuery(sqlQry);
@@ -1006,7 +1015,7 @@ namespace SMC_APM.Controller
             return recSet.Fields.Item(0).Value == "Y";
         }
 
-        private static string GuardarEnvioH2HEnLog(int docEntryPM, string codBanco, string codSucursal, string idArchivo)
+        private static string GuardarEnvioH2HEnLog(int docEntryPM, string codBanco, string codSucursal, string codMoneda, string idArchivo)
         {
             var sqlQry = "select 'E'||right('00000000' || ltrim(right(coalesce(max(\"Code\"),'0'),8)+1),8) as \"Codigo\" from \"@EXD_PM_LOGENVHTH\"";
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
@@ -1017,6 +1026,7 @@ namespace SMC_APM.Controller
             utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_ID_PAGMSV").Value = docEntryPM.ToString();
             utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_COD_BANCO").Value = codBanco.ToString();
             utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_COD_SUCURSAL").Value = codSucursal.ToString();
+            utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_COD_MONEDA").Value = codMoneda.ToString();
             utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_ID_ARCHIVO").Value = idArchivo.ToString();
             utEXD_PM_LOGENVHTH.UserFields.Fields.Item("U_FECHA_ENVIO").Value = DateTime.Today;
             var rslt = utEXD_PM_LOGENVHTH.Add();
@@ -1039,13 +1049,45 @@ namespace SMC_APM.Controller
             recSet.DoQuery(sqlQry);
         }
 
-        public static bool ValidaArchivoH2HEstado(int codPM, string codBanco, int codSucursal, string estado)
+        public static bool ValidaArchivoH2HEstado(int codPM, string codBanco, int codSucursal, string codMoneda, string estado)
         {
-            var sqlQry = $"select 'E' from \"@EXD_PM_LOGENVHTH\" where U_ID_PAGMSV = '{codPM}' and U_COD_BANCO = '{codBanco}' and U_COD_SUCURSAL = '{codSucursal}' and U_ESTADO = '{estado}'";
+            var sqlQry = $"select 'E' from \"@EXD_PM_LOGENVHTH\" where U_ID_PAGMSV = '{codPM}' and U_COD_BANCO = '{codBanco}' and U_COD_SUCURSAL = '{codSucursal}' and U_COD_MONEDA = '{codMoneda}' and U_ESTADO = '{estado}'";
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
 
             return !recSet.EoF;
+        }
+
+        private static async Task<bool> EncriptarGPG(string rutaEntrada, string rutaSalida)
+        {
+            await Task.Run(() =>
+            {
+                string gpgHomeDir = @"C:\Program Files (x86)\GnuPG\bin";
+                string arguments = $@"--encrypt --always-trust --output ""{rutaSalida}"" --recipient contacta_seg.informatica@scotiabank.com.pe ""{rutaEntrada}""";
+                string path = @"C:\Program Files (x86)\GnuPG\bin\gpg.exe";
+
+                var procStartInfo = new ProcessStartInfo(path, arguments)
+                {
+                    WorkingDirectory = gpgHomeDir,
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true
+                };
+
+                var proc = new Process { StartInfo = procStartInfo };
+                proc.Start();
+                //proc.StandardInput.WriteLine("passphrasetest1");
+                proc.StandardInput.Flush();
+
+                //var result = proc.StandardOutput.ReadToEnd();
+                var error = proc.StandardError.ReadToEnd();
+
+                if (!string.IsNullOrWhiteSpace(error)) throw new InvalidOperationException(error);
+            });
+
+            return true;
         }
 
         #region Obsoleto

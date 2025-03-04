@@ -1,4 +1,4 @@
-CREATE PROCEDURE EXD_SP_PM_H2H_DATOS_TXT_SCOTIABANK 
+CREATE PROCEDURE EXD_SP_PM_H2H_DATOS_TXT_SCOTIABANK
 (
 	NroPM int,
 	NroSC int,
@@ -17,25 +17,26 @@ BEGIN
 			rpad(left(ifnull(T0."U_EXP_COMENTARIO",''),16),16)					as "Referencia2",
 			case T0."U_EXP_MONEDA_PAGO" when 'SOL' 
 			then '00' when 'USD' then '01' else '  ' end						as "MonedaPago",
-			rpad(replace(T1."Account",'-','')||'01',20,' ')						as "CuentaCargo",
+			replace(T1."Account",'-','')										as "CuentaCargo",
 			TO_VARCHAR(now(),'yyyyMMdd')										as "FechaOrdenPago",
 			rpad(left(T0."U_EXP_NRODOCUMENTOSN",11),11,' ')						as "RucProveedor",
 			left(rpad(left(T0."U_EXP_CARDNAME",60),60,' '),60)					as "NombreProveedor",
 			case when T0."U_EXP_CODBANCOPROV" = '009' then '2' else '4' end		as "FormaPago",
-			rpad(replace(T0."U_EXP_NROCTAPROV",'-','')||'01',20,' ')			as "CuentaAbono",
+			replace(T0."U_EXP_NROCTAPROV",'-','')								as "CuentaAbono",
 			TO_VARCHAR(now(),'yyyyMMdd')										as "FechaFact",
 			TO_VARCHAR(now(),'yyyyMMdd')										as "FechaVencFact",
-			rpad(ifnull(T0."U_EXP_NROSUNAT",''),20,' ')									as "NumeroFact",
+			rpad(ifnull(T0."U_EXP_NROSUNAT",''),20,' ')							as "NumeroFact",
 			lpad(floor(T0."U_EXP_IMPORTE"),9,'0')||
-			right(REPLACE(TO_VARCHAR(mod(round(T0."U_EXP_IMPORTE",2),1)),'.',''),2)								as "ImporteNeto",
+			right('0' || mod(round(T0."U_EXP_IMPORTE",2),1) * 100,2)			as "ImporteNeto",
+			--right(REPLACE(TO_VARCHAR(mod(round(T0."U_EXP_IMPORTE",2),1)),'.',''),2)								
 			'77'																as "ModuloRaiz",
 			EXD_FN_H2H_TXT_SCOTIABANK_DIGITO_CONTROL(TO_VARCHAR(now(),'yyMMdd')
 			,floor(T0."U_EXP_IMPORTE")
 			,case T0."U_EXP_MONEDA_PAGO" when 'SOL' then '00' when 'USD' then '01' end
 			,case when T0."U_EXP_CODBANCOPROV" <> '009' then '4' else case T3."UsrNumber2" when 'A' then '3' when 'C' then '2' else '1' end end
 			,case when T0."U_EXP_CODBANCOPROV" <> '009' then substring(lpad(trim(replace(T0."U_EXP_NROCTAPROV",'-','')),20,'0'),14,20) 
-			else left(replace(T0."U_EXP_NROCTAPROV",'-',''),7) end
-			,left(replace(T1."Account",'-',''),7))																	as "DigitoControl",
+			else trim(substring(trim(replace(T0."U_EXP_NROCTAPROV",'-','')),4)) end
+			,substring(trim(replace(T1."Account",'-','')),4))																	as "DigitoControl",
 			' '																	as "SubTipoPago",
 			'+'																	as "Signo",
 			rpad(ifnull(T2."E_Mail",''),50,' ')									as "EmailProveedor",
@@ -53,7 +54,7 @@ BEGIN
 		select
 			'99'																		as "Indicador",
 			lpad(sum(1),6,'0')															as "CantRegistros",
-			lpad(floor(sum("Importe")),13,'0')||right(REPLACE(TO_VARCHAR(mod(round(sum("Importe"),2),1)),'.',''),2)	as "ImporteTotal",
+			lpad(floor(sum("Importe")),13,'0') || right('0' || mod(round(sum("Importe"),2),1) * 100,2) as "ImporteTotal",
 			max("FechaOrdenPago")														as "FechaOrdenPago",
 			lpad(SUM(TO_INT("DigitoControl")),6,'0')									as "SumDigitoControl"
 		from CTE_DATOS_CAB
@@ -66,12 +67,12 @@ BEGIN
 			"Referencia1"		||
 			"Referencia2"		||
 			"MonedaPago"		||
-			"CuentaCargo"		||
+			rpad(trim(substring("CuentaCargo",4))||'000'||'01',20,' ')||
 			"FechaOrdenPago"	||
 			"RucProveedor"		||
 			"NombreProveedor"	||
 			"FormaPago"			||
-			"CuentaAbono"		||
+			rpad(trim(substring("CuentaAbono",4))||'000'||'01',20,' ')||
 			"FechaFact" 		||
 			"FechaVencFact" 	||
 			"NumeroFact"		||

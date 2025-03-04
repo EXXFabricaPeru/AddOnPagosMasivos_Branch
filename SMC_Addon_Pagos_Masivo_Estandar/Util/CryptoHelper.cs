@@ -147,7 +147,7 @@ namespace SMC_APM.Util
             return output;
         }
 
-        public static void EncryptPgpFile(string inputFilePath, string outputFilePath, byte[] publicKeyData, bool armor = true, bool withIntegrityCheck = true)
+        public static void EncryptPgpFile(string inputFilePath, string outputFilePath, byte[] publicKeyData, bool armor = false, bool withIntegrityCheck = true)
         {
             using (Stream publicKeyStream = new MemoryStream(publicKeyData))
             {
@@ -159,7 +159,7 @@ namespace SMC_APM.Util
                     PgpUtilities.WriteFileToLiteralData(dataCompressor.Open(outputBytes), PgpLiteralData.Binary, new FileInfo(inputFilePath));
 
                     dataCompressor.Close();
-                    PgpEncryptedDataGenerator dataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Cast5, withIntegrityCheck, new SecureRandom());
+                    PgpEncryptedDataGenerator dataGenerator = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes128, withIntegrityCheck, new SecureRandom());
 
                     dataGenerator.AddMethod(pubKey);
                     byte[] dataBytes = outputBytes.ToArray();

@@ -1,12 +1,15 @@
-CREATE PROCEDURE [dbo].[EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA] --'20231013'
+CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA --'20231013'
 (
 	@fechaEscPago date,
-	@codSucursal int
+	@codSucursal int,
+	@codPrioridad varchar(50),
+	@tipoDocumento int
 )
 as
 begin
 
-	declare @mndLoc varchar(5) = (select "MainCurncy" from OADM);
+	declare @mndLoc varchar(5) = (select "MainCurncy"  from OADM);
+	
 	
 	--Factura de proveedor
 	WITH RSLT1
@@ -24,7 +27,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref"+ '-'+cast(T4."FolioNum" as varchar)as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -36,12 +39,17 @@ begin
 			T1."U_CUENTA_PROV"			as "NroCtaProveedor",
 			T1."U_COD_BANCO"			as "CodBncProveedor",
 			T7."WTCode"					as "CodRetencion",
-			case when T4."DocCur" = @mndLoc then 1 * (T7."WTAmnt" - T7."ApplAmnt")
-			else 1 * (T7."WTAmntFC" - T7."ApplAmntFC") end as "MontoRetencion",
+			T1."U_RETENCION"/*case when T4."DocCur" = @mndLoc then 1 * (T7."WTAmnt" - T7."ApplAmnt")
+			else 1 * (T7."WTAmntFC" - T7."ApplAmntFC") end*/ as "MontoRetencion",
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -67,7 +75,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref"+'-'+cast(T4."FolioNum" as varchar) as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -84,7 +92,12 @@ begin
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -108,7 +121,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			T4."FolioPref"+'-'+cast(T4."FolioNum" as varchar) as "NroDocSUNAT",
+			T4."NumAtCard" 				as "NroDocSUNAT",
 			T4."DocStatus"				as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -124,7 +137,12 @@ begin
 			T4."DocRate"				as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"	
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -148,7 +166,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'140'						as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			T4."U_EXX_NUMEREND" 		as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."CardCode"				as "CardCode",
 			T4."CardName"				as "CardName",
@@ -164,7 +182,12 @@ begin
 			0							as "TCDocumento",
 			T4."JrnlMemo"				as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -185,9 +208,9 @@ begin
 			T3."BankCode" 				as "CodBanco",
 			T2."AcctCode" 				as "CodCtaBanco",
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
-			T1."U_DOCENTRY"			as "DocEntryDocumento",
+			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			T4."ObjType"				as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			T4."Ref2" 					as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
@@ -204,13 +227,19 @@ begin
 			T4."FCCredit"/(case when T4."Credit" = 0 then 1 else T4."Credit" end) as "TCDocumento",
 			(select TX0."Memo" from OJDT TX0 where TX0."TransId" = T4."TransId")	as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"		as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"		as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T7."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'AS'
-		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"	
+		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
+		inner 	join OJDT				T7 on T4."TransId"		= T7."TransId"	
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"						 
 		where  T0."U_FECHA_PAGO" = 		@fechaEscPago 
 		and T1."U_NRO_LINEA_AS" = T4."Line_ID" 
@@ -235,7 +264,7 @@ begin
 			T1."U_NRO_CTA_PAGO" 		as "NumCtaBanco",
 			T1."U_DOCENTRY"				as "DocEntryDocumento",
 			'24'						as "TipoDocumento",
-			'' 							as "NroDocSUNAT",
+			(select max(TX0."U_EXX_NUMEREND") from ORCT TX0 where TX0."TransId" = T4."TransId")	as "NroDocSUNAT",
 			'O'							as "EstadoDocumento",
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
@@ -252,13 +281,19 @@ begin
 			T4."FCCredit"/(case when T4."Credit" = 0 then 1 else T4."Credit" end) as "TCDocumento",
 			(select TX0."Memo" from OJDT TX0 where TX0."TransId" = T4."TransId")	as "GlosaAsiento",
 			T1."U_COD_PROV_FACTO"	as "CardCodeFacto",
-			T1."U_NOM_PROV_FACTO"	as "CardNameFacto"
+			T1."U_NOM_PROV_FACTO"	as "CardNameFacto",
+			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
+			T1."U_TIENE_RETENCION"		as "TieneRetencion",
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T7."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
+		inner  	join OJDT				T7 on T4."TransId"		= T7."TransId"
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"								 
 		where  T0."U_FECHA_PAGO" = @fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" /*and T5."CardType" = 'C'*/ and T4."DebCred" = 'C' AND T0."U_ESTADO"='A'
 	),
@@ -290,25 +325,33 @@ begin
 		T0."CardCode",
 		T0."CardName",
 		T0."Moneda",
-		T0."Importe",
+		T0."Importe" - case when T0."AplicaRetencion" = 'Y' then isnull(T0."MontoRetencion",0) else 0.00 end as "Importe",
 		T0."NroCuota",
 		T0."NroLineaAsiento",
 		T0."NroDocumentoSN",
 		T0."NroCtaProveedor",
 		T0."CodBncProveedor",
-		T0."CodRetencion",
+		case when isnull(T0."MontoRetencion",0) > 0 then T0."CodRetencion" else '' end "CodRetencion",
 		isnull(T0."MontoRetencion",0) as "MontoRetencion",
-		isnull((select max('Y') from RSLT2 TX0 where isnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
-		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') as "AplSerieRetencion",
+		case when isnull(T0."MontoRetencion",0) > 0 then  isnull((select max('Y') from RSLT2 TX0 where isnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
+		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') else 'N' end as "AplSerieRetencion",
 		T0."TCDocumento",
 		T0."GlosaAsiento",
 		T0."CardCodeFacto",
-		T0."CardNameFacto"
-	from RSLT1 T0 where (isnull((select max('Y') from "@EXP_PMP1" TX0 
+		T0."CardNameFacto",
+		T0."AfectoRetencion",
+		T0."TieneRetencion",
+		T0."AplicaRetencion",
+		T0."CodPrioridad",
+		T0."NroLineaEP"
+	from RSLT1 T0 
+	where (isnull((select max('Y') from "@EXP_PMP1" TX0 
 	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
 	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"
 	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento"
 	and isnull(TX0."U_EXP_ASNROLINEA",'0') = isnull(T0."NroLineaAsiento",'0')
 	and isnull(TX0."U_EXP_NMROCUOTA",'0') = isnull(T0."NroCuota",'0')),'') != 'Y')
-	and isnull(T0."CodSucursal",'0') = case when @codSucursal = '-1' then isnull(T0."CodSucursal",'0') else @codSucursal end;
-end;
+	and isnull(T0."codSucursal",'0') = isnull(case when @codSucursal = '-1' then T0."CodSucursal" else @codSucursal end,'0')
+	and isnull(T0."CodPrioridad",'') = isnull(case when @codPrioridad = '' then T0."CodPrioridad" else @codPrioridad end,'')
+	and T0."TipoDocumento" = case when @tipoDocumento = '0' then T0."TipoDocumento" else @tipoDocumento end;
+end

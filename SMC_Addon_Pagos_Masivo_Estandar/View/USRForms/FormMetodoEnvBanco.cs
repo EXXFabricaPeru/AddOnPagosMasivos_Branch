@@ -24,6 +24,16 @@ namespace SMC_APM.View.USRForms
         {
             _dbsPMP4Main = dbsPMP4;
             _pmAction = pmAction;
+
+            var sqlQry = "select \"BankCode\",\"BankName\" from ODSC";
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            while (!recSet.EoF)
+            {
+                mtxBancos.Columns.Item("Col_1").ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                recSet.MoveNext();
+            }
+
             _dbsPMP4.Clear();
             var position = 0;
             for (int i = 0; i < _dbsPMP4Main.Size; i++)

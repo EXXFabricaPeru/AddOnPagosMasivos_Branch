@@ -173,6 +173,7 @@ namespace SMC_APM.View.USRForms
                 while (!recSet.EoF)
                 {
                     cmbPrioridad.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    Matrix.Columns.Item("Col_42").ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
                     recSet.MoveNext();
                 }
 
@@ -201,9 +202,6 @@ namespace SMC_APM.View.USRForms
         public void LoadDataOnFormAddMode()
         {
             var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
-            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-            var sqlQry = string.Empty;
-
             Matrix = Form.GetMatrix("Item_12");
             Button = Form.GetButton("btnGrbEnv");
             Combo = (SAPbouiCOM.ComboBox)Form.Items.Item("Item_26").Specific;
@@ -221,29 +219,7 @@ namespace SMC_APM.View.USRForms
             dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValue("Series", 0).Trim(), Form.BusinessObject.Type).ToString());
             Form.GetUserDataSource("UD_TOTAL").Value = "0.00";
             Form.GetUserDataSource("UD_TOT_USD").Value = "0.00";
-
-            if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
-                sqlQry = "CALL EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL()";
-            else
-                sqlQry = "EXEC EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL";
-            var position = 0;
-            recSet.DoQuery(sqlQry);
-            dbsPMP2.Clear();
-            while (!recSet.EoF)
-            {
-                dbsPMP2.InsertRecord(position);
-                dbsPMP2.Offset = position;
-                dbsPMP2.SetValue("U_COD_SUCURSAL", position, recSet.Fields.Item(0).Value);
-                dbsPMP2.SetValue("U_NOM_SUCURSAL", position, recSet.Fields.Item(1).Value);
-                dbsPMP2.SetValue("U_RETPRO", position, recSet.Fields.Item(2).Value);
-                dbsPMP2.SetValue("U_COD_SERIE_PAGO", position, recSet.Fields.Item(3).Value);
-                dbsPMP2.SetValue("U_COD_SERIE_RETEN", position, recSet.Fields.Item(5).Value);
-                dbsPMP2.SetValue("U_NOM_SERIE_PAGO", position, recSet.Fields.Item(4).Value);
-                dbsPMP2.SetValue("U_NOM_SERIE_RETEN", position, recSet.Fields.Item(6).Value);
-                position++;
-                recSet.MoveNext();
-            }
-
+            CargarSeriesDePago(DateTime.Today.Year);
             HabilitarControlesPorEstado("P");
             //Button.Caption = "Grabar";
             //Matrix.Columns.Item("Col_0").Editable = true;
@@ -264,6 +240,33 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("Item_3").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
             Form.Items.Item("Item_5").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
             */
+        }
+
+        private void CargarSeriesDePago(int indicador)
+        {
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            var sqlQry = string.Empty;
+            if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                sqlQry = $"CALL EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL('{indicador}')";
+            else
+                sqlQry = $"EXEC EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL '{indicador}'";
+            var position = 0;
+            recSet.DoQuery(sqlQry);
+            dbsPMP2.Clear();
+            while (!recSet.EoF)
+            {
+                dbsPMP2.InsertRecord(position);
+                dbsPMP2.Offset = position;
+                dbsPMP2.SetValue("U_COD_SUCURSAL", position, recSet.Fields.Item(0).Value);
+                dbsPMP2.SetValue("U_NOM_SUCURSAL", position, recSet.Fields.Item(1).Value);
+                dbsPMP2.SetValue("U_RETPRO", position, recSet.Fields.Item(2).Value);
+                dbsPMP2.SetValue("U_COD_SERIE_PAGO", position, recSet.Fields.Item(3).Value);
+                dbsPMP2.SetValue("U_COD_SERIE_RETEN", position, recSet.Fields.Item(5).Value);
+                dbsPMP2.SetValue("U_NOM_SERIE_PAGO", position, recSet.Fields.Item(4).Value);
+                dbsPMP2.SetValue("U_NOM_SERIE_RETEN", position, recSet.Fields.Item(6).Value);
+                position++;
+                recSet.MoveNext();
+            }
         }
 
         protected override void CargarEventos()
@@ -320,6 +323,8 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_APLICA_RETENCION", lineNum, doc.AplicaRetencion);
                         dbsPMP1.SetValue("U_EXP_IMPORTE_AUX", lineNum, doc.Importe.ToString());
                         dbsPMP1.SetValue("U_EXP_APL_RETENCION_AUX", lineNum, doc.AplicaRetencion);
+                        dbsPMP1.SetValue("U_EXP_COD_PRIORIDAD", lineNum, doc.CodPrioridad);
+                        dbsPMP1.SetValue("U_EXP_NROLINEA_EP", lineNum, doc.NroLineaEP.ToString());
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
@@ -335,6 +340,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP4.InsertRecord(nroLinea);
                         dbsPMP4.Offset = nroLinea;
                         dbsPMP4.SetValue("U_COD_BANCO", nroLinea, bco);
+                        dbsPMP4.SetValue("U_COD_METODO", nroLinea, "1");
                         nroLinea++;
                     }
                 }
@@ -499,20 +505,8 @@ namespace SMC_APM.View.USRForms
                         QuitarFilasNoSeleccionadas();
                         //var btnCrgEnv = (SAPbouiCOM.Button)Form.Items.Item("btnGrbEnv").Specific;
                         //var estadoDoc = dbsOPMP.GetValue("U_EXP_ESTADO", 0).Trim();
-                        var pgoDS = dbsPMP1.GetAsXML();
-                        var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS).ToList();
-                        var nroFila = 0;
-                        dbsPMP3.Clear();
-                        lstBancos.ForEach(b =>
-                        {
-                            dbsPMP3.InsertRecord(nroFila);
-                            dbsPMP3.Offset = nroFila;
-                            dbsPMP3.SetValue("U_COD_SUCURSAL", nroFila, b.Sucursal);
-                            dbsPMP3.SetValue("U_COD_BANCO", nroFila, b.Banco);
-                            dbsPMP3.SetValue("U_COD_MONEDA", nroFila, b.Moneda);
-                            dbsPMP3.SetValue("U_COD_CTAPAGO", nroFila, b.CtaBanco);
-                            nroFila++;
-                        });
+                        EstablecerCuentasParaNumerosDeOperacion("A");
+
                     }
                     else if (!e.BeforeAction && e.ActionSuccess)
                     {
@@ -577,10 +571,13 @@ namespace SMC_APM.View.USRForms
                             try
                             {
                                 var codPais = ObtenerPaisBanco(banc.Banco, banc.CtaBanco);
-                                var metodoEnvio = dcMetodoEnvPorBanco[banc.Banco];
+                                var metodoEnvio = "1";
+                                if (dcMetodoEnvPorBanco.ContainsKey(banc.Banco)) metodoEnvio = dcMetodoEnvPorBanco[banc.Banco];
                                 if (esHostToHost && metodoEnvio == "2")
                                 {
-                                    if (PagoMasivoController.ValidaArchivoH2HEstado(docEntry, banc.Banco, banc.Sucursal, "EN")) continue;
+                                    if (PagoMasivoController.ValidaArchivoH2HEstado(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, "EN")) continue;
+                                    if (PagoMasivoController.ValidaArchivoH2HEstado(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, "DS")) continue;
+                                    if (PagoMasivoController.ValidaArchivoH2HEstado(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, "PR")) continue;
                                     PagoMasivoController.GenerarTXTH2H(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais);
                                     Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
@@ -627,7 +624,7 @@ namespace SMC_APM.View.USRForms
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_MATRIX_LINK_PRESSED, "Item_12", e =>
             {
-                if (e.BeforeAction)
+                if (e.BeforeAction && e.ColUID == "Col_6")
                 {
                     var objType = dbsPMP1.GetValue("U_EXP_TIPODOC", e.Row - 1).Trim();
                     objType = objType == "24" ? "30" : objType;
@@ -731,14 +728,33 @@ namespace SMC_APM.View.USRForms
 
             Eventos.Add(new EventoItem(SAPbouiCOM.BoEventTypes.et_VALIDATE, "Item_31", e =>
             {
-                if (e.BeforeAction)
+                if (e.BeforeAction && Form.Mode != BoFormMode.fm_FIND_MODE)
                 {
                     try
                     {
                         var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
                         var fchPago = DateTime.ParseExact(dbsOPMP.GetValueExt("U_EXP_FECHAPAGO"), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
                         var rslt = sboBOB.GetCurrencyRate("USD", fchPago);
+                        CargarSeriesDePago(fchPago.Year);
                         if (!rslt.EoF) dbsOPMP.SetValueExt("U_EXP_TIPODECAMBIO", (string)Convert.ToString(rslt.Fields.Item(0).Value));
+                        if (Form.Mode == BoFormMode.fm_ADD_MODE)
+                        {
+                            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                            var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = 'EXP_OPMP' and \"Indicator\" = '{fchPago.Year}'";
+                            recSet.DoQuery(sqlQry);
+                            var cmbSeries = Form.GetComboBox("Item_26");
+                            cmbSeries.LimpiarValoresValidos();
+                            while (!recSet.EoF)
+                            {
+                                cmbSeries.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                                recSet.MoveNext();
+                            }
+                            if (cmbSeries.ValidValues.Count > 0)
+                            {
+                                dbsOPMP.SetValue("Series", 0, cmbSeries.ValidValues.Item(0).Value);
+                                dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValueExt("Series"), "EXP_OPMP").ToString());
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -749,7 +765,7 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
-            Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_37", e =>
+            Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "btnMetEnv", e =>
             {
                 if (!e.BeforeAction)
                 {
@@ -762,6 +778,63 @@ namespace SMC_APM.View.USRForms
                             if (Form.Mode == BoFormMode.fm_OK_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                         }));
                     }
+                }
+                return true;
+            }));
+
+            Eventos.Add(new EventoItem(BoEventTypes.et_ITEM_PRESSED, "Item_40", e =>
+            {
+                if (!e.BeforeAction)
+                {
+
+                    Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
+                    var slcRow = Matrix.GetNextSelectedRow(0, BoOrderType.ot_RowOrder);
+                    if (slcRow == -1)
+                    {
+                        Globales.Aplication.StatusBar.SetText("Seleccione una fila...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                        return false;
+                    }
+
+                    var rslt = Globales.Aplication.MessageBox("¿Esta seguro que desea proceder con esta acción?", 1, "SI", "NO");
+                    if (rslt != 1) return false;
+
+                    var EXP_PMP4 = Form.GetDBDataSource("@EXP_PMP4");
+                    dcMetodoEnvPorBanco.Clear();
+                    for (int i = 0; i < EXP_PMP4.Size; i++)
+                    {
+                        dcMetodoEnvPorBanco.Add(EXP_PMP4.GetValue("U_COD_BANCO", i), EXP_PMP4.GetValue("U_COD_METODO", i));
+                    }
+
+                    var codBanco = ((SAPbouiCOM.ComboBox)Matrix.GetCellSpecific("Col_5", slcRow)).Value;
+                    if (dcMetodoEnvPorBanco.ContainsKey(codBanco) && dcMetodoEnvPorBanco[codBanco] == "2")
+                    {
+                        Globales.Aplication.StatusBar.SetText("No se puede excluir un documento de que pertenece a un banco que envia host to host...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                        return false;
+                    }
+
+                    var estadoConta = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_17", slcRow)).Value;
+                    if (estadoConta == "OK")
+                    {
+                        Globales.Aplication.StatusBar.SetText("No se puede excluir un documento contabilizado...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                        return false;
+                    }
+
+                    var docEntryPM = dbsOPMP.GetValueExt("DocEntry");
+                    var lineIdPM = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_34", slcRow)).Value;
+                    var docEntryEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_3", slcRow)).Value;
+                    var lineIdEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_43", slcRow)).Value;
+                    //var sqlQry = $"update \"@EXP_PMP1\" set U_EXP_ESTADO = 'EX' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+                    var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                    var sqlQry = $"delete from \"@EXD_EPG1\" where \"DocEntry\" = '{docEntryEP}' and \"LineId\" = '{lineIdEP}'";
+                    recSet.DoQuery(sqlQry);
+
+                    sqlQry = $"delete from \"@EXP_PMP1\" where \"DocEntry\" = '{docEntryPM}' and \"LineId\" = '{lineIdPM}'";
+                    recSet.DoQuery(sqlQry);
+
+                    Globales.Aplication.ActivateMenuItem("1304");
+                    Globales.Aplication.StatusBar.SetText("Documento excluido correctamente", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
+
+                    EstablecerCuentasParaNumerosDeOperacion("U");
                 }
                 return true;
             }));
@@ -791,6 +864,17 @@ namespace SMC_APM.View.USRForms
                     }
                     Form.GetUserDataSource("UD_TOTAL").Value = totPgoMsv.ToString();
                     Form.GetUserDataSource("UD_TOT_USD").Value = totPgoMsvUSD.ToString();
+
+                    var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                    var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = 'EXP_OPMP'";
+                    recSet.DoQuery(sqlQry);
+                    var cmbSeries = Form.GetComboBox("Item_26");
+                    cmbSeries.LimpiarValoresValidos();
+                    while (!recSet.EoF)
+                    {
+                        cmbSeries.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                        recSet.MoveNext();
+                    }
 
                     HabilitarControlesPorEstado(estadoDoc);
                 }
@@ -844,6 +928,62 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+        }
+
+        private void EstablecerCuentasParaNumerosDeOperacion(string estado)
+        {
+            var pgoDS = dbsPMP1.GetAsXML();
+            var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS).ToList();
+            var nroFila = 0;
+
+            if (estado == "A")
+            {
+                dbsPMP3.Clear();
+                lstBancos.ForEach(b =>
+                {
+                    dbsPMP3.InsertRecord(nroFila);
+                    dbsPMP3.Offset = nroFila;
+                    dbsPMP3.SetValue("U_COD_SUCURSAL", nroFila, b.Sucursal);
+                    dbsPMP3.SetValue("U_COD_BANCO", nroFila, b.Banco);
+                    dbsPMP3.SetValue("U_COD_MONEDA", nroFila, b.Moneda);
+                    dbsPMP3.SetValue("U_COD_CTAPAGO", nroFila, b.CtaBanco);
+                    nroFila++;
+                });
+            }
+            else if (estado == "U")
+            {
+                var codSucursal = string.Empty;
+                var codBanco = string.Empty;
+                var codMoneda = string.Empty;
+                var codCtaPago = string.Empty;
+                var registroEliminado = false;
+                var actualizarUDO = false;
+
+                do
+                {
+                    registroEliminado = false;
+                    for (int i = 0; i < dbsPMP3.Size; i++)
+                    {
+                        codSucursal = dbsPMP3.GetValue("U_COD_SUCURSAL", i).Trim();
+                        codBanco = dbsPMP3.GetValue("U_COD_BANCO", i).Trim();
+                        codMoneda = dbsPMP3.GetValue("U_COD_MONEDA", i).Trim();
+                        codCtaPago = dbsPMP3.GetValue("U_COD_CTAPAGO", i).Trim();
+                        if (!lstBancos.Any(b => b.Sucursal.ToString() == codSucursal && b.Banco == codBanco && b.Moneda == codMoneda && b.CtaBanco == codCtaPago))
+                        {
+                            dbsPMP3.RemoveRecord(i);
+                            actualizarUDO = true;
+                            registroEliminado = true;
+                            break;
+                        }
+                    }
+                } while (registroEliminado);
+
+                if (actualizarUDO)
+                {
+                    if (Form.Mode != BoFormMode.fm_UPDATE_MODE) Form.Mode = BoFormMode.fm_UPDATE_MODE;
+                    Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                }
+            }
         }
 
         private string ObtenerPaisBanco(string banco, string ctaBanco)
@@ -919,6 +1059,7 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("Item_22").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_37").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_39").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
+            Form.Items.Item("Item_40").Enabled = false;
             Form.Items.Item("btnLstDocs").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_3").Enabled = false;
             Form.Items.Item("Item_5").Enabled = false;
@@ -927,7 +1068,7 @@ namespace SMC_APM.View.USRForms
             //Form.Items.Item("Item_17").Enabled = false;
             Form.Items.Item("Item_18").Enabled = false;
             Form.Items.Item("Item_20").Enabled = false;
-            Form.Items.Item("Item_26").Enabled = false;
+            Form.Items.Item("Item_26").Enabled = Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE;
             Form.Items.Item("Item_31").Enabled = false;
             Form.Items.Item("Item_33").Enabled = false;
             Form.Items.Item("btnCrgRsp").Enabled = false;
@@ -948,11 +1089,12 @@ namespace SMC_APM.View.USRForms
                 //Form.Items.Item("Item_16").Enabled = true;
                 //Form.Items.Item("Item_17").Enabled = true;
                 Form.Items.Item("Item_18").Enabled = true;
-                Form.Items.Item("Item_26").Enabled = true;
+                //Form.Items.Item("Item_26").Enabled = true;
                 Form.Items.Item("Item_31").Enabled = true;
                 Form.Items.Item("Item_33").Enabled = true;
                 Form.Items.Item("Item_23").Enabled = true;
                 Form.Items.Item("Item_24").Enabled = true;
+                Form.Items.Item("Item_40").Enabled = (Form.Mode != SAPbouiCOM.BoFormMode.fm_ADD_MODE);
                 Form.GetMatrix("Item_12").Columns.Item("Col_2").Editable = false;
             }
             else if (codEstado == "A")
@@ -966,6 +1108,7 @@ namespace SMC_APM.View.USRForms
                 Form.Items.Item("btnTrcRtn").Enabled = true;
                 Form.Items.Item("btnLibSNT").Enabled = true;
                 Form.Items.Item("btnCrgRsp").Enabled = true;
+                Form.Items.Item("Item_40").Enabled = true;
                 if (esTerceroRetenedor)
                 {
                     switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
@@ -1046,6 +1189,7 @@ namespace SMC_APM.View.USRForms
             dcMetodoEnvPorBanco.Clear();
             for (int i = 0; i < EXP_PMP4.Size; i++)
             {
+                if (string.IsNullOrWhiteSpace(EXP_PMP4.GetValue("U_COD_BANCO", i).Trim())) continue;
                 dcMetodoEnvPorBanco.Add(EXP_PMP4.GetValue("U_COD_BANCO", i), EXP_PMP4.GetValue("U_COD_METODO", i));
             }
 
@@ -1054,9 +1198,9 @@ namespace SMC_APM.View.USRForms
                 pendienteRespuestaH2H = false;
                 //banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco
                 var lstPagosAux = lstPagos.Where(p => p.CodSucursal == banc.Sucursal && p.MetodoPago.Banco == banc.Banco && p.MetodoPago.Cuenta == banc.CtaBanco);
-                if (dcMetodoEnvPorBanco[banc.Banco] == "2")
+                if (dcMetodoEnvPorBanco.ContainsKey(banc.Banco) && dcMetodoEnvPorBanco[banc.Banco] == "2")
                 {
-                    if (!PagoMasivoController.ValidaArchivoH2HEstado(docEntryForm, banc.Banco, banc.Sucursal, "PR"))
+                    if (!PagoMasivoController.ValidaArchivoH2HEstado(docEntryForm, banc.Banco, banc.Sucursal, banc.Moneda, "PR"))
                     {
                         pendienteRespuestaH2H = true;
                         continue;
@@ -1203,6 +1347,7 @@ namespace SMC_APM.View.USRForms
                         pgo.Monto = pgo.Detalle.Sum(d => d.MontoAPagar * ((d.MonedaDoc == mndLoc ? 1 : tipoDeCambio)
                         / (pgo.Moneda == mndLoc ? 1 : tipoDeCambio)));
                         PagoMasivoController.QuitarRetencionDocumento(pgo);
+                        pgo.Referencia = PagoMasivoController.ObtenerNroOperacion(docEntryForm, pgo.CodSucursal, pgo.MetodoPago.Banco, pgo.MetodoPago.Cuenta, pgo.Moneda);
                         nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo, tieneSucursales);
                     }
                     catch (Exception ex)
@@ -1465,5 +1610,6 @@ namespace SMC_APM.View.USRForms
                 Form.GetMatrix("Item_12").LoadFromDataSource();
             }
         }
+
     }
 }

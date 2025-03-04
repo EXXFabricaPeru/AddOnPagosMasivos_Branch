@@ -895,7 +895,7 @@ BEGIN
 		(select max(TX0."U_EXX_NUMEREND") from ORCT TX0 where TX0."TransId" = T0."TransId") as "NumAtCard",
 		--T0."TransCurr"
 		IFNULL(T1."FCCurrency",'SOL'),
-		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/T1."Credit" end,
+		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/case when T1."Credit" = 0 then 1 else T1."Credit" end end,
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",'SOL') in ('USD','EUR') 
@@ -1012,7 +1012,7 @@ BEGIN
 		T0."Ref2" 	as "NumAtCard",
 		--T0."TransCurr"
 		ifnull(T1."FCCurrency",'SOL'),
-		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/T1."Credit" end,
+		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/case when T1."Credit" = 0 then 1 else T1."Credit" end end,
 		CAST( 
 		(CASE 
 			WHEN ifnull(T1."FCCurrency",'SOL') in ('USD','EUR') 

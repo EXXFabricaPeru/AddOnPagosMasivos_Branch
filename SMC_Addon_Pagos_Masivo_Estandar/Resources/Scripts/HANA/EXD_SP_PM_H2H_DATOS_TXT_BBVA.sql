@@ -120,12 +120,12 @@ BEGIN
 			rpad('',206,' ')											as "Filler"							
 		from OADM	
 	)
-	select "Data",(select "NombreFichero" from CTE_DATOS_CAB) as "Nombre" from 
+	select "Data",(select "NombreFichero" from CTE_DATOS_CAB) as "Nombre","Orden1","Orden2","Orden3" from 
 	(
 		select
-			1,
-			'1',
-			1,
+			1 "Orden1",
+			'1' "Orden2",
+			1 "Orden3",
 			"CodigoRegistro" ||
 			"TipoDocOrdenante" ||
 			"DocumentoOrdenante" ||
@@ -236,8 +236,8 @@ BEGIN
 			lpad((select (sum("ImporteDocumento")-floor(sum("ImporteDocumento")))*100 from CTE_DATOS_FAC_PROV),2,'0')||
 			"Filler" || 'X' as "Data"
 		from CTE_DATOS_TOTALES
-		order by 1,2,3 asc
-	);
+		
+	)order by 3,4,5 asc;
 
 	
 	/*

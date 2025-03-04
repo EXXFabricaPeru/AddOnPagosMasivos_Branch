@@ -991,7 +991,24 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COD_PRIORIDAD</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Código de prioridad</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_OPMP</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -1690,6 +1707,42 @@
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP1</TableName>
         <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COD_PRIORIDAD</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Código de prioridad</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_NROLINEA_EP</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Número linea EP</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>10</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -3706,7 +3759,24 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_TIPO_DOCUMENTO</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Tipo de documento</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_OPMP</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -4393,6 +4463,43 @@
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP3</TableName>
         <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_BANCO</Name>
+        <Type>db_Alpha</Type>
+        <Size>4</Size>
+        <Description>Código de banco</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP4</TableName>
+        <EditSize>4</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_METODO</Name>
+        <Type>db_Alpha</Type>
+        <Size>2</Size>
+        <Description>Código de método</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP4</TableName>
+        <EditSize>2</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>

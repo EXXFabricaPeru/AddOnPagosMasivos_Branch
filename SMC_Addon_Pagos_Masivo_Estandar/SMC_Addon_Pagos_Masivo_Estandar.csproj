@@ -395,6 +395,9 @@
     <Content Include="Resources\Scripts\HANA\SP_EXD_GET_LIBERACION_SUNAT_CREADO.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Scripts\SQL\EXD_SP_PMP_CALCULAR_APLICA_RETENCION.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Scripts\SQL\EXD_SP_PM_H2H_OBTENER_DATOS_CONF_USUARIOS.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

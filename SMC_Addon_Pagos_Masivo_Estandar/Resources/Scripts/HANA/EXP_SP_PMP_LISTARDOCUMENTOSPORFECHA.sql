@@ -1,7 +1,9 @@
 CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA --'20231013'
 (
 	fechaEscPago date,
-	codSucursal int
+	codSucursal int,
+	codPrioridad varchar(50),
+	tipoDocumento int
 )
 as
 begin
@@ -45,7 +47,9 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -91,7 +95,9 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -134,7 +140,9 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -177,7 +185,9 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T4."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -220,13 +230,16 @@ begin
 			T1."U_NOM_PROV_FACTO"		as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T7."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'AS'
-		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"	
+		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
+		inner 	join OJDT				T7 on T4."TransId"		= T7."TransId"	
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"						 
 		where  T0."U_FECHA_PAGO" = 		:fechaEscPago 
 		and T1."U_NRO_LINEA_AS" = T4."Line_ID" 
@@ -271,13 +284,16 @@ begin
 			T1."U_NOM_PROV_FACTO"	as "CardNameFacto",
 			T1."U_AFECTO_RETENCION"		as "AfectoRetencion",
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
-			T1."U_APLICA_RETENCION"		as "AplicaRetencion"
+			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
+			T7."U_EXX_PRIPAG"			as "CodPrioridad",
+			T1."LineId"					as "NroLineaEP"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
 		inner 	join DSC1				T3 on T3."GLAccount" 	= T2."AcctCode"
 		inner 	join JDT1				T4 on T4."TransId" 		= rtrim(ltrim(T1."U_DOCENTRY")) and T1."U_TIPO_DOCUMENTO" = 'PR'
 		inner 	join OCRD				T5 on T5."CardCode"		= T4."ShortName"
+		inner  	join OJDT				T7 on T4."TransId"		= T7."TransId"
 		left 	join JDT2				T6 on T4."TransId"		= T6."AbsEntry"								 
 		where  T0."U_FECHA_PAGO" = :fechaEscPago and T1."U_NRO_LINEA_AS" = T4."Line_ID" /*and T5."CardType" = 'C'*/ and T4."DebCred" = 'C' AND T0."U_ESTADO"='A'
 	),
@@ -325,12 +341,16 @@ begin
 		T0."CardNameFacto",
 		T0."AfectoRetencion",
 		T0."TieneRetencion",
-		T0."AplicaRetencion"
+		T0."AplicaRetencion",
+		T0."CodPrioridad",
+		T0."NroLineaEP"
 	from RSLT1 T0 where (ifnull((select max('Y') from "@EXP_PMP1" TX0 
 	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
 	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"
 	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento"
 	and ifnull(TX0."U_EXP_ASNROLINEA",'0') = ifnull(T0."NroLineaAsiento",'0')
 	and ifnull(TX0."U_EXP_NMROCUOTA",'0') = ifnull(T0."NroCuota",'0')),'') != 'Y')
-	and T0."CodSucursal" = case when :codSucursal = '-1' then T0."CodSucursal" else :codSucursal end;
+	and T0."CodSucursal" = case when :codSucursal = '-1' then T0."CodSucursal" else :codSucursal end
+	and ifnull(T0."CodPrioridad",'') = ifnull(case when :codPrioridad = '' then T0."CodPrioridad" else :codPrioridad end,'')
+	and T0."TipoDocumento" = case when :tipoDocumento = '0' then T0."TipoDocumento" else :tipoDocumento end;
 end

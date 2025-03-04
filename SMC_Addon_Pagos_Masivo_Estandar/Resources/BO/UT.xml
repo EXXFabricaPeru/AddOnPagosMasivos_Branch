@@ -134,6 +134,20 @@
     </UserTablesMD>
   </BO>
 
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXP_PMP4</TableName>
+        <TableDescription>PM: Método de pago por banco</TableDescription>
+        <TableType>bott_DocumentLines</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
+  
 	<BO>
 		<AdmInfo>
 			<Object>153</Object>
