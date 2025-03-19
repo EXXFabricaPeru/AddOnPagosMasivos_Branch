@@ -288,5 +288,30 @@
       </row>
     </UserTablesMD>
   </BO>
-  
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_ORBT</TableName>
+        <TableDescription>PM: Rebotes offline</TableDescription>
+        <TableType>bott_Document</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_RBT1</TableName>
+        <TableDescription>PM: Rebotes offline pagos</TableDescription>
+        <TableType>bott_DocumentLines</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
 </BOM>

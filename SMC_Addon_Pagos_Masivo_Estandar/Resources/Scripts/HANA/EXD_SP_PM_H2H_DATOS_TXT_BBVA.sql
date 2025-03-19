@@ -102,12 +102,12 @@ BEGIN
 			TO_VARCHAR(NOW(),'ddMMyyyy')						   	 		as "FechaDocXP",
 			TO_VARCHAR(NOW(),'ddMMyyyy')									as "FechaVencDocXP",
 			case when T0."U_EXP_MONEDA" = 'SOL' then 'PEN' else 'USD' end	as "DivisaDocXP",
-			'000000000000'													as "Importe1",
-			'01'															as "Importe2",
+			lpad(floor(T0."U_EXP_IMPORTE"),12,'0')							as "Importe1",
+			right('0' || mod(T0."U_EXP_IMPORTE",1) * 100,2)		as "Importe2",
 			'1'																as "SignoImporte",
 			rpad('',25,' ')													as "Concepto",
 			rpad('',153,' ')												as "Filler",
-			0.01															as "ImporteDocumento"
+			T0."U_EXP_IMPORTE"												as "ImporteDocumento"
 		from "@EXP_PMP1" T0 			
 		where T0."DocEntry" = :NroPM and T0."U_EXP_COD_SUCURSAL" = :NroSC and T0."U_EXP_CODCTABANCO" = :NroCT
 	),
@@ -169,7 +169,7 @@ BEGIN
 			"NroDocProv"||
 			"NombreProv"||
 			lpad(floor((select sum(TX0."ImporteDocumento") from CTE_DATOS_FAC_PROV TX0 where TX0."NroDocProv" = T0."NroDocProv")),12,'0')||
-			lpad(right((select sum(TX0."ImporteDocumento") from CTE_DATOS_FAC_PROV TX0 where TX0."NroDocProv" = T0."NroDocProv"),2),2,'0')||
+			right('0' || mod((select sum(TX0."ImporteDocumento") from CTE_DATOS_FAC_PROV TX0 where TX0."NroDocProv" = T0."NroDocProv"),1) * 100,2)||
 			"Divisa"||
 			"Filler"||
 			"CodigoDevolucion"||

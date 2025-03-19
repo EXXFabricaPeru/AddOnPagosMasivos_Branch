@@ -29,6 +29,7 @@ namespace SMC_APM.Controladores
         private FormEscenarioPago formEscenarioPago = null;
         private FormAutorizacion formAutorizacion = null;
         private FormConfiguracionH2H formConfiguracionH2H = null;
+        private FormRebotes formRebotes = null;
 
         #endregion Atributos
 
@@ -151,6 +152,7 @@ namespace SMC_APM.Controladores
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0007", "Autorizacion Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, SMC_APM.Properties.Resources.codSubMenu1, SMC_APM.Properties.Resources.nomSubMenu1, SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0008", "Pagos Masivos", SAPbouiCOM.BoMenuType.mt_STRING);
+                sapObj.sapCrearSubMenu(sboApplication, SMC_APM.Properties.Resources.codMenu1, "SMC0010", "Rebotes Offline", SAPbouiCOM.BoMenuType.mt_STRING);
                 sapObj.sapCrearSubMenu(sboApplication, "11264", "SMC0009", "Configuración H2H - Pago masivo", SAPbouiCOM.BoMenuType.mt_STRING);
 
                 sapObj.sapCrearSubMenu(sboApplication, "1536", "SMC0004", "Reporte Tercero Ret. Embargo", SAPbouiCOM.BoMenuType.mt_STRING);
@@ -322,6 +324,9 @@ namespace SMC_APM.Controladores
                         case "SMC0009":
                             formConfiguracionH2H = new FormConfiguracionH2H(FormConfiguracionH2H.TYPE + DateTime.Now.ToString("hhmmss"));
                             break;
+                        case "SMC0010":
+                            formRebotes = new FormRebotes(FormRebotes.TYPE + DateTime.Now.ToString("hhmmss"));
+                            break;
                         case "1284":
                             var activeForm = sboApplication.Forms.ActiveForm;
                             switch (activeForm.TypeEx)
@@ -360,6 +365,9 @@ namespace SMC_APM.Controladores
                                     break;
                                 case "FrmEP":
                                     ((FormEscenarioPago)UIFormFactory.GetFormByUID(activeForm.UniqueID)).LoadDataOnFormAddMode();
+                                    break;
+                                case "FrmPMRbt":
+                                    ((FormRebotes)UIFormFactory.GetFormByUID(activeForm.UniqueID)).LoadDataOnFormAddMode();
                                     break;
                                 default:
                                     break;
@@ -436,7 +444,7 @@ namespace SMC_APM.Controladores
             try
             {
                 if (pVal.FormTypeEx == "FrmLPG" || pVal.FormTypeEx == "FrmPMP" || pVal.FormTypeEx == "FrmAUT" || pVal.FormTypeEx == "FrmEP" || pVal.FormTypeEx == "FrmSLCPV" || pVal.FormTypeEx == FormMetodoEnvBanco.TYPE
-                    || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE || pVal.FormTypeEx == FormNumeroDeOperacion.TYPE || pVal.FormTypeEx == "EXD_PM_CONFAUT")
+                    || pVal.FormTypeEx == "FrmSRESUC" || pVal.FormTypeEx == FormConfiguracionH2H.TYPE || pVal.FormTypeEx == FormNumeroDeOperacion.TYPE || pVal.FormTypeEx == "EXD_PM_CONFAUT" || pVal.FormTypeEx == "FrmPMRbt")
                 {
                     IUSAP uiForm = null;
 

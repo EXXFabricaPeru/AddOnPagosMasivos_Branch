@@ -4679,6 +4679,33 @@
   <BO>
     <AdmInfo>
       <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>OBPL</TableID>
+        <AliasID>EXX_RETPRO</AliasID>
+        <Descr>Retiene proveedores</Descr>
+        <TypeID>A</TypeID>
+        <SizeID>1</SizeID>
+        <EditSize>1</EditSize>
+        <Dflt>N</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>Y</FldValue>
+        <Descr>SI</Descr>
+      </row>
+      <row>
+        <FldValue>N</FldValue>
+        <Descr>NO</Descr>
+      </row>
+    </UFD1>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
       <Version>2</Version>
     </AdmInfo>
     <UserFieldsMD>
@@ -4855,6 +4882,25 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>COD_MONEDA</Name>
+        <Type>db_Alpha</Type>
+        <Size>5</Size>
+        <Description>Código de moneda</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_LOGENVHTH</TableName>
+        <EditSize>5</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>COD_BANCO</Name>
         <Type>db_Alpha</Type>
         <Size>6</Size>
@@ -4919,6 +4965,405 @@
         <SubType>st_None</SubType>
         <TableName>@EXD_PM_CNFUSUH2H</TableName>
         <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>DOCENTRY_PM</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>DocEntry pago masivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>DOCNUM_PM</Name>
+        <Type>db_Alpha</Type>
+        <Size>10</Size>
+        <Description>Numero de pago masivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_BANCO</Name>
+        <Type>db_Alpha</Type>
+        <Size>6</Size>
+        <Description>Código de banco</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>6</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_SUCURSAL</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Código de sucursal</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CARDCODE</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Código de proveedor</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CARDNAME</Name>
+        <Type>db_Alpha</Type>
+        <Size>200</Size>
+        <Description>Nombre del proveedor</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_ORBT</TableName>
+        <EditSize>200</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>SELECCION</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Selección</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_SUCURSAL</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Código de sucursal</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COD_BANCO</Name>
+        <Type>db_Alpha</Type>
+        <Size>6</Size>
+        <Description>Codigo de banco</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>6</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CARDCODE</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Código de proveedor</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CARDNAME</Name>
+        <Type>db_Alpha</Type>
+        <Size>200</Size>
+        <Description>Nombre del proveedor</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>200</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>DOCENTRY</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>ID Documento</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>DOCTYPE</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Tipo de documento</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>ID_PAGO</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>ID Pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>ID_PAGO2</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>ID Pago 2</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>NRO_SUNAT</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Número SUNAT</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>IMPORTE</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Importe</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>MONEDA</Name>
+        <Type>db_Alpha</Type>
+        <Size>10</Size>
+        <Description>Moneda</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>LINEA_PM</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Linea pago masivo</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>DOCENTRY_EP</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>DocEntry escenario de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>LINEA_EP</Name>
+        <Type>db_Numeric</Type>
+        <Size>11</Size>
+        <Description>Linea escenario de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_RBT1</TableName>
+        <EditSize>10</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>

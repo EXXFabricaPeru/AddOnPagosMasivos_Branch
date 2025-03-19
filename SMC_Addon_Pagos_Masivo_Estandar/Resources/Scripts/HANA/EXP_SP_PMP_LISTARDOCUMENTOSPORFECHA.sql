@@ -325,14 +325,20 @@ begin
 		T0."CardCode",
 		T0."CardName",
 		T0."Moneda",
-		T0."Importe" - case when T0."AplicaRetencion" = 'Y' then ifnull(T0."MontoRetencion",0) else 0.00 end as "Importe",
+		T0."Importe" - 
+		case when T0."AplicaRetencion" = 'Y' 
+		then 
+			ifnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP") * T0."MontoRetencion",0) 
+		else 0.00 end as "Importe",
 		T0."NroCuota",
 		T0."NroLineaAsiento",
 		T0."NroDocumentoSN",
 		T0."NroCtaProveedor",
 		T0."CodBncProveedor",
 		case when ifnull(T0."MontoRetencion",0) > 0 then T0."CodRetencion" else '' end "CodRetencion",
-		ifnull(T0."MontoRetencion",0) as "MontoRetencion",
+		ifnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) as "MontoRetencion",
 		case when ifnull(T0."MontoRetencion",0) > 0 then  ifnull((select max('Y') from RSLT2 TX0 where ifnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
 		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') else 'N' end as "AplSerieRetencion",
 		T0."TCDocumento",

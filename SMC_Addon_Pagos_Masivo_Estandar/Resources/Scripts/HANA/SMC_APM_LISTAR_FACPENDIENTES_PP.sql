@@ -36,7 +36,8 @@ BEGIN
 	and T1.U_NRO_LINEA_AS 	= TX0.U_EXP_ASNROLINEA 
 	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
 	and (case T1.U_TIPO_DOCUMENTO 
-		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
+		when 'FT-P' then 18 
+		when 'SA-P' then 204 end) = TX0.U_EXP_TIPODOC
 	/*and TX1."Status" = 'C' and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK')*/ 
 	),'') <> 'Y'
 	
@@ -52,7 +53,8 @@ BEGIN
 	and T1.U_NRO_LINEA_AS 	= TX0.U_EXP_ASNROLINEA 
 	and T1.U_DOCENTRY 		= TX0.U_EXP_DOCENTRYDOC 
 	and (case T1.U_TIPO_DOCUMENTO 
-		when 'FT-P' then 18 end) = TX0.U_EXP_TIPODOC
+		when 'FT-P' then 18 
+		when 'SA-P' then 204 end) = TX0.U_EXP_TIPODOC
 	and ifnull(TX0.U_EXP_ESTADO,'') <> 'OK'
 	/*and TX1."Status" = 'C'and ifnull(TX0.U_EXP_ESTADO,'') IN ('','OK')*/  
 	),'') = 'Y'
@@ -661,12 +663,12 @@ BEGIN
 							CASE (SELECT "WTCode" FROM DPO5 WHERE "AbsEntry" = T0."DocEntry")
 								WHEN 'RT4C' THEN T1."InsTotalFC" - ((T1."InsTotalFC"/(T1."InsTotalFC" - T1."PaidFC")) * (T4."WTAmntFC" - T4."ApplAmntFC"))
 								WHEN 'RIGV' THEN T1."InsTotalFC" - ((T1."InsTotalFC"/(T1."InsTotalFC" - T1."PaidFC")) * (T4."WTAmntFC" - T4."ApplAmntFC"))
-								ELSE T1."InsTotalFC" - T1."PaidFC"- T0."WTSumFC"
+								ELSE T1."InsTotalFC" - T1."PaidFC"-- T0."WTSumFC"
 							END
 						ELSE 
 							CASE (SELECT "WTCode" FROM DPO5 WHERE "AbsEntry" = T0."DocEntry")
 								WHEN 'RT4C' THEN T1."InsTotal" - T1."PaidToDate"
-								ELSE T1."InsTotal" - T1."PaidToDate" - T0."WTSum"
+								ELSE T1."InsTotal" - T1."PaidToDate" -- T0."WTSum"
 							END
 			END)AS DECIMAL(16,2)) AS "TotalPagar",
 		T3."LicTradNum" AS "RUC",
@@ -775,8 +777,8 @@ BEGIN
 		AND T0."CreateTran" = 'N'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
 		--							WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'SA-P')
-		AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
-		where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SA-P' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N'OR T0."U_CP_VARESC"='Y')
+		--AND (ifnull((select max('Y') from "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		--where TX0."U_DOCENTRY" = T0."DocEntry" and TX0."U_TIPO_DOCUMENTO" = 'SA-P' and ifnull(TX1."Canceled",'') != 'Y'),'N') = 'N'OR T0."U_CP_VARESC"='Y')
 		--AND T0."DocTotal" NOT IN (SELECT "U_SMC_MONTO" FROM "@SMC_APM_ESCDET" WHERE "U_SMC_ESCCAB" = :escenario)
 		
 		

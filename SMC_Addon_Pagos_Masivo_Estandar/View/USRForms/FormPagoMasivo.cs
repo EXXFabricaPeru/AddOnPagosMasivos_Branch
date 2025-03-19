@@ -786,10 +786,8 @@ namespace SMC_APM.View.USRForms
             {
                 if (!e.BeforeAction)
                 {
-
-                    Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
-                    var slcRow = Matrix.GetNextSelectedRow(0, BoOrderType.ot_RowOrder);
-                    if (slcRow == -1)
+                    var nextSlcRow = Matrix.GetNextSelectedRow(0, BoOrderType.ot_RowOrder);
+                    if (nextSlcRow == -1)
                     {
                         Globales.Aplication.StatusBar.SetText("Seleccione una fila...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
                         return false;
@@ -798,43 +796,54 @@ namespace SMC_APM.View.USRForms
                     var rslt = Globales.Aplication.MessageBox("¿Esta seguro que desea proceder con esta acción?", 1, "SI", "NO");
                     if (rslt != 1) return false;
 
+                    Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                     var EXP_PMP4 = Form.GetDBDataSource("@EXP_PMP4");
                     dcMetodoEnvPorBanco.Clear();
                     for (int i = 0; i < EXP_PMP4.Size; i++)
                     {
                         dcMetodoEnvPorBanco.Add(EXP_PMP4.GetValue("U_COD_BANCO", i), EXP_PMP4.GetValue("U_COD_METODO", i));
                     }
-
-                    var codBanco = ((SAPbouiCOM.ComboBox)Matrix.GetCellSpecific("Col_5", slcRow)).Value;
-                    if (dcMetodoEnvPorBanco.ContainsKey(codBanco) && dcMetodoEnvPorBanco[codBanco] == "2")
+                    var primeraFilaXSlc = 0;
+                    do
                     {
-                        Globales.Aplication.StatusBar.SetText("No se puede excluir un documento de que pertenece a un banco que envia host to host...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                        return false;
-                    }
+                        nextSlcRow = Matrix.GetNextSelectedRow(primeraFilaXSlc, BoOrderType.ot_RowOrder);
+                        if (nextSlcRow > -1)
+                        {
+                            var codBanco = ((SAPbouiCOM.ComboBox)Matrix.GetCellSpecific("Col_5", nextSlcRow)).Value;
+                            if (dcMetodoEnvPorBanco.ContainsKey(codBanco) && dcMetodoEnvPorBanco[codBanco] == "2")
+                            {
+                                Globales.Aplication.StatusBar.SetText("No se puede excluir un documento de que pertenece a un banco que envia host to host...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                                primeraFilaXSlc = nextSlcRow;
+                                continue;
+                                //return false;
+                            }
 
-                    var estadoConta = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_17", slcRow)).Value;
-                    if (estadoConta == "OK")
-                    {
-                        Globales.Aplication.StatusBar.SetText("No se puede excluir un documento contabilizado...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
-                        return false;
-                    }
+                            var estadoConta = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_17", nextSlcRow)).Value;
+                            if (estadoConta == "OK")
+                            {
+                                Globales.Aplication.StatusBar.SetText("No se puede excluir un documento contabilizado...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Error);
+                                primeraFilaXSlc = nextSlcRow;
+                                continue;
+                                //return false;
+                            }
 
-                    var docEntryPM = dbsOPMP.GetValueExt("DocEntry");
-                    var lineIdPM = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_34", slcRow)).Value;
-                    var docEntryEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_3", slcRow)).Value;
-                    var lineIdEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_43", slcRow)).Value;
-                    //var sqlQry = $"update \"@EXP_PMP1\" set U_EXP_ESTADO = 'EX' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
-                    var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                    var sqlQry = $"delete from \"@EXD_EPG1\" where \"DocEntry\" = '{docEntryEP}' and \"LineId\" = '{lineIdEP}'";
-                    recSet.DoQuery(sqlQry);
+                            var docEntryPM = dbsOPMP.GetValueExt("DocEntry");
+                            var lineIdPM = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_34", nextSlcRow)).Value;
+                            var docEntryEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_3", nextSlcRow)).Value;
+                            var lineIdEP = ((SAPbouiCOM.EditText)Matrix.GetCellSpecific("Col_43", nextSlcRow)).Value;
+                            //var sqlQry = $"update \"@EXP_PMP1\" set U_EXP_ESTADO = 'EX' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+                            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                            var sqlQry = $"delete from \"@EXD_EPG1\" where \"DocEntry\" = '{docEntryEP}' and \"LineId\" = '{lineIdEP}'";
+                            recSet.DoQuery(sqlQry);
 
-                    sqlQry = $"delete from \"@EXP_PMP1\" where \"DocEntry\" = '{docEntryPM}' and \"LineId\" = '{lineIdPM}'";
-                    recSet.DoQuery(sqlQry);
+                            sqlQry = $"delete from \"@EXP_PMP1\" where \"DocEntry\" = '{docEntryPM}' and \"LineId\" = '{lineIdPM}'";
+                            recSet.DoQuery(sqlQry);
+                        }
+                        primeraFilaXSlc = nextSlcRow;
+                    } while (primeraFilaXSlc > -1);
 
                     Globales.Aplication.ActivateMenuItem("1304");
-                    Globales.Aplication.StatusBar.SetText("Documento excluido correctamente", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
-
-                    EstablecerCuentasParaNumerosDeOperacion("U");
+                    Globales.Aplication.StatusBar.SetText("Documentos excluidos correctamente", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
                 }
                 return true;
             }));

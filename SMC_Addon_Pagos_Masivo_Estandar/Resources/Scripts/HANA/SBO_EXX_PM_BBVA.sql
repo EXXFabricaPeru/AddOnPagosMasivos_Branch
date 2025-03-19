@@ -45,7 +45,7 @@ FROM (
 			left(replace(T2."Account",'-',''),8) ||'00'||right(replace(T2."Account",'-',''),length(replace(T2."Account",'-',''))-8) 
 		else lpad('',20,'0') end AS "004-023(20)",--CUENTA CARGO
 	CASE T2."UsrNumber4" WHEN 'SOL' THEN 'PEN' WHEN 'USD' THEN 'USD' ELSE '' END AS "024-026(3)",--MONEDA
-	RIGHT(replicate('0',15)||REPLACE(REPLACE(CAST(CAST(SUM(T1."U_EXP_IMPORTE") AS DECIMAL(18,2)) AS NVARCHAR(20)),',',''),'.',''),15) AS "027-041(15)", -- IMPORTE A CARGAR
+	RIGHT(replicate('0',15)||REPLACE(REPLACE(CAST(CAST(SUM(ROUND(T1."U_EXP_IMPORTE",2)) AS DECIMAL(18,2)) AS NVARCHAR(20)),',',''),'.',''),15) AS "027-041(15)", -- IMPORTE A CARGAR
 	'A'  as "042-042(1)",--Tipo de Proceso A: Inmediato H:Hora F:Fecha
 	replicate(' ',8) AS "043-050(8)", --Fecha de Proceso - Opcional si Tipo es F
 	' ' as "051-051(1)", -- --Hora Proceso - Opcional si tipo es H - B:11:00am C:3:00pm D:7:00pm
@@ -156,7 +156,7 @@ SELECT
 		END 
 	END AS  "018-037(20)",--Número de cuenta de abono
 	LEFT(LIMPIA_CADENA(T1."U_EXP_CARDNAME")||replicate(' ',40),40) as "038-077(40)",--Nombre Beneficiario
-	RIGHT(replicate('0',15)||REPLACE(REPLACE(CAST(CAST(T1."U_EXP_IMPORTE" AS DECIMAL(18,2)) AS NVARCHAR(20)),',',''),'.',''),15) AS "078-092(15)",--Importe a abonar
+	RIGHT(replicate('0',15)||REPLACE(REPLACE(CAST(CAST(ROUND(T1."U_EXP_IMPORTE",2) AS DECIMAL(18,2)) AS NVARCHAR(20)),',',''),'.',''),15) AS "078-092(15)",--Importe a abonar
 	CASE T1."U_EXP_MEDIODEPAGO"
 	WHEN 'TB' THEN
 		CASE coalesce(T4."Indicator",T5."Indicator")

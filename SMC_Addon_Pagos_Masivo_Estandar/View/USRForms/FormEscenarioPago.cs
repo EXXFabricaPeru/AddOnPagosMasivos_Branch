@@ -362,6 +362,7 @@ namespace SMC_APM.View.USRForms
                 {
                     try
                     {
+                        var tblConfPM = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
                         var lstDocumentosNuevos = new List<EPDocumento>();
                         var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                         var fechaVencD = dbsEXD_OEPG.GetValueExt("U_FECHA_VENC");
@@ -374,6 +375,26 @@ namespace SMC_APM.View.USRForms
                         var codTipoDocumento = dbsEXD_OEPG.GetValueExt("U_TIPO_DOC");
                         var codAutorizarPor = dbsEXD_OEPG.GetValueExt("U_AUTORIZAR_POR");
                         var montoMinimo = Convert.ToDouble(dbsEXD_OEPG.GetValueExt("U_MONTO_MINIMO"));
+                        var qry = string.Empty;
+
+                        //Valido Pago de retenciones
+                        if (tblConfPM.GetByKey("16") && tblConfPM.UserFields.Fields.Item("U_VALOR").Value == "Y")
+                        {
+                            qry = $"EXEC EXD_PM_VALIDAR_PAGO_RETENCIONES";
+                            if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
+                                qry = $"CALL EXD_PM_VALIDAR_PAGO_RETENCIONES()";
+                            recSet.DoQuery(qry);
+                            var nrosPM = string.Empty;
+                            while (!recSet.EoF)
+                            {
+                                nrosPM += recSet.Fields.Item("DocNum").Value + "\n";
+                                recSet.MoveNext();
+                            }
+
+                            Globales.Aplication.MessageBox("Los siguientes numeros de pago masivo tienen documentos con retencion pendientes de pago: \n" + nrosPM + "regularicelos para crear mas escenarios");
+
+                            return false;
+                        }
 
                         var tipoDocFiltro = codAutorizarPor;
                         if (codAutorizarPor == "VR")
@@ -388,7 +409,7 @@ namespace SMC_APM.View.USRForms
                         }
                         dttFac.Rows.Clear();
                         mtxFact.LoadFromDataSourceEx();
-                        var qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{tipoDocFiltro}','{montoMinimo}'";
+                        qry = $"EXEC SMC_APM_LISTAR_FACPENDIENTES_PP '{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{tipoDocFiltro}','{montoMinimo}'";
                         if (Globales.Company.DbServerType == SAPbobsCOM.BoDataServerTypes.dst_HANADB)
                             qry = $"CALL SMC_APM_LISTAR_FACPENDIENTES_PP('{fechaVencD}','{fechaVencH}','{monedaLoc}','{monedaExt}','','','{codBanco}','','{codSucursal}','{codPrioridad}','{tipoDocFiltro}','{montoMinimo}')";
                         dttFac.ExecuteQuery(qry);

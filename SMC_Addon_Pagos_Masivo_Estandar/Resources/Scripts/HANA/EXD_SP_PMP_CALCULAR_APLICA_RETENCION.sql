@@ -33,7 +33,7 @@ BEGIN
 			from "@EXP_OPMP" TX0 inner join "@EXP_PMP1" TX1
 			on TX0."DocEntry" = TX1."DocEntry"
 			where TX0."DocEntry" = :docEntry
-			and coalesce(TX1.U_EXP_APL_RETENCION_AUX,'') <> 'Y' 
+			--and coalesce(TX1.U_EXP_APL_RETENCION_AUX,'') <> 'Y' 
 			and TX1.U_EXP_AFECTO_RETENCION = 'Y'
 			and TX1.U_EXP_SLC_PAGO = 'Y'
 			group by TX1.U_EXP_COD_SUCURSAL,TX1.U_EXP_CARDCODE,TX1.U_EXP_MONEDA
@@ -42,5 +42,6 @@ BEGIN
 		) T1 on T0.U_EXP_COD_SUCURSAL = T1.U_EXP_COD_SUCURSAL 
 		and T1.U_EXP_CARDCODE = T0.U_EXP_CARDCODE
 		and T1.U_EXP_MONEDA = T0.U_EXP_MONEDA
-		where T0."DocEntry" = :docEntry and T0.U_EXP_SLC_PAGO = 'Y' and T0.U_EXP_APL_RETENCION_AUX <> 'Y';
+		where T0."DocEntry" = :docEntry and T0.U_EXP_SLC_PAGO = 'Y' 
+		and T0.U_EXP_AFECTO_RETENCION = 'Y' and T0.U_EXP_APL_RETENCION_AUX <> 'Y';
 END;

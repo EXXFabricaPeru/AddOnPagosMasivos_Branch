@@ -404,4 +404,65 @@
 			</row>
 		</UDO3>
 	</BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>206</Object>
+    </AdmInfo>
+    <OUDO>
+      <row>
+        <Code>EXD_PM_ORBT</Code>
+        <Name>EXD_PM_ORBT</Name>
+        <TableName>EXD_PM_ORBT</TableName>
+        <TYPE>3</TYPE>
+        <MngSeries>Y</MngSeries>
+        <CanFind>Y</CanFind>
+        <CanYrTrnsf>N</CanYrTrnsf>
+        <CanDefForm>N</CanDefForm>
+        <CanLog>N</CanLog>
+        <CanDelete>N</CanDelete>
+        <CanCancel>Y</CanCancel>
+        <CanClose>Y</CanClose>
+      </row>
+    </OUDO>
+    <UDO1>
+      <row>
+        <TableName>EXD_PM_RBT1</TableName>
+      </row>
+    </UDO1>
+    <UDO2>
+      <row>
+        <ColAlias>DocNum</ColAlias>
+        <ColumnDesc>DocNum</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>CreateDate</ColAlias>
+        <ColumnDesc>CreateDate</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>UpdateDate</ColAlias>
+        <ColumnDesc>UpdateDate</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>U_DOCNUM_PM</ColAlias>
+        <ColumnDesc>U_DOCNUM_PM</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>U_COD_BANCO</ColAlias>
+        <ColumnDesc>U_COD_BANCO</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>U_COD_SUCURSAL</ColAlias>
+        <ColumnDesc>U_COD_SUCURSAL</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>U_CARDCODE</ColAlias>
+        <ColumnDesc>U_CARDCODE</ColumnDesc>
+      </row>
+      <row>
+        <ColAlias>U_CARDNAME</ColAlias>
+        <ColumnDesc>U_CARDNAME</ColumnDesc>
+      </row>
+    </UDO2>
+  </BO>
 </BOM>

@@ -38,9 +38,9 @@ BEGIN
 	CTE_PROV AS
 	(
 		select 
-			'2'																				as "TipoRegistro",
-			case when T1."U_EXP_CODBANCO" != '002' then 'B' else T4."UsrNumber2" end		as "TipoCuentaAbono",
-			case when T1."U_EXP_CODBANCO" != '002' 
+			'2'																								as "TipoRegistro",
+			case when T1."U_EXP_CODBANCOPROV" != '002' then 'B' else ifnull(T4."UsrNumber2",'C') end		as "TipoCuentaAbono",
+			case when T1."U_EXP_CODBANCOPROV" != '002' 
 			then 
 				left(replace(T1."U_EXP_NROCTAPROV",'-',''),20) 
 			else 
