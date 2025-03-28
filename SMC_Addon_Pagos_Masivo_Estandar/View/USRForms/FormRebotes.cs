@@ -549,11 +549,12 @@ namespace SMC_APM.View.USRForms
             try
             {
                 //Form.Freeze(true);
-
-                Form.GetItem("Item_1").Enabled = false;
+                Form.GetItem("Item_1").Visible = false;
+                Form.GetItem("Item_22").Visible = true;
                 Form.GetItem("Item_4").Enabled = false;
                 Form.GetItem("Item_7").Enabled = false;
-                Form.GetItem("Item_9").Enabled = false;
+                Form.GetItem("Item_9").Visible = false;
+                Form.GetItem("Item_23").Visible = true;
                 Form.GetItem("Item_16").Enabled = false;
                 btnEjecutar.Item.Enabled = false;
                 btnBuscar.Item.Enabled = false;
@@ -563,10 +564,12 @@ namespace SMC_APM.View.USRForms
                     btnEjecutar.Item.Enabled = true;
                     if (Form.Mode == SAPbouiCOM.BoFormMode.fm_ADD_MODE)
                     {
-                        Form.GetItem("Item_1").Enabled = true;
+                        Form.GetItem("Item_1").Visible = true;
+                        Form.GetItem("Item_22").Visible = false;
                         Form.GetItem("Item_4").Enabled = true;
                         Form.GetItem("Item_7").Enabled = true;
-                        Form.GetItem("Item_9").Enabled = true;
+                        Form.GetItem("Item_9").Visible = true;
+                        Form.GetItem("Item_23").Visible = false;
                         Form.GetItem("Item_16").Enabled = true;
                         mtxDocs.Columns.Item("Col_8").Editable = true;
                         btnEjecutar.Item.Enabled = false;
