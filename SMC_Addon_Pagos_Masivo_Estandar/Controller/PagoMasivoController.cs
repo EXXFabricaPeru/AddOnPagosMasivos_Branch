@@ -744,6 +744,7 @@ namespace SMC_APM.Controller
                 {
                     var rutaDestinoAux = Path.Combine(Path.GetDirectoryName(rutaFisica), Path.ChangeExtension(rutaFisica, ".gpg"));
                     EncriptarArchivo(rutaLlavePublica, rutaFisica, rutaDestinoAux);
+                    //EncriptarGPG(rutaFisica, rutaDestinoAux);
                     rutaFldINFTP = Path.Combine(rutaFldINFTP, Path.GetFileName(rutaDestinoAux));
                     HostToHostManager.SendToSFTP(ipFPT, puertoFTP, usuarioFTP, passwordFTP, rutaDestinoAux, rutaFldINFTP);
                 }
@@ -1058,35 +1059,57 @@ namespace SMC_APM.Controller
             return !recSet.EoF;
         }
 
-        private static async Task<bool> EncriptarGPG(string rutaEntrada, string rutaSalida)
+        private static bool EncriptarGPG(string rutaEntrada, string rutaSalida)
         {
-            await Task.Run(() =>
+            string gpgHomeDir = @"C:\Program Files (x86)\GnuPG\bin";
+            string arguments = $@"--encrypt --always-trust --output ""{rutaSalida}"" --recipient contacta_seg.informatica@scotiabank.com.pe ""{rutaEntrada}""";
+            string path = @"C:\Program Files (x86)\GnuPG\bin\gpg.exe";
+
+            using (Process process = new Process())
             {
-                string gpgHomeDir = @"C:\Program Files (x86)\GnuPG\bin";
-                string arguments = $@"--encrypt --always-trust --output ""{rutaSalida}"" --recipient contacta_seg.informatica@scotiabank.com.pe ""{rutaEntrada}""";
-                string path = @"C:\Program Files (x86)\GnuPG\bin\gpg.exe";
+                process.StartInfo.FileName = path;
+                process.StartInfo.Arguments = arguments;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.RedirectStandardInput = true;
+                process.StartInfo.CreateNoWindow = true;
+                process.Start();
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+                process.WaitForExit();
 
-                var procStartInfo = new ProcessStartInfo(path, arguments)
+                if (process.ExitCode == 0)
                 {
-                    WorkingDirectory = gpgHomeDir,
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true
-                };
 
-                var proc = new Process { StartInfo = procStartInfo };
-                proc.Start();
-                //proc.StandardInput.WriteLine("passphrasetest1");
-                proc.StandardInput.Flush();
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(error)) throw new InvalidOperationException(error);
+                }
+            }
+            /*
+            var procStartInfo = new ProcessStartInfo(path, arguments)
+            {
+                WorkingDirectory = gpgHomeDir,
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true
+            };
 
-                //var result = proc.StandardOutput.ReadToEnd();
-                var error = proc.StandardError.ReadToEnd();
+            var proc = new Process { StartInfo = procStartInfo };
+            proc.Start();
+            //proc.StandardInput.WriteLine("passphrasetest1");
+            proc.StandardInput.Flush();
 
-                if (!string.IsNullOrWhiteSpace(error)) throw new InvalidOperationException(error);
-            });
+            //var result = proc.StandardOutput.ReadToEnd();
+            var error = proc.StandardError.ReadToEnd();
 
+            if (!string.IsNullOrWhiteSpace(error)) throw new InvalidOperationException(error);
+
+            */
             return true;
         }
 
