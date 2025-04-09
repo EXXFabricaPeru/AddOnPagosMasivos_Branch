@@ -16,7 +16,7 @@ BEGIN
 			'C'															as "TipoCtaCargo",
 			case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end	as "Moneda",
 			rpad(replace(T3."Account",'-',''),20,' ')					as "NroCtaCargo",
-			TO_DECIMAL(sum(T1."U_EXP_IMPORTE"),14,2)					as "TotalPlanilla",
+			sum(TO_DECIMAL(T1."U_EXP_IMPORTE",14,2))					as "TotalPlanilla",
 			ifnull(T1."U_EXP_COMENTARIO",'')							as "Referencia",
 			'N'															as "FlagExoITF",
 			''															as "TotalControl",
@@ -91,7 +91,8 @@ BEGIN
 		lpad(round("TotalPlanilla",2),17,'0')			||
 		rpad(left("Referencia",40),40,' ')			||
 		"FlagExoITF"			||
-		lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim(TX0."NroCtaAbono"),10))) from CTE_PROV TX0 where ifnull(TX0."NroCtaAbono",'') <>''),15,'0')||
+		lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim(TX0."NroCtaAbono")
+		,case when "TipoCuentaAbono" = 'A' then 11 else 10 end))) from CTE_PROV TX0 where ifnull(TX0."NroCtaAbono",'') <>''),15,'0')||
 		--rpad("Filler",100,' ') ||
 		--lpad("NroPlanilla",6,'0') ||
 		--lpad((select count('A') from CTE_PROV),6,' ') ||

@@ -336,9 +336,10 @@ begin
 		T0."NroDocumentoSN",
 		T0."NroCtaProveedor",
 		T0."CodBncProveedor",
-		case when ifnull(T0."MontoRetencion",0) > 0 then T0."CodRetencion" else '' end "CodRetencion",
+		case when (ifnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) * T0."MontoRetencion")  > 0 then T0."CodRetencion" else '' end "CodRetencion",
 		ifnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
-			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) as "MontoRetencion",
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) * T0."MontoRetencion" as "MontoRetencion",
 		case when ifnull(T0."MontoRetencion",0) > 0 then  ifnull((select max('Y') from RSLT2 TX0 where ifnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
 		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') else 'N' end as "AplSerieRetencion",
 		T0."TCDocumento",

@@ -17,9 +17,11 @@ AS
 BEGIN
 	declare tipoCambioP decimal(18,6);
 	declare montoMinimoRET decimal(19,6);
+	declare validaPagoDetraccion varchar(1);
 	
 	select ifnull(max("Rate"),1) into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
 	select ifnull(max(U_EXX_MONTOMIN),0.00) into montoMinimoRET from OWHT where "WTCode" = 'RIGV';
+	select ifnull(max(U_VALOR),'N') into validaPagoDetraccion from "@SMC_APM_CONFIAPM" where "Code" = '12';
 	
 	PAG_PAR = select 
 		sum(case when ifnull(U_COD_RETENCION,'') <> '' and ifnull(U_TOTAL,0) <> ifnull(U_TOTAL_PAGO,0) then ifnull(U_TOTAL_PAGO,0) + ifnull(U_RETENCION,0) else ifnull(U_TOTAL_PAGO,0) end) as "MONTO" 
@@ -121,7 +123,7 @@ BEGIN
 		T0."DueDate",
 		*/
 		T0."BloqueoPago",
-		IFNULL(T0."DetraccionPend", 'N') AS "DetraccionPend"
+		case when :validaPagoDetraccion = 'Y' then ifnull(T0."DetraccionPend", 'N') else 'N' end AS "DetraccionPend"
 		,T0."NroCuota"
 		,T0."LineaAsiento"
 		,T0."GlosaAsiento"
@@ -456,7 +458,7 @@ BEGIN
 		LEFT JOIN RIN6 T1 ON T0."DocEntry" = T1."DocEntry"
 		LEFT JOIN OCTG T2 ON T0."GroupNum" = T2."GroupNum"
 		LEFT JOIN OCRD T3 ON T0."CardCode" = T3."CardCode"
-		LEFT JOIN PCH5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
+		LEFT JOIN RIN5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
@@ -607,7 +609,7 @@ BEGIN
 		LEFT JOIN DPO6 T1 ON T0."DocEntry" = T1."DocEntry"
 		LEFT JOIN OCTG T2 ON T0."GroupNum" = T2."GroupNum"
 		LEFT JOIN OCRD T3 ON T0."CardCode" = T3."CardCode"
-		LEFT JOIN PCH5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
+		LEFT JOIN DPO5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
@@ -761,7 +763,7 @@ BEGIN
 		LEFT JOIN DPO6 T1 ON T0."DocEntry" = T1."DocEntry"
 		LEFT JOIN OCTG T2 ON T0."GroupNum" = T2."GroupNum"
 		LEFT JOIN OCRD T3 ON T0."CardCode" = T3."CardCode"
-		LEFT JOIN PCH5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
+		LEFT JOIN DPO5 T4 ON T0."DocEntry" = T4."AbsEntry" AND T4."ObjType" = T0."ObjType"
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
