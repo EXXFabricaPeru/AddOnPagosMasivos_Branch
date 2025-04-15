@@ -547,7 +547,10 @@ namespace SMC_APM.Controller
                     case "CO": //Colombia
                         switch (codBanco)
                         {
-                            case "13":
+                            case "1001":
+                                qry = $"CALL SBO_EXX_PM_BANCO_DE_BOGOTA({docEntry},{codSucursal},'{GLAccount}')";
+                                break;
+                            case "1013":
                                 qry = $"CALL SBO_EXX_PM_BBVA_COL({docEntry},{codSucursal},'{GLAccount}')";
                                 break;
                             default:
