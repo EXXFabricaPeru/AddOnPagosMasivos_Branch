@@ -650,7 +650,7 @@ namespace SMC_APM.View.USRForms
 
                     if (codSucursal == -1) return true;
                     var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                    var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'N'";
+                    var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'N' order by 1";
                     var cmbSeriePago = (SAPbouiCOM.ComboBox)Form.GetItem("Item_3").Specific;
                     recSet.DoQuery(sqlQry);
                     while (cmbSeriePago.ValidValues.Count > 0) cmbSeriePago.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
@@ -662,7 +662,7 @@ namespace SMC_APM.View.USRForms
                     if (cmbSeriePago.ValidValues.Count > 0) cmbSeriePago.SelectExclusive(0, SAPbouiCOM.BoSearchKey.psk_Index);
 
 
-                    sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'Y'";
+                    sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and \"BPLId\" = '{codSucursal}' and coalesce(U_EXC_CR,'') = 'Y' order by 1";
                     var cmbSerieReten = (SAPbouiCOM.ComboBox)Form.GetItem("Item_5").Specific;
                     recSet.DoQuery(sqlQry);
                     while (cmbSerieReten.ValidValues.Count > 0) cmbSerieReten.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);

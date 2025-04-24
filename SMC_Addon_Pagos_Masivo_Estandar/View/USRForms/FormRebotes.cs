@@ -275,6 +275,7 @@ namespace SMC_APM.View.USRForms
                                         pagoBorradorNew.ControlAccount = pagoBorradorOld.ControlAccount;
                                         pagoBorradorNew.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = pagoBorradorOld.UserFields.Fields.Item("U_EXX_MPTRABAN").Value;
                                         pagoBorradorNew.UserFields.Fields.Item("U_EXX_NUMEREND").Value = pagoBorradorOld.UserFields.Fields.Item("U_EXX_NUMEREND").Value;
+                                        pagoBorradorNew.UserFields.Fields.Item("U_EXX_PRIPAG").Value = pagoBorradorOld.UserFields.Fields.Item("U_EXX_PRIPAG").Value;
 
                                         var rslt2 = pagoBorradorNew.Add();
                                         if (rslt2 != 0)
