@@ -5368,4 +5368,64 @@
       </row>
     </UserFieldsMD>
   </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXX_PRIPAG</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Prioridad de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>OPCH</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+        <LinkedTable>EXX_PRIPAG</LinkedTable>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXX_PRIPAG</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Prioridad de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>OJDT</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+        <LinkedTable>EXX_PRIPAG</LinkedTable>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXX_PRIPAG</Name>
+        <Type>db_Alpha</Type>
+        <Size>1</Size>
+        <Description>Prioridad de pago</Description>
+        <SubType>st_None</SubType>
+        <TableName>OVPM</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+        <LinkedTable>EXX_PRIPAG</LinkedTable>
+      </row>
+    </UserFieldsMD>
+  </BO>
 </BOM>

@@ -321,7 +321,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_AFECTO_RETENCION", lineNum, doc.AfectoRetencion);
                         dbsPMP1.SetValue("U_EXP_TIENE_RETENCION", lineNum, doc.TieneRetencion);
                         dbsPMP1.SetValue("U_EXP_APLICA_RETENCION", lineNum, doc.AplicaRetencion);
-                        dbsPMP1.SetValue("U_EXP_IMPORTE_AUX", lineNum, doc.Importe.ToString());
+                        dbsPMP1.SetValue("U_EXP_IMPORTE_AUX", lineNum, doc.ImporteAux.ToString());
                         dbsPMP1.SetValue("U_EXP_APL_RETENCION_AUX", lineNum, doc.AplicaRetencion);
                         dbsPMP1.SetValue("U_EXP_COD_PRIORIDAD", lineNum, doc.CodPrioridad);
                         dbsPMP1.SetValue("U_EXP_NROLINEA_EP", lineNum, doc.NroLineaEP.ToString());
