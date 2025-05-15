@@ -1,6 +1,6 @@
 CREATE PROCEDURE EXD_SP_PM_LISTAR_SERIES_X_SUCURSAL
 (
-	indicador int
+	indicador varchar(10)
 )
 AS
 BEGIN

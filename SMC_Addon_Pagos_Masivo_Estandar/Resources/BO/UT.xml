@@ -314,4 +314,18 @@
       </row>
     </UserTablesMD>
   </BO>
+
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXX_PRIPAG</TableName>
+        <TableDescription>EXX - Prioridad de pago</TableDescription>
+        <TableType>bott_NoObject</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
 </BOM>

@@ -314,6 +314,9 @@
     <Content Include="Resources\Img\CFL.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Scripts\HANA\EXD_FN_H2H_TXT_SCOTIABANK_DIGITO_CONTROL.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Scripts\HANA\EXD_PM_VALIDAR_PAGO_RETENCIONES.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -351,6 +354,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\EXP_SP_PMP_OBTENER_CNT_AUT_POR_AUTORIZADOR.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scripts\HANA\LIMPIA_CADENA.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Scripts\HANA\REPLICATE.sql">
