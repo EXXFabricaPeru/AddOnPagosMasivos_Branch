@@ -69,6 +69,8 @@ namespace SMC_APM.View.USRForms
 
         private bool esSeleccionarTodo = false;
 
+        private string codMonedaLocal = string.Empty;
+
 
         public FormEscenarioPago(string id) : base(TYPE, MENU, id, PATH)
         {
@@ -85,6 +87,9 @@ namespace SMC_APM.View.USRForms
                 var banks = (SAPbobsCOM.Banks)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oBanks);
                 var currencies = (SAPbobsCOM.Currencies)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oCurrencyCodes);
                 var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(BoObjectTypes.BoBridge);
+
+                codMonedaLocal = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
 
                 recSet.DoQuery("select \"BankCode\",\"BankName\" from ODSC");
                 banks.Browser.Recordset = recSet;
@@ -694,7 +699,7 @@ namespace SMC_APM.View.USRForms
                             var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
                             var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
                             var sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                            $"where TX0.\"BankCode\" = '{codBanco}' and coalesce(TX0.\"Branch\",'0') = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(TX0.\"U_EXM_PMASIVO\",'') = 'Y'";
+                            $"where TX0.\"BankCode\" = '{codBanco}' and coalesce(TX0.\"Branch\",'0') = '{codSucursal}' and TX0.\"UsrNumber4\" = '{codMoneda}' and coalesce(TX0.\"U_EXM_PMASIVO\",'') = 'Y'";
 
                             var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
                             while (cmbNroCtaPgo.ValidValues.Count > 0) cmbNroCtaPgo.ValidValues.Remove(0, SAPbouiCOM.BoSearchKey.psk_Index);
@@ -771,7 +776,7 @@ namespace SMC_APM.View.USRForms
                     var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
                     var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
                     var sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                    $"where TX0.\"BankCode\" = '{codBanco}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
+                    $"where TX0.\"BankCode\" = '{codBanco}' and TX0.\"Branch\" = '{codSucursal}' and TX0.\"UsrNumber4\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
 
 
                     var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
@@ -851,7 +856,7 @@ namespace SMC_APM.View.USRForms
                             var codSucursal = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_9", e.Row)).Value;
                             var codMoneda = ((SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_8", e.Row)).Value;
                             sqlQry = $"select \"Account\",TX0.\"GLAccount\" from DSC1 TX0 inner join OACT TX1 on TX0.\"GLAccount\" = TX1.\"AcctCode\" " +
-                            $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX1.\"ActCurr\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
+                            $"where TX0.\"BankCode\" = '{codBancoPago}' and TX0.\"Branch\" = '{codSucursal}' and TX0.\"UsrNumber4\" = '{codMoneda}' and coalesce(U_EXM_PMASIVO,'') = 'Y'";
 
                             var cmbNroCtaPgo = (SAPbouiCOM.ComboBox)mtxFact.GetCellSpecific("Col_10", e.Row);
                             var edtCodCtaPgo = (SAPbouiCOM.EditText)mtxFact.GetCellSpecific("Col_11", e.Row);
@@ -907,7 +912,7 @@ namespace SMC_APM.View.USRForms
                         for (int i = 0; i < mtxSelc.RowCount; i++)
                         {
                             var moneda = ((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fMon", i + 1)).Value;
-                            if (moneda != "SOL")
+                            if (moneda != codMonedaLocal)
                             {
                                 totMonExt += Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", i + 1)).Value);
                             }
@@ -1074,9 +1079,9 @@ namespace SMC_APM.View.USRForms
                         EstadoExt = "S"
                     }).ToList();
 
-                    udsSALDO.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == "SOL").Sum(d => d.TotalPagar).ToString();
+                    udsSALDO.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == codMonedaLocal).Sum(d => d.TotalPagar).ToString();
                     udsSALDO_USD.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == "USD").Sum(d => d.TotalPagar).ToString();
-                    udsTOTAL.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == "SOL").Sum(d => d.TotalPagar).ToString();
+                    udsTOTAL.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == codMonedaLocal).Sum(d => d.TotalPagar).ToString();
                     udsTOTAL_USD.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == "USD").Sum(d => d.TotalPagar).ToString();
                 }
                 return true;
@@ -1120,9 +1125,9 @@ namespace SMC_APM.View.USRForms
 
             //Totales ++
 
-            udsSALDO.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == "SOL").Sum(d => d.TotalPagar).ToString();
+            udsSALDO.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == codMonedaLocal).Sum(d => d.TotalPagar).ToString();
             udsSALDO_USD.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "P" && d.DocCur == "USD").Sum(d => d.TotalPagar).ToString();
-            udsTOTAL.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == "SOL").Sum(d => d.TotalPagar).ToString();
+            udsTOTAL.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == codMonedaLocal).Sum(d => d.TotalPagar).ToString();
             udsTOTAL_USD.ValueEx = lstDocumentos.Where(d => d.EstadoExt == "S" && d.DocCur == "USD").Sum(d => d.TotalPagar).ToString();
 
             _dsrXmlDTDocs.Rows = lstDocumentos.Where(d => d.EstadoExt == "P").Select(d => new Row

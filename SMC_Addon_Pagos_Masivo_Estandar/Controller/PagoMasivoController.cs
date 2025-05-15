@@ -491,10 +491,9 @@ namespace SMC_APM.Controller
 
                 switch (codPais)
                 {
-                    case "PE":
+                    case "PE": //Peru
                         switch (codBanco)
                         {
-                            //PODRÍA SER UNA INTERFAZ
                             case "002":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
                                     qry = $"CALL SBO_EXX_PM_BCP_DEV({docEntry},{codSucursal},'{GLAccount}')";
@@ -529,10 +528,9 @@ namespace SMC_APM.Controller
                                 throw new Exception($"Código de banco {codBanco} no soportado");
                         }
                         break;
-                    case "CL":
+                    case "CL": //Chile
                         switch (codBanco)
                         {
-                            //PODRÍA SER UNA INTERFAZ
                             case "001":
                                 qry = $"CALL SBO_EXX_PM_BANCO_CHILE_CH({docEntry},'{GLAccount}')";
                                 break;
@@ -541,6 +539,19 @@ namespace SMC_APM.Controller
                                 break;
                             case "037":
                                 qry = $"CALL SBO_EXX_PM_SANTANDER_CH({docEntry},'{GLAccount}')";
+                                break;
+                            default:
+                                throw new Exception($"Código de banco {codBanco} no soportado");
+                        }
+                        break;
+                    case "CO": //Colombia
+                        switch (codBanco)
+                        {
+                            case "1001":
+                                qry = $"CALL SBO_EXX_PM_BANCO_DE_BOGOTA({docEntry},{codSucursal},'{GLAccount}')";
+                                break;
+                            case "1013":
+                                qry = $"CALL SBO_EXX_PM_BBVA_COL({docEntry},{codSucursal},'{GLAccount}')";
                                 break;
                             default:
                                 throw new Exception($"Código de banco {codBanco} no soportado");

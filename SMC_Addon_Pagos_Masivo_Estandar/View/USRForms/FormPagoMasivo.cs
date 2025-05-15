@@ -37,6 +37,8 @@ namespace SMC_APM.View.USRForms
         private bool esHostToHost = false;
         private Dictionary<string, string> dcMetodoEnvPorBanco = null;
 
+        private string codMonedaLocal = string.Empty;
+
         public FormPagoMasivo(string id) : base(TYPE, MENU, id, PATH)
         {
             if (!UIFormFactory.FormUIDExists(id)) UIFormFactory.AddUSRForm(id, this);
@@ -53,6 +55,9 @@ namespace SMC_APM.View.USRForms
                 dbsPMP3 = Form.DataSources.DBDataSources.Item("@EXP_PMP3");
                 dbsPMP4 = Form.DataSources.DBDataSources.Item("@EXP_PMP4");
                 utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
+                var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
+
+                codMonedaLocal = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
 
                 dbsPMP4.Clear();
                 // Deshabilito la opcion de restablecer
@@ -328,7 +333,7 @@ namespace SMC_APM.View.USRForms
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
-                    Form.GetUserDataSource("UD_TOTAL").Value = lstDocumentos.Where(d => d.Moneda == "SOL").Sum(d => d.Importe).ToString();
+                    Form.GetUserDataSource("UD_TOTAL").Value = lstDocumentos.Where(d => d.Moneda == codMonedaLocal).Sum(d => d.Importe).ToString();
                     Form.GetUserDataSource("UD_TOT_USD").Value = lstDocumentos.Where(d => d.Moneda == "USD").Sum(d => d.Importe).ToString();
 
                     //Agrego los bancos de la consulta
@@ -690,7 +695,7 @@ namespace SMC_APM.View.USRForms
                     {
                         if (((SAPbouiCOM.CheckBox)mtxDocs.GetCellSpecific(e.ColUID, i + 1)).Checked)
                         {
-                            if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == "SOL")
+                            if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == codMonedaLocal)
                                 totSlc += Convert.ToDouble(((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_11", i + 1)).Value);
                             if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == "USD")
                                 totSlcUSD += Convert.ToDouble(((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_11", i + 1)).Value);
@@ -866,7 +871,7 @@ namespace SMC_APM.View.USRForms
                     for (int i = 0; i < EXP_PMP1.Size; i++)
                     {
                         EXP_PMP1.Offset = i;
-                        if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == "SOL")
+                        if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == codMonedaLocal)
                             totPgoMsv += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
                         if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == "USD")
                             totPgoMsvUSD += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
