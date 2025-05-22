@@ -330,6 +330,11 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_APL_RETENCION_AUX", lineNum, doc.AplicaRetencion);
                         dbsPMP1.SetValue("U_EXP_COD_PRIORIDAD", lineNum, doc.CodPrioridad);
                         dbsPMP1.SetValue("U_EXP_NROLINEA_EP", lineNum, doc.NroLineaEP.ToString());
+                        dbsPMP1.SetValue("U_EXP_NROLINEA_EP", lineNum, doc.NroLineaEP.ToString());
+                        dbsPMP1.SetValue("U_EXP_NROLINEA_EP", lineNum, doc.NroLineaEP.ToString());
+                        dbsPMP1.SetValue("U_EXP_IMPORTE_MS", lineNum, doc.ImporteMS.ToString());
+                        dbsPMP1.SetValue("U_EXP_IMP_RETENCION_MS", lineNum, doc.ImporteRetencionMS.ToString());
+                        dbsPMP1.SetValue("U_EXP_COMENTARIOS", lineNum, doc.Comentarios.ToString());
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();

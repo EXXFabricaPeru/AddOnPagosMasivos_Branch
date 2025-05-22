@@ -119,7 +119,10 @@ namespace SMC_APM.Controller
                     AplicaRetencion = dc["AplicaRetencion"],
                     TieneRetencion = dc["TieneRetencion"],
                     CodPrioridad = dc["CodPrioridad"],
-                    NroLineaEP = Convert.ToInt32(dc["NroLineaEP"])
+                    NroLineaEP = Convert.ToInt32(dc["NroLineaEP"]),
+                    Comentarios = dc["Comentarios"],
+                    ImporteMS = Convert.ToDouble(dc["ImporteMS"]),
+                    ImporteRetencionMS = Convert.ToDouble(dc["ImporteRetencionMS"])
                 };
             });
             return rslt;

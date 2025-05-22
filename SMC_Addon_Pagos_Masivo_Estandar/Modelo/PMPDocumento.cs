@@ -42,6 +42,9 @@ namespace SMC_APM.Modelo
         public string AplicaRetencion { get; set; }
         public string CodPrioridad { get; set; }
         public int NroLineaEP { get; set; }
+        public string Comentarios { get; set; }
+        public double ImporteMS { get; set; }
+        public double ImporteRetencionMS { get; set; }
 
     }
 }

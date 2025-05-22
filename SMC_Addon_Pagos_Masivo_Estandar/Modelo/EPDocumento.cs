@@ -50,5 +50,10 @@ namespace SMC_APM.Modelo
         public string AfectoRetencion { get; set; }
         public string TieneRetencion { get; set; }
         public string AplicaRetencion { get; set; }
+        public string Comentarios { get; set; }
+        public double RetencionMS { get; set; }
+        public double TotalMS { get; set; }
+        public double SaldoMS { get; set; }
+        public double TotalPagarMS { get; set; }
     }
 }

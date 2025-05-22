@@ -472,6 +472,11 @@ namespace SMC_APM.View.USRForms
                                 AfectoRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("AfectoRetencion"))?.Value,
                                 TieneRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("TieneRetencion"))?.Value,
                                 AplicaRetencion = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("AplicaRetencion"))?.Value,
+                                Comentarios = r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("Comentarios"))?.Value,
+                                RetencionMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("RetencionMS"))?.Value),
+                                TotalMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("TotalMS"))?.Value),
+                                SaldoMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("SaldoMS"))?.Value),
+                                TotalPagarMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid.Equals("TotalPagarMS"))?.Value),
                                 EstadoExt = "P"
                             }).ToList();
 
@@ -1072,6 +1077,11 @@ namespace SMC_APM.View.USRForms
                         AfectoRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_AFECTO_RETENCION"))?.Value ?? "",
                         TieneRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TIENE_RETENCION"))?.Value ?? "",
                         AplicaRetencion = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_APLICA_RETENCION"))?.Value ?? "",
+                        Comentarios = r.Cells.FirstOrDefault(c => c.Uid.Equals("U_COMENTARIOS"))?.Value ?? "",
+                        RetencionMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_RETENCION_MS"))?.Value),
+                        TotalMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TOTAL_MS"))?.Value),
+                        SaldoMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_SALDO_MS"))?.Value),
+                        TotalPagarMS = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.Uid.Equals("U_TOTAL_PAGO_MS"))?.Value),
                         RUC = string.Empty,
                         CuentaMoneda = string.Empty,
                         Estado = string.Empty,
@@ -1175,6 +1185,11 @@ namespace SMC_APM.View.USRForms
                             new Cell{ ColumnUid = "AfectoRetencion", Value = d.AfectoRetencion },
                             new Cell{ ColumnUid = "TieneRetencion", Value = d.TieneRetencion },
                             new Cell{ ColumnUid = "AplicaRetencion", Value = d.AplicaRetencion },
+                            new Cell{ ColumnUid = "Comentarios", Value = d.Comentarios },
+                            new Cell{ ColumnUid = "RetencionMS", Value = d.RetencionMS.ToString() },
+                            new Cell{ ColumnUid = "TotalMS", Value = d.TotalMS.ToString() },
+                            new Cell{ ColumnUid = "SaldoMS", Value = d.SaldoMS.ToString() },
+                            new Cell{ ColumnUid = "TotalPagarMS", Value = d.TotalPagarMS.ToString() }
 
                         }.ToArray()
             }).ToArray();
@@ -1226,7 +1241,12 @@ namespace SMC_APM.View.USRForms
                             new CellDBS{ Uid = "U_COD_PRIORIDAD", Value = d.CodPrioridad.ToString()},
                             new CellDBS{ Uid = "U_AFECTO_RETENCION", Value = d.AfectoRetencion },
                             new CellDBS{ Uid = "U_TIENE_RETENCION", Value = d.TieneRetencion},
-                            new CellDBS{ Uid = "U_APLICA_RETENCION", Value = d.AplicaRetencion}
+                            new CellDBS{ Uid = "U_APLICA_RETENCION", Value = d.AplicaRetencion},
+                            new CellDBS{ Uid = "U_COMENTARIOS", Value = d.Comentarios},
+                            new CellDBS{ Uid = "U_RETENCION_MS", Value = d.RetencionMS.ToString() },
+                            new CellDBS{ Uid = "U_TOTAL_MS", Value = d.TotalMS.ToString() },
+                            new CellDBS{ Uid = "U_SALDO_MS", Value = d.SaldoMS.ToString() },
+                            new CellDBS{ Uid = "U_TOTAL_PAGO_MS", Value = d.TotalPagarMS.ToString() }
                         }.ToArray()
             }).ToArray();
 

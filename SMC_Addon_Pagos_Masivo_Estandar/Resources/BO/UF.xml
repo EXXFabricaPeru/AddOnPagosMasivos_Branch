@@ -1754,6 +1754,96 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>EXP_NUM_ESCENARIOPAGO</Name>
+        <Type>db_Alpha</Type>
+        <Size>20</Size>
+        <Description>Número escenario</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COD_SUCURSAL</Name>
+        <Type>db_Alpha</Type>
+        <Size>10</Size>
+        <Description>Código de sucursal</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>10</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COMENTARIOS</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Comentarios</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_IMPORTE_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Importe MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_IMP_RETENCION_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Importe retención MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>EXD_BNPA</Name>
         <Type>db_Alpha</Type>
         <Size>20</Size>
@@ -3572,7 +3662,97 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>COMENTARIOS</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Comentarios</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>250</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>RETENCION_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Retención MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>TOTAL_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Total MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>SALDO_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Saldo MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>TOTAL_PAGO_MS</Name>
+        <Type>db_Float</Type>
+        <Size>16</Size>
+        <Description>Total pago MS</Description>
+        <SubType>st_Sum</SubType>
+        <TableName>@EXD_EPG1</TableName>
+        <EditSize>16</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -4047,43 +4227,7 @@
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
-  </BO>
-  <BO>
-    <AdmInfo>
-      <Object>152</Object>
-      <Version>2</Version>
-    </AdmInfo>
-    <UserFieldsMD>
-      <row>
-        <Name>EXP_NUM_ESCENARIOPAGO</Name>
-        <Type>db_Alpha</Type>
-        <Size>20</Size>
-        <Description>Número escenario</Description>
-        <SubType>st_None</SubType>
-        <TableName>@EXP_PMP1</TableName>
-        <EditSize>20</EditSize>
-        <Mandatory>tNO</Mandatory>
-      </row>
-    </UserFieldsMD>
-  </BO>
-  <BO>
-    <AdmInfo>
-      <Object>152</Object>
-      <Version>2</Version>
-    </AdmInfo>
-    <UserFieldsMD>
-      <row>
-        <Name>EXP_COD_SUCURSAL</Name>
-        <Type>db_Alpha</Type>
-        <Size>10</Size>
-        <Description>Código de sucursal</Description>
-        <SubType>st_None</SubType>
-        <TableName>@EXP_PMP1</TableName>
-        <EditSize>10</EditSize>
-        <Mandatory>tNO</Mandatory>
-      </row>
-    </UserFieldsMD>
-  </BO>
+  </BO>  
   <BO>
     <AdmInfo>
       <Object>152</Object>
