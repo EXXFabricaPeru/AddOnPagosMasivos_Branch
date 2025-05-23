@@ -1400,6 +1400,8 @@ namespace SMC_APM.View.USRForms
             var codSlcSucursal = Convert.ToInt32(dbsOPMP.GetValueExt("U_EXP_COD_SUCURSAL"));
             var fechaPago = DateTime.ParseExact(dbsOPMP.GetValue("U_EXP_FECHAPAGO", 0).Trim(), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
             var tipoDeCambio = Convert.ToDouble(dbsOPMP.GetValueExt("U_EXP_TIPODECAMBIO"));
+            var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
+            var mndLoc = sboBOB.GetLocalCurrency().Fields.Item(0).Value;
 
             var lstPagosPrev = _dsrXmlDBDataSource.Rows.Where(r =>
             r.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_SLC_PAGO")).Value == "Y"
@@ -1415,7 +1417,7 @@ namespace SMC_APM.View.USRForms
                 {
                     Sucursal = Convert.ToInt32(g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_COD_SUCURSAL")).Value),
                     MedioDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MEDIODEPAGO")).Value,
-                    MonedaDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA")).Value,
+                    MonedaDePago = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA_PAGO")).Value,
                     Banco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODBANCO")).Value,
                     CtaBanco = g.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_CODCTABANCO")).Value
                 }).Select(s => new SBOPago
@@ -1427,7 +1429,12 @@ namespace SMC_APM.View.USRForms
                     FechaDocumento = fechaPago,
                     FechaVencimiento = fechaPago,
                     TipoCambio = tipoDeCambio,
-                    Monto = s.Sum(sm => Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value)),
+                    Monto = s.Sum(sm =>
+                    {
+                        return ((mndLoc == sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA")).Value ? 1 : tipoDeCambio)
+                        / (mndLoc == sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_MONEDA_PAGO")).Value ? 1 : tipoDeCambio))
+                       * Convert.ToDouble(sm.Cells.FirstOrDefault(c => c.Uid.Equals("U_EXP_IMPORTE")).Value);
+                    }),
                     ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Cells.FirstOrDefault(c => c.Uid == "LineId").Value)),
                     MetodoPago = new SBOMetodoPago
                     {

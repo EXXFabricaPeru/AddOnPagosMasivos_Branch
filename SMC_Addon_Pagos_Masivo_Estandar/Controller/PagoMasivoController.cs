@@ -442,7 +442,7 @@ namespace SMC_APM.Controller
                     //ExtLineasDS = s.Select(s1 => Convert.ToInt32(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("LineId")).FirstOrDefault()?.Element("value").Value)),
                     MontoRetencion = s.Sum(sm => (
                     sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value == "N" ?
-                    Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value) : 0.00)),
+                    Convert.ToDouble(sm.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION_PAGO")).FirstOrDefault()?.Element("value").Value) : 0.00)),
                     AplicaRetencion = s.Key.AplicaRetencion,
                     EstadoH2H = s.Key.EstadoH2H,
                     MetodoPago = new SBOMetodoPago
@@ -467,7 +467,7 @@ namespace SMC_APM.Controller
                         //MontoPagado = Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPORTE")).FirstOrDefault()?.Element("value").Value)
                         TieneRetencion = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value,
                         ImpRetencionAux = s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_TIENE_RETENCION")).FirstOrDefault()?.Element("value").Value == "N" ?
-                        Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION")).FirstOrDefault()?.Element("value").Value) : 0.00
+                        Convert.ToDouble(s1.Descendants("cell").Where(w => w.Element("uid").Value.Equals("U_EXP_IMPRETENCION_PAGO")).FirstOrDefault()?.Element("value").Value) : 0.00
                     })
                 });
             }
@@ -919,8 +919,8 @@ namespace SMC_APM.Controller
                 sboPayments.AccountPayments.SetCurrentLine(nroLineaPago);
                 sboPayments.AccountPayments.AccountCode = d.CodigoCuenta;
                 sboPayments.AccountPayments.AccountName = d.NumeroCuenta;
-                sboPayments.AccountPayments.GrossAmount = d.Monto;
-                sboPayments.AccountPayments.SumPaid = d.MontoAPagar;
+                sboPayments.AccountPayments.GrossAmount = pago.Monto;
+                sboPayments.AccountPayments.SumPaid = pago.Monto;
                 sboPayments.AccountPayments.Decription = d.Comentarios;
                 sboPayments.AccountPayments.ProjectCode = d.CodProyecto;
                 sboPayments.AccountPayments.ProfitCenter = d.CentroCosto;
