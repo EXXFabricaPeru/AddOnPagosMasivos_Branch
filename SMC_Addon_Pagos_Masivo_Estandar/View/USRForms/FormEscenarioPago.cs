@@ -80,6 +80,8 @@ namespace SMC_APM.View.USRForms
                 Form.Freeze(true);
                 // Deshabilito la opcion de restablecer
                 Form.EnableMenu("1285", false);
+                // Deshabilito la opcion de cerrar
+                Form.EnableMenu("1286", false);
 
                 var tblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
                 tieneAutorizaciones = tblConf.GetByKey("4") && tblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
@@ -926,8 +928,8 @@ namespace SMC_APM.View.USRForms
                                 totMonLoc += Convert.ToDouble(((SAPbouiCOM.EditText)mtxSelc.GetCellSpecific("fTotalP", i + 1)).Value);
                             }
                         }
-                        udsTOTAL.Value = totMonLoc.ToString();
-                        udsTOTAL_USD.Value = totMonExt.ToString();
+                        udsTOTAL.ValueEx = totMonLoc.ToString();
+                        udsTOTAL_USD.ValueEx = totMonExt.ToString();
                     }
                 }
                 return true;
@@ -1096,6 +1098,12 @@ namespace SMC_APM.View.USRForms
                 }
                 return true;
             }));
+        }
+
+        internal void ValidarAnulacionEscenario()
+        {
+            var estado = dbsEXD_OEPG.GetValueExt("U_ESTADO", 0);
+            if (estado == "A") throw new Exception("No se puede anular un escenario autorizado");
         }
 
         internal void LoadDataOnFormAddMode()

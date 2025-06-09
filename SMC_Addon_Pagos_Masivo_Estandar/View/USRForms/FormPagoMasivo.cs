@@ -222,8 +222,8 @@ namespace SMC_APM.View.USRForms
             dbsOPMP.SetValue("U_EXP_COD_PRIORIDAD", 0, "");
             dbsOPMP.SetValue("U_EXP_TIPO_DOCUMENTO", 0, "0");
             dbsOPMP.SetValue("DocNum", 0, Form.BusinessObject.GetNextSerialNumber(dbsOPMP.GetValue("Series", 0).Trim(), Form.BusinessObject.Type).ToString());
-            Form.GetUserDataSource("UD_TOTAL").Value = "0.00";
-            Form.GetUserDataSource("UD_TOT_USD").Value = "0.00";
+            Form.GetUserDataSource("UD_TOTAL").ValueEx = "0.00";
+            Form.GetUserDataSource("UD_TOT_USD").ValueEx = "0.00";
             CargarSeriesDePago(DateTime.Today.Year);
             HabilitarControlesPorEstado("P");
             //Button.Caption = "Grabar";
@@ -338,8 +338,8 @@ namespace SMC_APM.View.USRForms
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
-                    Form.GetUserDataSource("UD_TOTAL").Value = lstDocumentos.Where(d => d.Moneda == codMonedaLocal).Sum(d => d.Importe).ToString();
-                    Form.GetUserDataSource("UD_TOT_USD").Value = lstDocumentos.Where(d => d.Moneda == "USD").Sum(d => d.Importe).ToString();
+                    Form.GetUserDataSource("UD_TOTAL").ValueEx = lstDocumentos.Where(d => d.Moneda == codMonedaLocal).Sum(d => d.Importe).ToString();
+                    Form.GetUserDataSource("UD_TOT_USD").ValueEx = lstDocumentos.Where(d => d.Moneda == "USD").Sum(d => d.Importe).ToString();
 
                     //Agrego los bancos de la consulta
                     var nroLinea = 0;
@@ -707,8 +707,8 @@ namespace SMC_APM.View.USRForms
 
                         }
                     }
-                    Form.GetUserDataSource("UD_TOTAL").Value = totSlc.ToString();
-                    Form.GetUserDataSource("UD_TOT_USD").Value = totSlcUSD.ToString();
+                    Form.GetUserDataSource("UD_TOTAL").ValueEx = totSlc.ToString();
+                    Form.GetUserDataSource("UD_TOT_USD").ValueEx = totSlcUSD.ToString();
                 }
                 return true;
             }));
@@ -881,8 +881,8 @@ namespace SMC_APM.View.USRForms
                         if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == "USD")
                             totPgoMsvUSD += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
                     }
-                    Form.GetUserDataSource("UD_TOTAL").Value = totPgoMsv.ToString();
-                    Form.GetUserDataSource("UD_TOT_USD").Value = totPgoMsvUSD.ToString();
+                    Form.GetUserDataSource("UD_TOTAL").ValueEx = totPgoMsv.ToString();
+                    Form.GetUserDataSource("UD_TOT_USD").ValueEx = totPgoMsvUSD.ToString();
 
                     var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
                     var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = 'EXP_OPMP'";

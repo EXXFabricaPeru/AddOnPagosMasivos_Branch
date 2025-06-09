@@ -26,7 +26,7 @@ BEGIN
 		from  
 		"@EXP_PMP1" 				T1
 		inner join "@EXP_OPMP" 		T2 on T1."DocEntry" = T2."DocEntry"
-		inner join DSC1 			T3 on T3."BankCode" = T1."U_EXP_CODBANCO" and T1."U_EXP_COD_SUCURSAL" = T3."Branch" and T1."U_EXP_CODCTABANCO" =  T3."GLAccount"
+		inner join DSC1 			T3 on T3."BankCode" = T1."U_EXP_CODBANCO" and ifnull(T1."U_EXP_COD_SUCURSAL",'0') = ifnull(T3."Branch",'0') and T1."U_EXP_CODCTABANCO" =  T3."GLAccount"
 		where T3."BankCode" = '002' --and ifnull(T3."UsrNumber2",'') = 'C'
 		and T2."DocEntry" = :NroPM
 		and T1."U_EXP_COD_SUCURSAL" = :NroSC

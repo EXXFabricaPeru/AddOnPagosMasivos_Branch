@@ -618,11 +618,11 @@
       <row>
         <Name>VALOR</Name>
         <Type>db_Alpha</Type>
-        <Size>10</Size>
+        <Size>50</Size>
         <Description>Valor</Description>
         <SubType>st_None</SubType>
         <TableName>@SMC_APM_CONFIAPM</TableName>
-        <EditSize>10</EditSize>
+        <EditSize>50</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>

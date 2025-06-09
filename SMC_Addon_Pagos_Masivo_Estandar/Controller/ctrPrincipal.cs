@@ -334,6 +334,9 @@ namespace SMC_APM.Controladores
                                 case "FrmPMP":
                                     ((FormPagoMasivo)UIFormFactory.GetFormByUID(activeForm.UniqueID)).ValidarAnulacionPagos();
                                     break;
+                                case "FrmEP":
+                                    ((FormEscenarioPago)UIFormFactory.GetFormByUID(activeForm.UniqueID)).ValidarAnulacionEscenario();
+                                    break;
                             }
                             break;
                         case "1286":

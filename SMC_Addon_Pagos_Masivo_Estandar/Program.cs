@@ -63,7 +63,8 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "13",Name="Obt. serie pago desde ctas. banco propio",Valor="N" },
                                 new { Code = "14",Name="Cta. de ajuste por redondeo",Valor="" },
                                 new { Code = "15",Name="ID de flujo de caja",Valor="" },
-                                new { Code = "16",Name="Validar pago de retenciones",Valor="N" }
+                                new { Code = "16",Name="Validar pago de retenciones",Valor="N" },
+                                new { Code = "17",Name="Cancelar pagos a la fecha actual",Valor="N" }
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");

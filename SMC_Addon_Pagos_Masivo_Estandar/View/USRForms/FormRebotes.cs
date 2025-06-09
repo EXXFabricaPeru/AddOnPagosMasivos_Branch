@@ -154,6 +154,13 @@ namespace SMC_APM.View.USRForms
                     var mntoTotalAnulado = 0.00;
                     var rslt = 0;
                     var idPM = Convert.ToInt32(dbsORBT.GetValueExt("U_DOCENTRY_PM"));
+                    var utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
+                    bool cancelarPagoFechaActual = false;
+
+                    if (utblConf.GetByKey("17"))
+                    {
+                        cancelarPagoFechaActual = utblConf.UserFields.Fields.Item("U_VALOR").Value == "Y";
+                    }
 
                     mtxDocs.FlushToDataSource();
                     var _xmlSerializer = new XmlSerializer(typeof(XMLDBDataSource));
@@ -200,7 +207,7 @@ namespace SMC_APM.View.USRForms
                                 //Cancelo pago documentos
                                 if (vendorPayment.Cancelled == SAPbobsCOM.BoYesNoEnum.tNO)
                                 {
-                                    rslt = vendorPayment.CancelbyCurrentSystemDate();
+                                    rslt = cancelarPagoFechaActual ? vendorPayment.CancelbyCurrentSystemDate() : vendorPayment.Cancel();
                                     if (rslt != 0) throw new InvalidOperationException($"Error al cancelar pago con ID: {pagoDocumento.ID}, error: {Globales.Company.GetLastErrorDescription()}");
                                 }
 
@@ -210,9 +217,9 @@ namespace SMC_APM.View.USRForms
                                     vendorPaymentNew.Series = vendorPayment.Series;
                                     vendorPaymentNew.CardCode = vendorPayment.CardCode;
                                     vendorPaymentNew.PaymentType = vendorPayment.PaymentType;
-                                    vendorPaymentNew.DocDate = vendorPayment.DocDate;
-                                    vendorPaymentNew.TaxDate = vendorPayment.TaxDate;
-                                    vendorPaymentNew.DueDate = vendorPayment.DueDate;
+                                    vendorPaymentNew.DocDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.DocDate;
+                                    vendorPaymentNew.TaxDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.TaxDate;
+                                    vendorPaymentNew.DueDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.DueDate;
                                     vendorPaymentNew.Reference1 = vendorPayment.Reference1;
                                     vendorPaymentNew.Reference2 = vendorPayment.Reference2;
                                     vendorPaymentNew.CounterReference = vendorPayment.CounterReference;
@@ -292,7 +299,7 @@ namespace SMC_APM.View.USRForms
                         {
                             if (vendorPayment.Cancelled == SAPbobsCOM.BoYesNoEnum.tNO)
                             {
-                                rslt = vendorPayment.CancelbyCurrentSystemDate();
+                                rslt = cancelarPagoFechaActual ? vendorPayment.CancelbyCurrentSystemDate() : vendorPayment.Cancel();
                                 if (rslt != 0) throw new InvalidOperationException($"Error al cancelar pago con ID: {rebote.IDPagoSucursal}, error: {Globales.Company.GetLastErrorDescription()}");
                             }
 
@@ -303,9 +310,9 @@ namespace SMC_APM.View.USRForms
                                 vendorPaymentNew.DocType = vendorPayment.DocType;
                                 vendorPaymentNew.DocCurrency = vendorPayment.DocCurrency;
                                 vendorPaymentNew.DocRate = vendorPayment.DocRate;
-                                vendorPaymentNew.DocDate = vendorPayment.DocDate;
-                                vendorPaymentNew.TaxDate = vendorPayment.TaxDate;
-                                vendorPaymentNew.DueDate = vendorPayment.DueDate;
+                                vendorPaymentNew.DocDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.DocDate;
+                                vendorPaymentNew.TaxDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.TaxDate;
+                                vendorPaymentNew.DueDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.DueDate;
                                 vendorPaymentNew.Reference1 = vendorPayment.Reference1;
                                 vendorPaymentNew.Reference2 = vendorPayment.Reference2;
                                 vendorPaymentNew.CounterReference = vendorPayment.CounterReference;
