@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Exxis Perú")]
 [assembly: AssemblyProduct("AddOn de Pagos Masivos SAP B1")]
 [assembly: AssemblyCopyright("Copyright @Exxis Perú 20")]
-[assembly: AssemblyTrademark("SmartCode")]
+[assembly: AssemblyTrademark("Exxis Perú")]
 [assembly: AssemblyCulture("")]
 
 // Si establece ComVisible en false, los tipos de este ensamblado no estarán visibles 
