@@ -328,4 +328,17 @@
       </row>
     </UserTablesMD>
   </BO>
+  <BO>
+    <AdmInfo>
+      <Object>153</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserTablesMD>
+      <row>
+        <TableName>EXD_PM_EP_TIPDOC</TableName>
+        <TableDescription>PM: Tipo doc. para escenario</TableDescription>
+        <TableType>bott_NoObject</TableType>
+      </row>
+    </UserTablesMD>
+  </BO>
 </BOM>

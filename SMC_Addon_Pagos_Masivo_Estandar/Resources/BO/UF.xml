@@ -5571,4 +5571,56 @@
       </row>
     </UserFieldsMD>
   </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>OIDC</TableID>
+        <AliasID>EXD_PAGO_MASIVO</AliasID>
+        <Descr>Pago masivo</Descr>
+        <TypeID>A</TypeID>
+        <SizeID>1</SizeID>
+        <EditSize>1</EditSize>
+        <Dflt>Y</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>Y</FldValue>
+        <Descr>SI</Descr>
+      </row>
+      <row>
+        <FldValue>N</FldValue>
+        <Descr>NO</Descr>
+      </row>
+    </UFD1>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>@EXD_PM_EP_TIPDOC</TableID>
+        <AliasID>HABILITADO</AliasID>
+        <Descr>Habilitado</Descr>
+        <TypeID>A</TypeID>
+        <SizeID>1</SizeID>
+        <EditSize>1</EditSize>
+        <Dflt>Y</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>Y</FldValue>
+        <Descr>SI</Descr>
+      </row>
+      <row>
+        <FldValue>N</FldValue>
+        <Descr>NO</Descr>
+      </row>
+    </UFD1>
+  </BO>
 </BOM>

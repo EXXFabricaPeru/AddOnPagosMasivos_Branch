@@ -64,7 +64,8 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "14",Name="Cta. de ajuste por redondeo",Valor="" },
                                 new { Code = "15",Name="ID de flujo de caja",Valor="" },
                                 new { Code = "16",Name="Validar pago de retenciones",Valor="N" },
-                                new { Code = "17",Name="Cancelar pagos a la fecha actual",Valor="N" }
+                                new { Code = "17",Name="Cancelar pagos a la fecha actual",Valor="N" },
+                                new { Code = "18",Name="Version extendida del TXT de BCP",Valor="N" }
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");
@@ -96,6 +97,34 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                     tblConfDocumentos.Add();
                                 }
                             }
+
+                            var lstTiposDocumentoEP = new List<dynamic>
+                            {
+                                new { Code = "AS",Name="Asiento" },
+                                new { Code = "FA-P",Name="Factura de anticipo de proveedores"},
+                                new { Code = "FT-P",Name="Factura de proveedores"},
+                                new { Code = "NC-C",Name="Nota de credito de clientes" },
+                                new { Code = "PR",Name="Pago recibido"},
+                                new { Code = "SA-P",Name="Solicitud de anticipo de proveedores"},
+                                new { Code = "SP",Name="Pago borrador"}
+                            };
+                            //Establezco opciones por defecto
+                            var tblTiposDocumentoEP = conexSBO.sboCompany.UserTables.Item("EXD_PM_EP_TIPDOC");
+                            foreach (var item in lstTiposDocumentoEP)
+                            {
+                                if (!tblTiposDocumentoEP.GetByKey(item.Code))
+                                {
+                                    tblTiposDocumentoEP.Code = item.Code;
+                                    tblTiposDocumentoEP.Name = item.Name;
+                                    tblTiposDocumentoEP.Add();
+                                }
+                            }
+
+                            var recset = (SAPbobsCOM.Recordset)conexSBO.sboCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                            var sqlQry = "update OIDC set U_EXD_PAGO_MASIVO = 'Y'";
+                            recset.DoQuery(sqlQry);
+                            recset = null;            
+
                             //inicia el addon
                             ctrPrincipal = new ctrPrincipal(conexSBO.sboApplication, conexSBO.sboCompany);
                             ctrPrincipal.iniciarAddon();

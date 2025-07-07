@@ -13,8 +13,8 @@ BEGIN
 	(
 		select 
 			'01'																as "TipoOrden",
-			rpad(T0."DocEntry" ||'-'|| T0."LineId",15,' ')						as "Referencia1",
-			rpad(left(ifnull(T0."U_EXP_COMENTARIO",''),16),16)					as "Referencia2",
+			rpad('Proveedores',15,' ')											as "Referencia1",
+			rpad(T0."DocEntry" ||'-'|| T0."LineId",16,' ')						as "Referencia2",
 			case T0."U_EXP_MONEDA_PAGO" when 'SOL' 
 			then '00' when 'USD' then '01' else '  ' end						as "MonedaPago",
 			replace(T1."Account",'-','')										as "CuentaCargo",

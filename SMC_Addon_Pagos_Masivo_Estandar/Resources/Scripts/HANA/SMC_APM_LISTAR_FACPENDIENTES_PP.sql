@@ -307,10 +307,11 @@ BEGIN
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
-		T0."Indicator" IN ('00','01','02','08','10','14','50','99','05','91','SA')
+		T0."Indicator" IN (select "Code" from OIDC where U_EXD_PAGO_MASIVO = 'Y')
 		--T0."Indicator" IN ('01','02','03','08','DT','DO')
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'FT-P') = 'Y'
 		AND IFNULL(T1."U_EXX_CONFTIPODET",'No') = 'No'
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
@@ -486,11 +487,12 @@ BEGIN
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
-		T0."Indicator" IN ('00','01','02','08','14','50','99','91','05','07','SA')
+		T0."Indicator" IN (select "Code" from OIDC where U_EXD_PAGO_MASIVO = 'Y')
 		--T0."Indicator" IN ('01','02','03','08','DT','DO')
 		AND T1."InstlmntID" = '1'
 		AND T1."Status" = 'O'
 		AND T0."U_EXC_ESCPAG"='Y'
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'NC-C') = 'Y'
 		AND T2."PymntGroup" not like '%DT%'
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (T0."DocCur" = UPPER(:monedaLoc) or T0."DocCur" = UPPER(:monedaExt))
@@ -644,10 +646,11 @@ BEGIN
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
-		T0."Indicator" IN ('SA','00','01','02','08','14','50','99','91','05','07')
+		T0."Indicator" IN (select "Code" from OIDC where U_EXD_PAGO_MASIVO = 'Y')
 		--T0."Indicator" IN ('01','02','03','08','DT','DO')
 		AND T1."InstlmntID" = '1'
 		AND T1."Status" = 'O'
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'FA-P') = 'Y'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		--AND T1."DueDate" <= :fechaVencH
@@ -805,10 +808,11 @@ BEGIN
 		LEFT JOIN OWHT T5 ON T4."WTCode" = T5."WTCode"
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
-		T0."Indicator" IN ('00','01','02','08','14','50','99','91','05','07','SA')
+		T0."Indicator" IN (select "Code" from OIDC where U_EXD_PAGO_MASIVO = 'Y')
 		--T0."Indicator" IN ('01','02','03','08','DT','DO')
 		AND T1."InstlmntID" = '1'
 		AND T1."Status" = 'O'
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'SA-P') = 'Y'
 		AND T0."U_EXC_ESCPAG"='Y'
 		AND T2."PymntGroup" not like '%DT%'
 		--AND T1."DueDate" <= :fechaVencH
@@ -902,6 +906,7 @@ BEGIN
 		1=1
 		--T0."DocDueDate" <= :fechaVencH
 		AND T0."Canceled" = 'N'
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'SP') = 'Y'
 		--AND (T0."DocCurr" = UPPER(:monedaLoc) or T0."DocCurr" = UPPER(:monedaExt))
 		AND T0."CardCode" like '%' || :CardCode ||'%'
 		--AND T0."DocEntry" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
@@ -1025,7 +1030,7 @@ BEGIN
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
 	 	T0."TransType" = 24
-
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'PR') = 'Y'
 		/*
 		AND IFNULL((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
@@ -1166,7 +1171,7 @@ BEGIN
 		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
 	WHERE 
 	 	T0."TransType" = 30
-	
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'AS') = 'Y'
 		/*
 		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
