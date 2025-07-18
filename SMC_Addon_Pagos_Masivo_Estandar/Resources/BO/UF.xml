@@ -4155,8 +4155,34 @@
     <CUFD>
       <row>
         <TableID>OCRB</TableID>
+        <AliasID>EXD_PAGO_MASIVO</AliasID>
+        <Descr>Banco pago masivo</Descr>
+        <TypeID>A</TypeID>
+        <SizeID>1</SizeID>
+        <EditSize>1</EditSize>
+        <Dflt>Y</Dflt>
+      </row>
+    </CUFD>
+    <UFD1>
+      <row>
+        <FldValue>Y</FldValue>
+        <Descr>SI</Descr>
+      </row>
+      <row>
+        <FldValue>N</FldValue>
+        <Descr>NO</Descr>
+      </row>
+    </UFD1>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+    </AdmInfo>
+    <CUFD>
+      <row>
+        <TableID>OCRB</TableID>
         <AliasID>EXC_ACTIVO</AliasID>
-        <Descr>Banco Activo</Descr>
+        <Descr>Banco Activo P.M.</Descr>
         <TypeID>A</TypeID>
         <SizeID>1</SizeID>
         <EditSize>1</EditSize>

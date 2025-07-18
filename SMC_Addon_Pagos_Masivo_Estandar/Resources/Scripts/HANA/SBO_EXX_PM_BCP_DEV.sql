@@ -6,11 +6,12 @@ CREATE PROCEDURE SBO_EXX_PM_BCP_DEV
 )
 AS
 BEGIN
-	
+	declare mndLoc varchar(5);
 	declare versionExtendida varchar(1);
 
 	select U_VALOR into versionExtendida from "@SMC_APM_CONFIAPM" where "Code" = '18';
-
+	select "MainCurncy" into mndLoc from OADM;
+	
 	IF :versionExtendida = 'Y'
 	THEN
 		with CTE_CAB AS
@@ -21,7 +22,7 @@ BEGIN
 				sum(1)														as "CntDeAbonos",
 				TO_VARCHAR(NOW(),'yyyyMMdd')								as "FechaProceso",
 				'C'															as "TipoCtaCargo",
-				case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end	as "Moneda",
+				case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end	as "Moneda",
 				rpad(replace(T3."Account",'-',''),20,' ')					as "NroCtaCargo",
 				sum(TO_DECIMAL(T1."U_EXP_IMPORTE",14,2))					as "TotalPlanilla",
 				ifnull(T1."U_EXP_COMENTARIO",'')							as "Referencia",
@@ -59,7 +60,7 @@ BEGIN
 				T3."CardName"																as "NombreProveedor",
 				ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaProveedor",
 				ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaEmpresa",
-				case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end				as "Moneda",
+				case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end				as "Moneda",
 				TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)											as "Importe",
 				'S'																			as "Validar",
 				''																			as "Filler",
@@ -147,7 +148,7 @@ BEGIN
 				sum(1)														as "CntDeAbonos",
 				TO_VARCHAR(NOW(),'yyyyMMdd')								as "FechaProceso",
 				'C'															as "TipoCtaCargo",
-				case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end	as "Moneda",
+				case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end	as "Moneda",
 				rpad(replace(T3."Account",'-',''),20,' ')					as "NroCtaCargo",
 				sum(TO_DECIMAL(T1."U_EXP_IMPORTE",14,2))					as "TotalPlanilla",
 				ifnull(T1."U_EXP_COMENTARIO",'')							as "Referencia",
@@ -185,7 +186,7 @@ BEGIN
 				T3."CardName"																as "NombreProveedor",
 				ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaProveedor",
 				ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaEmpresa",
-				case when T1."U_EXP_MONEDA" = 'SOL' then '0001' else '1001' end				as "Moneda",
+				case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end				as "Moneda",
 				TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)											as "Importe",
 				'S'																			as "Validar",
 				''																			as "Filler"

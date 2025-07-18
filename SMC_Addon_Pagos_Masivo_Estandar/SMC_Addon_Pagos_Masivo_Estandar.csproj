@@ -255,9 +255,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\frmSMC_PM_PagoProveedores.srf">
+    <Content Include="Resources\FrmEscenarioPago.srf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\frmSMC_PM_DatosCuenta.srf" />

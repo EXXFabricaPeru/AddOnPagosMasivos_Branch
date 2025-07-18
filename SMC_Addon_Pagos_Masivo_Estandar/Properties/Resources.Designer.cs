@@ -203,23 +203,6 @@ namespace SMC_APM.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-16&quot;?&gt;
-        ///&lt;Application&gt;
-        ///  &lt;forms&gt;
-        ///    &lt;action type=&quot;add&quot;&gt;
-        ///      &lt;form appformnumber=&quot;frmSMC&quot; FormType=&quot;frmSMC&quot; type=&quot;0&quot; BorderStyle=&quot;0&quot; uid=&quot;frmSMC1&quot; title=&quot;Escenarios de pago&quot; visible=&quot;1&quot; default_button=&quot;&quot; pane=&quot;1&quot; color=&quot;0&quot; left=&quot;0&quot; top=&quot;0&quot; width=&quot;926&quot; height=&quot;574&quot; client_width=&quot;&quot; client_height=&quot;&quot; AutoManaged=&quot;0&quot; SupportedModes=&quot;15&quot; ObjectType=&quot;EXD_OEPG&quot; mode=&quot;3&quot;&gt;
-        ///        &lt;datasources&gt;
-        ///          &lt;DataTables&gt;
-        ///            &lt;DataTable Uid=&quot;DT_FAC&quot;&gt;
-        ///              &lt;Columns&gt; [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string frmSMC_PM_PagoProveedores {
-            get {
-                return ResourceManager.GetString("frmSMC_PM_PagoProveedores", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to SMC_Pagos_Masivos.
         /// </summary>
         internal static string nombreAddon {
