@@ -157,9 +157,6 @@
   <data name="frmSMC_PM_LiberarTerceroRet" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\frmSMC_PM_LiberarTerceroRet.srf;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-16</value>
   </data>
-  <data name="frmSMC_PM_PagoProveedores" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\frmSMC_PM_PagoProveedores.srf;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-16</value>
-  </data>
   <data name="frmSMC_PM_DatosCuenta" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\frmSMC_PM_DatosCuenta.srf;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-16</value>
   </data>
