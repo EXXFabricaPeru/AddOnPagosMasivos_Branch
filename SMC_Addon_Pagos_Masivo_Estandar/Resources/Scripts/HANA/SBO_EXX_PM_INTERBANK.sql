@@ -6,9 +6,9 @@ AS
 factoring nvarchar(1);
 BEGIN
 -- Llenado de variables
-SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and "Branch" = :codSucursal and ifnull("U_EXM_PMASIVO",'') = 'Y';
+SELECT "U_EXC_FCTRNG" INTO factoring FROM DSC1 WHERE "GLAccount"=:glaccount and coalesce("Branch",'0') = coalesce(:codSucursal,'0') and ifnull("U_EXM_PMASIVO",'') = 'Y';
 
-IF :factoring='N' THEN
+IF coalesce(:factoring,'N') ='N' THEN
 
 SELECT
 A0."1-2 (2)"
