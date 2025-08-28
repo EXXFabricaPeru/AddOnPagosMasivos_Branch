@@ -65,7 +65,8 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "15",Name="ID de flujo de caja",Valor="" },
                                 new { Code = "16",Name="Validar pago de retenciones",Valor="N" },
                                 new { Code = "17",Name="Cancelar pagos a la fecha actual",Valor="N" },
-                                new { Code = "18",Name="Version extendida del TXT de BCP",Valor="N" }
+                                new { Code = "18",Name="Version extendida del TXT de BCP",Valor="N" },
+                                new { Code = "19",Name="Mostrar asientos con bloqueo de pago",Valor="Y" }
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");

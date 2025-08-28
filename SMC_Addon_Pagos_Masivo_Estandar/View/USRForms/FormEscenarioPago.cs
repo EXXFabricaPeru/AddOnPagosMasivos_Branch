@@ -958,6 +958,19 @@ namespace SMC_APM.View.USRForms
                                 dttFac.SetValue("NombreBanco", e.Row - 1, dttFac.GetValue("NomBancoPago", e.Row - 1));
                                 dttFac.SetValue("Cuenta", e.Row - 1, recSet.Fields.Item(0).Value.ToString());
                             }
+                            else
+                            {
+                                sqlQry = $"select T0.\"BankCode\",T1.\"BankName\",coalesce(T0.U_EXM_INTERBANCARIA,'') as \"CCI\" from " +
+                                $"OCRB T0 inner join ODSC T1 on T0.\"BankCode\" =T1.\"BankCode\" where \"CardCode\" = '{codProveedor}' and coalesce(\"UsrNumber1\",'') = '{codMonedaPago}' " +
+                                $"and coalesce(U_EXD_PAGO_MASIVO,'') = 'Y' and coalesce(U_EXC_ACTIVO,'') = 'Y' and coalesce(\"Account\",'') <> '' ";
+                                recSet.DoQuery(sqlQry);
+                                if (recSet.RecordCount > 0)
+                                {
+                                    dttFac.SetValue("BankCode", e.Row - 1, recSet.Fields.Item(0).Value.ToString());
+                                    dttFac.SetValue("NombreBanco", e.Row - 1, recSet.Fields.Item(1).Value.ToString());
+                                    dttFac.SetValue("Cuenta", e.Row - 1, recSet.Fields.Item(2).Value.ToString());
+                                }
+                            }
 
                             mtxFact.LoadFromDataSourceEx();
 

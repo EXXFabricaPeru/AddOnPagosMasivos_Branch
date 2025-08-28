@@ -18,12 +18,14 @@ BEGIN
 	declare tipoCambioP decimal(18,6);
 	declare montoMinimoRET decimal(19,6);
 	declare validaPagoDetraccion varchar(1);
+	declare mostrarAsientosBloqueoPago varchar(1);
 	declare monLoc varchar(5);
 	declare monSis varchar(5);
 	
 	select ifnull(max("Rate"),1) into tipoCambioP from ORTT where "Currency" = 'USD' and "RateDate" = TO_DATE(now());
 	select ifnull(max(U_EXX_MONTOMIN),0.00) into montoMinimoRET from OWHT where "WTCode" = 'RIGV';
 	select ifnull(max(U_VALOR),'N') into validaPagoDetraccion from "@SMC_APM_CONFIAPM" where "Code" = '12';
+	select ifnull(max(U_VALOR),'N') into mostrarAsientosBloqueoPago from "@SMC_APM_CONFIAPM" where "Code" = '19';
 	select "MainCurncy","SysCurrncy" into monLoc,monSis from OADM;
 	
 	PAG_PAR = select 
@@ -1172,6 +1174,164 @@ BEGIN
 	WHERE 
 	 	T0."TransType" = 30
 		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'AS') = 'Y'
+		AND ifnull(T1."PayBlock",'') = 'N'
+		/*
+		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
+		*/
+		and ((T1."Credit" - 
+		ifnull((select sum(TT0."ReconSum") from 
+		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
+		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0 or ((T1."FCCredit" - 
+		ifnull((select sum(TT0."ReconSumFC") from 
+		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
+		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0))
+		
+		--AND T1."DueDate" <= :fechaVencH
+		--AND (ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaExt))
+		AND T3."CardCode" like '%' || :CardCode || '%'
+		and ( T1."Credit" > 0 or T1."FCCredit" > 0)
+		and ifnull(T1."U_EXX_DETRACCION",'') <> 'Y'
+		/*AND T0."TransId" NOT IN (SELECT "U_SMC_DOCENTRY" FROM "@SMC_APM_ESCDET" 
+									WHERE "U_SMC_ESCCAB" = :escenario and "U_SMC_TIPO_DOCUMENTO" = 'AS')*/
+		--AND ifnull((SELECT max('Y') FROM "@SMC_APM_ESCDET" 
+		--							WHERE "U_SMC_ESCCAB" = :escenario 
+		--and "U_SMC_TIPO_DOCUMENTO" = 'AS' and "U_SMC_DOCENTRY" = T0."TransId" and "U_EXP_LINEAASIENTO" = T1."Line_ID"),'N') != 'Y'
+
+		AND (ifnull((SELECT max('Y') FROM "@EXD_EPG1" TX0 inner join "@EXD_OEPG" TX1 on TX0."DocEntry" = TX1."DocEntry"
+		WHERE TX0."U_TIPO_DOCUMENTO" = 'AS' and TX0."U_DOCENTRY" = T0."TransId" and TX0."U_NRO_LINEA_AS" = T1."Line_ID" 
+		
+		and (ifnull((select max('Y') from "@EXP_OPMP" TT0 
+		inner join "@EXP_PMP1" TT1 on TT0."DocEntry" = TT1."DocEntry"
+		where TT0."Status" = 'C' and TT1."U_EXP_COD_ESCENARIOPAGO" = TX1."DocEntry" and TT1."U_EXP_TIPODOC" = '30' 
+		and TT1."U_EXP_DOCENTRYDOC" = TX0."U_DOCENTRY" and TT1."U_EXP_ASNROLINEA" = TX0."U_NRO_LINEA_AS" and TT1."U_EXP_ESTADO" = 'ER'),'N')) = 'N'
+		
+		and ifnull(TX1."Canceled",'') != 'Y'),'N') != 'Y' 
+		OR T0."U_CP_VARESC"='Y')
+		
+		union all
+
+		SELECT
+		DISTINCT
+		T0."TransId" as "DocEntry",
+		T0."Number" as "DocNum",
+		T0."TaxDate" AS "FechaContable",
+		T1."DueDate" AS "FechaVencimiento",
+		T3."CardCode",
+		T3."CardName",
+		T0."Ref2" 	as "NumAtCard",
+		--T0."TransCurr"
+		ifnull(T1."FCCurrency",:monLoc),
+		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/case when T1."Credit" = 0 then 1 else T1."Credit" end end,
+		CAST( 
+		(CASE 
+			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 
+			
+				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
+		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
+		
+			ELSE 
+			
+				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
+		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+		GROUP BY TT0."TransId",TT0."TransRowId"),0))
+				
+		END)AS DECIMAL(16,2)) AS "Total",
+		
+		T2."WTCode" AS "CodigoRetencion" ,
+		
+		IFNULL(CAST( 
+		(CASE 
+			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 
+				THEN (T2."WTAmntFC") 
+			ELSE 
+				(T2."WTAmnt")
+				
+		END)AS DECIMAL(16,2)), 0.0) AS "Retencion",
+		
+		CAST( 
+		(CASE 
+			WHEN IFNULL(T1."FCCurrency",:monLoc) in ('USD','EUR') 
+				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
+												 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+												 GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+												 
+						(
+							(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
+													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
+												 
+						)						 
+												 
+			ELSE 
+						(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") from 
+						"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+						GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+						
+						(
+							(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") 
+													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
+												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
+												 
+						)	
+				
+		END)AS DECIMAL(16,2))    AS "TotalPagar",
+			
+		T3."LicTradNum" AS "RUC",
+
+		(SELECT CASE :tipoBanco WHEN '000' THEN R3."Account" ELSE CASE WHEN :tipoBanco = R3."BankCode" THEN R3."Account" ELSE R3."U_EXM_INTERBANCARIA" END END 
+		FROM OCRD R0
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",:monLoc) --:monedaLoc --normal
+		WHERE R0."CardCode" = T3."CardCode")
+		AS "Cuenta",
+		
+		(SELECT R3."UsrNumber1"
+		FROM OCRD R0
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",:monLoc) --:monedaLoc --normal
+		WHERE R0."CardCode" = T3."CardCode")
+		AS "CuentaMoneda",
+
+		(SELECT R3."BankCode"
+		FROM OCRD R0
+		LEFT JOIN OCRB R3 ON R0."CardCode"=R3."CardCode" AND R3."U_EXC_ACTIVO"='Y' AND IFNULL(R3."UsrNumber1",'') = ifnull(T1."FCCurrency",:monLoc) --:monedaLoc --normal
+		WHERE R0."CardCode" = T3."CardCode")
+		AS "BankCode",
+		(CASE 
+			WHEN DAYS_BETWEEN(T0."DueDate", :fechaVencH) < 0 THEN 0 
+			ELSE DAYS_BETWEEN(T0."DueDate", :fechaVencH) 
+		END) AS "Atraso",
+		--0 AS "Atraso",
+		'' AS "Marca",
+		'' AS "Estado",
+		'AS' as "Documento",
+		'' AS "Comentario",
+		CASE WHEN T3."QryGroup11" = 'Y' THEN 'PROV. CAJA CHICA' ELSE '' END AS "Propiedad",
+		T0."DueDate"
+		,'' as "Origen"
+		,T1."PayBlock" AS "BloqueoPago"
+		,'N' AS "DetraccionPend"
+		,0 AS "NroCuota"
+		,T1."Line_ID" AS "LineaAsiento"
+		,T0."Memo" AS "GlosaAsiento"
+		,T0."U_EXX_PROORI" as "CardCodeFactoring" 
+		,T4."CardName" as "CardNameFactoring" 
+		,T1."BPLId" as "CodSucursal"
+		,T0.U_EXX_PRIPAG as "CodPrioridad"
+		,T0."Memo" as "Comentarios"
+		,1.00 as "CteTipoCambioSis"
+	FROM 
+		OJDT T0
+		LEFT JOIN JDT1 T1 ON T0."TransId" = T1."TransId"
+		LEFT JOIN JDT2 T2 ON T1."TransId" = T2."AbsEntry"
+		--LEFT JOIN OCTG T2 ON T0."GroupNum" = T2."GroupNum"
+		inner JOIN OCRD T3 ON T1."ShortName" = T3."CardCode"
+		LEFT JOIN OCRD T4 ON T0."U_EXX_PROORI" = T4."CardCode"
+		--LEFT JOIN OCRB T4 ON T0."CardCode" = T4."CardCode"
+	WHERE 
+	 	T0."TransType" = 30
+		AND (select U_HABILITADO from "@EXD_PM_EP_TIPDOC" where "Code" = 'AS') = 'Y'
+		AND ifnull(T1."PayBlock",'') = 'Y'
+		AND :mostrarAsientosBloqueoPago = 'Y'
 		/*
 		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
