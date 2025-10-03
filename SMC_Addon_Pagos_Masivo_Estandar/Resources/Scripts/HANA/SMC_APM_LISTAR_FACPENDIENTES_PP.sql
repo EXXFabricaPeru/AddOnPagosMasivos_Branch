@@ -68,6 +68,9 @@ BEGIN
 	)AS TT  
 	group by U_TIPO_DOCUMENTO,U_DOCENTRY,U_NRO_CUOTA,U_NRO_LINEA_AS;
 	
+	MNT_REC = select sum(TT0."ReconSum") as "Total",sum(TT0."ReconSumFC") as "TotalFC",TT0."TransId",TT0."TransRowId" from "ITR1" TT0 
+			  group by TT0."TransId", TT0."TransRowId";
+	
 	DOCS = SELECT 
 		'N' as "Slc",
 		T0."CodSucursal",
@@ -1068,18 +1071,10 @@ BEGIN
 		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/case when T1."Credit" = 0 then 1 else T1."Credit" end end,
 		CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 
-			
-				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
-		
-			ELSE 
-			
-				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId",TT0."TransRowId"),0))
-				
+			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 			
+				THEN (T1."FCCredit" - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) 
+			ELSE 			
+				(T1."Credit" - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0))	
 		END)AS DECIMAL(16,2)) AS "Total",
 		
 		T2."WTCode" AS "CodigoRetencion" ,
@@ -1096,26 +1091,18 @@ BEGIN
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",:monLoc) in ('USD','EUR') 
-				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
-												 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												 GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) - 
 												 
 						(
-							(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
-													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
+							(ifnull(T1."FCCredit",0) - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
 												 
 						)						 
 												 
 			ELSE 
-						(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") from 
-						"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-						GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+						(ifnull(T1."Credit",0) - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) - 
 						
 						(
-							(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") 
-													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
+							(ifnull(T1."Credit",0) - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
 												 
 						)	
 				
@@ -1179,12 +1166,8 @@ BEGIN
 		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
 		and ((T1."Credit" - 
-		ifnull((select sum(TT0."ReconSum") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0 or ((T1."FCCredit" - 
-		ifnull((select sum(TT0."ReconSumFC") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0))
+		ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) > 0 or ((T1."FCCredit" - 
+		ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) > 0))
 		
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaExt))
@@ -1207,7 +1190,7 @@ BEGIN
 		
 		and ifnull(TX1."Canceled",'') != 'Y'),'N') != 'Y' 
 		OR T0."U_CP_VARESC"='Y')
-		
+
 		union all
 
 		SELECT
@@ -1224,18 +1207,10 @@ BEGIN
 		case when ifnull(T1."FCCurrency",'') = '' then 1.00 else T1."FCCredit"/case when T1."Credit" = 0 then 1 else T1."Credit" end end,
 		CAST( 
 		(CASE 
-			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 
-			
-				THEN (T1."FCCredit" - ifnull((select sum(TT0."ReconSumFC") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId",TT0."TransRowId"),0)) 
-		
-			ELSE 
-			
-				(T1."Credit" - ifnull((select sum(TT0."ReconSum") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId",TT0."TransRowId"),0))
-				
+			WHEN ifnull(T1."FCCurrency",:monLoc) in ('USD','EUR') 			
+				THEN (T1."FCCredit" - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) 
+			ELSE 			
+				(T1."Credit" - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0))	
 		END)AS DECIMAL(16,2)) AS "Total",
 		
 		T2."WTCode" AS "CodigoRetencion" ,
@@ -1252,26 +1227,18 @@ BEGIN
 		CAST( 
 		(CASE 
 			WHEN IFNULL(T1."FCCurrency",:monLoc) in ('USD','EUR') 
-				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
-												 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												 GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+				THEN 	(ifnull(T1."FCCredit",0) - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) - 
 												 
 						(
-							(ifnull(T1."FCCredit",0) - ifnull((select sum(TT0."ReconSumFC") 
-													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
+							(ifnull(T1."FCCredit",0) - ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) / ((case when T1."FCCredit" = 0 then 1 else T1."FCCredit" end)) * ifnull((T2."WTAmntFC" - T2."ApplAmntFC"),0)
 												 
 						)						 
 												 
 			ELSE 
-						(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") from 
-						"ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-						GROUP BY TT0."TransId",TT0."TransRowId"),0)) - 
+						(ifnull(T1."Credit",0) - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) - 
 						
 						(
-							(ifnull(T1."Credit",0) - ifnull((select sum(TT0."ReconSum") 
-													 from "ITR1" TT0 where TT0."TransId" = T0."TransId"  AND TT0."TransRowId" = T1."Line_ID"
-												     GROUP BY TT0."TransId",TT0."TransRowId"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
+							(ifnull(T1."Credit",0) - ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) / ((case when T1."Credit" = 0 then 1 else T1."Credit" end)) * ifnull((T2."WTAmnt" - T2."ApplAmnt"),0)
 												 
 						)	
 				
@@ -1336,12 +1303,8 @@ BEGIN
 		AND ifnull((select count(*) from "ITR1" TT0 where TT0."TransId" = T0."TransId" GROUP BY TT0."TransId"),0) = 0
 		*/
 		and ((T1."Credit" - 
-		ifnull((select sum(TT0."ReconSum") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0 or ((T1."FCCredit" - 
-		ifnull((select sum(TT0."ReconSumFC") from 
-		"ITR1" TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"
-		GROUP BY TT0."TransId", TT0."TransRowId"),0)) > 0))
+		ifnull((select TT0."Total" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) > 0 or ((T1."FCCredit" - 
+		ifnull((select TT0."TotalFC" from :MNT_REC TT0 where TT0."TransId" = T0."TransId" AND TT0."TransRowId" = T1."Line_ID"),0)) > 0))
 		
 		--AND T1."DueDate" <= :fechaVencH
 		--AND (ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaLoc) or ifnull(T1."FCCurrency",:monLoc) = UPPER(:monedaExt))

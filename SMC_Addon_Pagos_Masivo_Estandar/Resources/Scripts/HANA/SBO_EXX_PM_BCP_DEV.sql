@@ -11,7 +11,7 @@ BEGIN
 
 	select U_VALOR into versionExtendida from "@SMC_APM_CONFIAPM" where "Code" = '18';
 	select "MainCurncy" into mndLoc from OADM;
-	
+
 	IF :versionExtendida = 'Y'
 	THEN
 		with CTE_CAB AS
@@ -64,7 +64,7 @@ BEGIN
 				TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)											as "Importe",
 				'S'																			as "Validar",
 				''																			as "Filler",
-				T3."CardCode"																as "CodigoProveedor"
+				T1."LineId"																	as "NroLinea"
 			--from OVPM T0 
 			from "@EXP_PMP1"		T1 
 			inner join "@EXP_OPMP"	T2 on T1."DocEntry" = T2."DocEntry"
@@ -84,15 +84,18 @@ BEGIN
 				case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end		as "TipoDocumento",
 				T1."U_EXP_NROSUNAT"												as "NroDocAPagar",
 				TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)								as "Importe",
-				"U_EXP_CARDCODE"												as "CodigoProveedor"
+				"LineId"														as "NroLinea"
 			from 
 			"@EXP_PMP1"	T1 where T1."DocEntry" = :NroPM
+			and T1."U_EXP_COD_SUCURSAL" = :NroSC
+			and T1."U_EXP_CODCTABANCO" = :NroCT
+			and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 		)
 	
-		select "Data","CodigoProveedor","Orden" from
+		select "Data","NroLinea","Orden" from
 		(
 			select
-				0 as "Orden",'AAAA' as "CodigoProveedor",
+				0 as "Orden",0 as "NroLinea",
 				"TipoRegistro"			||
 				lpad("CntDeAbonos",6,'0')		||
 				"FechaProceso"			||
@@ -114,7 +117,7 @@ BEGIN
 			
 			union all 
 			
-			select 1 as "Orden","CodigoProveedor",
+			select 1 as "Orden","NroLinea",
 				"TipoRegistro"			||
 				"TipoCuentaAbono"		||
 				rpad("NroCtaAbono",20,' ') ||
@@ -131,7 +134,7 @@ BEGIN
 				||'Z' as "Data"
 			from CTE_PROV where ifnull("NroCtaAbono",'') <>''
 			union all 
-			select 2 as "Orden","CodigoProveedor",
+			select 2 as "Orden","NroLinea",
 				"TipoRegistro"		||
 				"TipoDocumento"		||
 				lpad(ifnull("NroDocAPagar",''),15,'0')	||

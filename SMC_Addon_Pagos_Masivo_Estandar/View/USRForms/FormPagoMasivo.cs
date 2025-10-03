@@ -1298,6 +1298,7 @@ namespace SMC_APM.View.USRForms
                 {
                     Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                     dbsOPMP.SetValueExt("Status", "C");
+                    dbsOPMP.SetValueExt("U_EXP_ESTADO","C");
                     if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                     Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                 }

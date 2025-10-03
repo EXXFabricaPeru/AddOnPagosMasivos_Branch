@@ -10,6 +10,7 @@ using SMC_APM.Modelo;
 using System.IO;
 using System.Threading;
 using System.Xml;
+using SAPbobsCOM;
 
 namespace SMC_APM.View.USRForms
 {
@@ -155,7 +156,11 @@ namespace SMC_APM.View.USRForms
                     var rslt = 0;
                     var idPM = Convert.ToInt32(dbsORBT.GetValueExt("U_DOCENTRY_PM"));
                     var utblConf = Globales.Company.UserTables.Item("SMC_APM_CONFIAPM");
+                    var sboBob = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
+                    var mndLoc = sboBob.GetLocalCurrency().Fields.Item(0).Value;
                     bool cancelarPagoFechaActual = false;
+                    var totalPagoDoc = 0.00;
+                    var totalPagoSuc = 0.00;
 
                     if (utblConf.GetByKey("17"))
                     {
@@ -211,11 +216,13 @@ namespace SMC_APM.View.USRForms
                                     if (rslt != 0) throw new InvalidOperationException($"Error al cancelar pago con ID: {pagoDocumento.ID}, error: {Globales.Company.GetLastErrorDescription()}");
                                 }
 
-                                if (vendorPayment.CashSum - pagoDocumento.ImpTotal > 0)
+                                totalPagoDoc = vendorPayment.DocCurrency == mndLoc ? vendorPayment.CashSum : vendorPayment.CashSumFC;
+                                if (totalPagoDoc - pagoDocumento.ImpTotal > 0)
                                 {
                                     //Genero pago de documentos abiertos                             
                                     vendorPaymentNew.Series = vendorPayment.Series;
                                     vendorPaymentNew.CardCode = vendorPayment.CardCode;
+                                    vendorPaymentNew.DocCurrency = vendorPayment.DocCurrency;
                                     vendorPaymentNew.PaymentType = vendorPayment.PaymentType;
                                     vendorPaymentNew.DocDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.DocDate;
                                     vendorPaymentNew.TaxDate = cancelarPagoFechaActual ? DateTime.Today : vendorPayment.TaxDate;
@@ -232,7 +239,8 @@ namespace SMC_APM.View.USRForms
                                     vendorPaymentNew.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = vendorPayment.UserFields.Fields.Item("U_EXX_MPTRABAN").Value;
                                     */
                                     vendorPaymentNew.CashAccount = vendorPayment.CashAccount;
-                                    vendorPaymentNew.CashSum = vendorPayment.CashSum - pagoDocumento.ImpTotal;
+
+                                    vendorPaymentNew.CashSum = (vendorPayment.DocCurrency == mndLoc ? vendorPayment.CashSum : vendorPayment.CashSumFC) - pagoDocumento.ImpTotal;
                                     vendorPaymentNew.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = vendorPayment.UserFields.Fields.Item("U_EXX_MPFONDEF").Value;
                                     mntoTotalAnulado += pagoDocumento.ImpTotal;
                                     var lineaPagoNew = 0;
@@ -303,7 +311,12 @@ namespace SMC_APM.View.USRForms
                                 if (rslt != 0) throw new InvalidOperationException($"Error al cancelar pago con ID: {rebote.IDPagoSucursal}, error: {Globales.Company.GetLastErrorDescription()}");
                             }
 
-                            if ((vendorPayment.Checks.CheckSum + vendorPayment.TransferSum + vendorPayment.CashSum) - rebote.ImpTotal > 0)
+                            if (vendorPayment.DocCurrency == mndLoc)
+                                totalPagoSuc = (vendorPayment.Checks.CheckSum + vendorPayment.TransferSum + vendorPayment.CashSum) - rebote.ImpTotal;
+                            else
+                                totalPagoSuc = Math.Round(((vendorPayment.Checks.CheckSum + vendorPayment.TransferSum + vendorPayment.CashSumFC) / vendorPayment.DocRate), 2) - rebote.ImpTotal;
+
+                            if (totalPagoSuc > 0)
                             {
                                 vendorPaymentNew = (SAPbobsCOM.Payments)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oVendorPayments);
                                 vendorPaymentNew.Series = vendorPayment.Series;
@@ -325,7 +338,10 @@ namespace SMC_APM.View.USRForms
                                     vendorPaymentNew.Checks.BankCode = vendorPayment.Checks.BankCode;
                                     vendorPaymentNew.Checks.Branch = vendorPayment.Checks.Branch;
                                     vendorPaymentNew.Checks.CheckAccount = vendorPayment.Checks.CheckAccount;
-                                    vendorPaymentNew.Checks.CheckSum = vendorPayment.Checks.CheckSum - rebote.ImpTotal;
+                                    if (vendorPayment.DocCurrency == mndLoc)
+                                        vendorPaymentNew.Checks.CheckSum = vendorPayment.Checks.CheckSum - rebote.ImpTotal;
+                                    else
+                                        vendorPaymentNew.Checks.CheckSum = (vendorPayment.Checks.CheckSum / vendorPayment.DocRate) - rebote.ImpTotal;
                                     vendorPaymentNew.Checks.CountryCode = vendorPayment.Checks.CountryCode;
                                     vendorPaymentNew.Checks.Trnsfrable = vendorPayment.Checks.Trnsfrable;
                                 }
@@ -335,13 +351,19 @@ namespace SMC_APM.View.USRForms
                                     vendorPaymentNew.TransferAccount = vendorPayment.TransferAccount;
                                     vendorPaymentNew.TransferDate = vendorPayment.TransferDate;
                                     vendorPaymentNew.TransferReference = vendorPayment.TransferReference;
-                                    vendorPaymentNew.TransferSum = vendorPayment.TransferSum - rebote.ImpTotal;
+                                    if (vendorPayment.DocCurrency == mndLoc)
+                                        vendorPaymentNew.TransferSum = vendorPayment.TransferSum - rebote.ImpTotal;
+                                    else
+                                        vendorPaymentNew.TransferSum = (vendorPayment.TransferSum / vendorPayment.DocRate) - rebote.ImpTotal;
                                 }
 
                                 if (vendorPayment.CashSum > 0)
                                 {
                                     vendorPaymentNew.CashAccount = vendorPayment.CashAccount;
-                                    vendorPaymentNew.CashSum = vendorPayment.CashSum - rebote.ImpTotal;
+                                    if (vendorPayment.DocCurrency == mndLoc)
+                                        vendorPaymentNew.CashSum = vendorPayment.CashSum - rebote.ImpTotal;
+                                    else
+                                        vendorPaymentNew.CashSum = vendorPayment.CashSumFC - rebote.ImpTotal;
                                 }
                                 vendorPaymentNew.PrimaryFormItems.CashFlowLineItemID = vendorPayment.PrimaryFormItems.CashFlowLineItemID;
                                 vendorPaymentNew.PrimaryFormItems.PaymentMeans = vendorPayment.PrimaryFormItems.PaymentMeans;
@@ -352,8 +374,11 @@ namespace SMC_APM.View.USRForms
                                     vendorPaymentNew.AccountPayments.SetCurrentLine(i);
                                     vendorPaymentNew.AccountPayments.AccountCode = vendorPayment.AccountPayments.AccountCode;
                                     vendorPaymentNew.AccountPayments.AccountName = vendorPayment.AccountPayments.AccountName;
-                                    vendorPaymentNew.AccountPayments.GrossAmount = vendorPayment.AccountPayments.GrossAmount;
-                                    vendorPaymentNew.AccountPayments.SumPaid = vendorPayment.AccountPayments.SumPaid - rebote.ImpTotal;
+                                    //vendorPaymentNew.AccountPayments.GrossAmount = (vendorPayment.AccountPayments.GrossAmount/vendorPayment.DocRate);
+                                    if (vendorPayment.DocCurrency == mndLoc)
+                                        vendorPaymentNew.AccountPayments.SumPaid = vendorPayment.AccountPayments.SumPaid - rebote.ImpTotal;
+                                    else
+                                        vendorPaymentNew.AccountPayments.SumPaid = (vendorPayment.AccountPayments.SumPaid / vendorPayment.DocRate) - rebote.ImpTotal;
                                     vendorPaymentNew.AccountPayments.Decription = vendorPayment.AccountPayments.Decription;
                                     vendorPaymentNew.AccountPayments.ProjectCode = vendorPayment.AccountPayments.ProjectCode;
                                     vendorPaymentNew.AccountPayments.ProfitCenter = vendorPayment.AccountPayments.ProfitCenter;

@@ -1247,8 +1247,11 @@ namespace SMC_APM.View.USRForms
 
         internal void ValidarAnulacionEscenario()
         {
-            var estado = dbsEXD_OEPG.GetValueExt("U_ESTADO", 0);
-            if (estado == "A") throw new Exception("No se puede anular un escenario autorizado");
+            if (tieneAutorizaciones)
+            {
+                var estado = dbsEXD_OEPG.GetValueExt("U_ESTADO", 0);
+                if (estado == "A") throw new Exception("No se puede anular un escenario autorizado");
+            }
         }
 
         internal void LoadDataOnFormAddMode()
