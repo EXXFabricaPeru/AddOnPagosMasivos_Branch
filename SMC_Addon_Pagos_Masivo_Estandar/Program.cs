@@ -42,6 +42,13 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                         }
                     };
 
+                    var recset = (SAPbobsCOM.Recordset)conexSBO.sboCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                    recset.DoQuery("select 'E' from CUFD where \"TableID\" = 'OIDC' and \"AliasID\" = 'EXD_PAGO_MASIVO'");
+                    var existePrevCampoPMEnOIDC = !recset.EoF;
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(recset);
+                    recset = null;
+                    GC.Collect();
+
                     if (MDResources.loadMetaData(Assembly.GetExecutingAssembly().GetName().Version, conexSBO.sboApplication, "EXX", "PGOMSV"))
                     {
                         var utblMD = (SAPbobsCOM.UserTablesMD)conexSBO.sboCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserTables);
@@ -65,8 +72,10 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 new { Code = "15",Name="ID de flujo de caja",Valor="" },
                                 new { Code = "16",Name="Validar pago de retenciones",Valor="N" },
                                 new { Code = "17",Name="Cancelar pagos a la fecha actual",Valor="N" },
-                                new { Code = "18",Name="Version extendida del TXT de BCP",Valor="N" },
-                                new { Code = "19",Name="Mostrar asientos con bloqueo de pago",Valor="Y" }
+                                new { Code = "18",Name="Version extendida del TXT BCP",Valor="N" },
+                                new { Code = "19",Name="Mostrar asientos con bloqueo de pago",Valor="Y" },
+                                new { Code = "20",Name="Nueva version de telecredito TXT BCP",Valor="N" },
+                                new { Code = "21",Name="Agrupar pagos por proveedor TXT BCP",Valor="N" }
                             };
                             //Establezco opciones por defecto
                             var tblConfPM = conexSBO.sboCompany.UserTables.Item("SMC_APM_CONFIAPM");
@@ -121,10 +130,14 @@ namespace SMC_Addon_Pagos_Masivo_Estandar
                                 }
                             }
 
-                            var recset = (SAPbobsCOM.Recordset)conexSBO.sboCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                            var sqlQry = "update OIDC set U_EXD_PAGO_MASIVO = 'Y'";
-                            recset.DoQuery(sqlQry);
-                            recset = null;            
+                            if (!existePrevCampoPMEnOIDC)
+                            {
+                                var recsetAux = (SAPbobsCOM.Recordset)conexSBO.sboCompany.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                                recsetAux.DoQuery("select 'E' from CUFD where \"TableID\" = 'OIDC' and \"AliasID\" = 'EXD_PAGO_MASIVO'");
+                                if (!recsetAux.EoF) recsetAux.DoQuery("update OIDC set U_EXD_PAGO_MASIVO = 'Y'");
+                                System.Runtime.InteropServices.Marshal.ReleaseComObject(recsetAux);
+                                recsetAux = null;
+                            }
 
                             //inicia el addon
                             ctrPrincipal = new ctrPrincipal(conexSBO.sboApplication, conexSBO.sboCompany);

@@ -146,7 +146,7 @@ namespace SMC_APM.View.USRForms
                 btnAddPrv.Image = Path.Combine(System.Windows.Forms.Application.StartupPath, "Resources\\Img\\CFL.bmp");
                 Form.GetComboBox("Item_14").Active = true;
                 udsTAB.Value = "1";
-                dttProveedores.ExecuteQuery("select 'N' as \"Slc\",\"CardCode\",\"CardName\" from OCRD");
+                dttProveedores.ExecuteQuery("select 'N' as \"Slc\",\"CardCode\",\"CardName\" from OCRD order by \"CardName\" ");
 
                 btnEnvApr.Item.Visible = tieneAutorizaciones;
                 if (tieneSucursales) PrepareFormOnSucursales();

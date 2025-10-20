@@ -1844,6 +1844,24 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>EXP_DOCNUM_PAGO</Name>
+        <Type>db_Alpha</Type>
+        <Size>250</Size>
+        <Description>Número de pago SAP</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>EXD_BNPA</Name>
         <Type>db_Alpha</Type>
         <Size>20</Size>

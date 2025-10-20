@@ -1176,6 +1176,13 @@ namespace SMC_APM.View.USRForms
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
             var sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}', \"U_EXP_ESTADO\" = '{estado}', " +
                 $"\"U_EXP_MSJERROR\" = '{msjError.Replace("'", "")}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+
+            if (estado == "OK")
+            {
+                sqlQry = $"update \"@EXP_PMP1\" set \"U_EXP_NROPGOEFEC\" = '{nroPagoEfec}',U_EXP_DOCNUM_PAGO = (select \"DocNum\" from OVPM where \"DocEntry\" = '{nroPagoEfec}'), \"U_EXP_ESTADO\" = '{estado}', " +
+                    $"\"U_EXP_MSJERROR\" = '{msjError.Replace("'", "")}' where \"DocEntry\" = '{docEntry}' and \"LineId\" = '{lineId}'";
+            }
+
             recSet.DoQuery(sqlQry);
 
             /*
