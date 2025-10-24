@@ -294,10 +294,10 @@ namespace SMC_APM.View.USRForms
                 var arrProvNoSlc = _arrRows.Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "Slc").Value != "Y")
                     .Where(r => r.Cells.FirstOrDefault(c => c.ColumnUid == "CardName").Value.ToLower().Contains(indicioNombProv)).ToArray();
 
-                if (arrProvSlc.Length == 0 || arrProvNoSlc.Length == 0)
-                {
-                    Form.Items.Item("Item_5").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
-                }
+                //if (arrProvSlc.Length == 0 || arrProvNoSlc.Length == 0)
+                //{
+                Form.Items.Item("Item_5").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
+                //}
 
                 _dsrXmlDTDocs.Rows = arrProvNoSlc;
                 using (var strWritter = new StringWriter())

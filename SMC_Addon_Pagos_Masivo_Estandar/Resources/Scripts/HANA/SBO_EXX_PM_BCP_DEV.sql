@@ -95,21 +95,6 @@ BEGIN
 			and T1."U_EXP_CODCTABANCO" = :NroCT
 			and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 			and T4."U_EXC_ACTIVO" = 'Y'
-		),
-		
-		CTE_BENEF as
-		(
-			select 
-				'3'																as "TipoRegistro",									
-				case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end		as "TipoDocumento",
-				T1."U_EXP_NROSUNAT"												as "NroDocAPagar",
-				TO_DECIMAL(T1."U_EXP_IMPORTE",14,4)								as "Importe",
-				"LineId"														as "NroLinea"
-			from 
-			"@EXP_PMP1"	T1 where T1."DocEntry" = :NroPM
-			and T1."U_EXP_COD_SUCURSAL" = :NroSC
-			and T1."U_EXP_CODCTABANCO" = :NroCT
-			and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 		)
 		
 		select "Data","NroLinea","Orden" from
@@ -260,7 +245,7 @@ BEGIN
 						"TipoCtaCargo"			||
 						"Moneda"				||
 						rpad("NroCtaCargo",20,' ')			||
-						lpad(round("TotalPlanilla",2),17,'0')			||
+						lpad(TO_DECIMAL(round("TotalPlanilla",2),14,2),17,'0')			||
 						rpad(left("Referencia",40),40,' ')			||
 						"FlagExoITF"			||
 						lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim(TX0."NroCtaAbono")
@@ -287,7 +272,7 @@ BEGIN
 						rpad(left("ReferenciaProveedor",40),40,' ')	||
 						rpad(left("ReferenciaEmpresa",20),20,' ')	||
 						"Moneda"				||
-						lpad(round("Importe",2),17,'0')				||
+						lpad(TO_DECIMAL(round("Importe",2),14,2),17,'0')				||
 						"Validar"
 						||'Z' as "Data"
 					from CTE_PROV where ifnull("NroCtaAbono",'') <>''
@@ -295,8 +280,8 @@ BEGIN
 					select 1 as "Orden","CodigoProveedor",2 as "Orden2",
 						"TipoRegistro"		||
 						"TipoDocumento"		||
-						lpad(ifnull("NroDocAPagar",''),15,'0')	||
-						lpad("Importe",17,'0')
+						rpad(ifnull("NroDocAPagar",''),15,'0')	||
+						lpad(TO_DECIMAL("Importe",14,2),17,'0')
 						||'Z' as "Data"
 					from CTE_BENEF
 				) order by 2,3,4;
@@ -389,7 +374,7 @@ BEGIN
 						"TipoCtaCargo"			||
 						"Moneda"				||
 						rpad("NroCtaCargo",20,' ')			||
-						lpad(round("TotalPlanilla",2),17,'0')			||
+						lpad(TO_DECIMAL(round("TotalPlanilla",2),14,2),17,'0')			||
 						rpad(left("Referencia",40),40,' ')			||
 						"FlagExoITF"			||
 						lpad(to_bigint(right(trim("NroCtaCargo"),10))+(select sum(to_bigint(right(trim(TX0."NroCtaAbono")
@@ -416,7 +401,7 @@ BEGIN
 						rpad(left("ReferenciaProveedor",40),40,' ')	||
 						rpad(left("ReferenciaEmpresa",20),20,' ')	||
 						"Moneda"				||
-						lpad(round("Importe",2),17,'0')				||
+						lpad(TO_DECIMAL(round("Importe",2),14,2),17,'0')				||
 						"Validar"
 						||'Z' as "Data"
 					from CTE_PROV where ifnull("NroCtaAbono",'') <>''
@@ -424,8 +409,8 @@ BEGIN
 					select 2 as "Orden","NroLinea",
 						"TipoRegistro"		||
 						"TipoDocumento"		||
-						lpad(ifnull("NroDocAPagar",''),15,'0')	||
-						lpad("Importe",17,'0')
+						rpad(ifnull("NroDocAPagar",''),15,'0')	||
+						lpad(TO_DECIMAL("Importe",14,2),17,'0')
 						||'Z' as "Data"
 					from CTE_BENEF
 				) order by 2,3;
