@@ -365,8 +365,19 @@ namespace SMC_APM.View.USRForms
                                     else
                                         vendorPaymentNew.CashSum = vendorPayment.CashSumFC - rebote.ImpTotal;
                                 }
-                                vendorPaymentNew.PrimaryFormItems.CashFlowLineItemID = vendorPayment.PrimaryFormItems.CashFlowLineItemID;
-                                vendorPaymentNew.PrimaryFormItems.PaymentMeans = vendorPayment.PrimaryFormItems.PaymentMeans;
+
+                                var cfVPNewLine = 0;
+                                for (int i = 0; i < vendorPayment.PrimaryFormItems.Count; i++)
+                                {
+                                    vendorPayment.PrimaryFormItems.SetCurrentLine(i);
+                                    if (vendorPayment.PrimaryFormItems.CashFlowLineItemID == 0) continue;
+                           
+                                    vendorPaymentNew.PrimaryFormItems.SetCurrentLine(cfVPNewLine);
+                                    vendorPaymentNew.PrimaryFormItems.CashFlowLineItemID = vendorPayment.PrimaryFormItems.CashFlowLineItemID;
+                                    vendorPaymentNew.PrimaryFormItems.PaymentMeans = vendorPayment.PrimaryFormItems.PaymentMeans;
+                                    vendorPaymentNew.PrimaryFormItems.Add();
+                                    cfVPNewLine++;
+                                }
 
                                 for (int i = 0; i < vendorPayment.AccountPayments.Count; i++)
                                 {
