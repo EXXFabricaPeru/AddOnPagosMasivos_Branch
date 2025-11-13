@@ -410,7 +410,7 @@ BEGIN
 						"TipoRegistro"		||
 						"TipoDocumento"		||
 						rpad(ifnull("NroDocAPagar",''),15,'0')	||
-						lpad(TO_DECIMAL("Importe",14,2),17,'0')
+						lpad(TO_DECIMAL(round("Importe",2),14,2),17,'0')
 						||'Z' as "Data"
 					from CTE_BENEF
 				) order by 2,3;
