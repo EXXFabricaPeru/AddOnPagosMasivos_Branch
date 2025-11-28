@@ -3899,7 +3899,97 @@
       </row>
     </UserFieldsMD>
   </BO>
-
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CODAUTBKP2</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cod autorizador backup 2</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CODAUTBKP3</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cod autorizador backup 3</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CODAUTBKP4</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cod autorizador backup 4</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CODAUTBKP5</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cod autorizador backup 5</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>CODAUTBKP6</Name>
+        <Type>db_Alpha</Type>
+        <Size>50</Size>
+        <Description>Cod autorizador backup 6</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXD_PM_CONFAUT1</TableName>
+        <EditSize>50</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  
   <BO>
     <AdmInfo>
       <Object>152</Object>

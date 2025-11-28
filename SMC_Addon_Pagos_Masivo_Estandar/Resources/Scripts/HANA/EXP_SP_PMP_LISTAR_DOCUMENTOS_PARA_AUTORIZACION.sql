@@ -9,6 +9,13 @@ CREATE PROCEDURE EXP_SP_PMP_LISTAR_DOCUMENTOS_PARA_AUTORIZACION
 )
 AS
 BEGIN
+	
+	TMP_AUTORIZADORES = select 
+		"Code",map(element_number,1,U_CODAUTORI,2,U_CODAUTBKP,3,U_CODAUTBKP2,4,U_CODAUTBKP3,5,U_CODAUTBKP4,6,U_CODAUTBKP5,7,U_CODAUTBKP6) as "Autorizadores",'Y' as "AutBackup"
+	from "@EXD_PM_CONFAUT1",SERIES_GENERATE_INTEGER(1, 1, 8) 
+	union all
+	select "Code",U_CODAUTORI,'N' from "@EXD_PM_CONFAUT1";	
+
 	select distinct
 		'P' 						as "Accion",
 		T0."Creator"				as "Creador",
@@ -27,14 +34,11 @@ BEGIN
 	and T0."U_ESTADO" = 'E'
 	and T0."U_AUTORIZAR_POR" = :tipoDocumento
 	and ifnull(T0."Canceled",'') != 'Y'
-	and 
-	(
-	 	T4."U_CODAUTORI" = :codAutorizador or
-		case when ifnull(T3."U_TIENEAUTBKP",'') = 'Y' then T4."U_CODAUTBKP" else T4."U_CODAUTORI" end  = :codAutorizador
-	)
 	and T0."CreateDate" between :fechaDesde and :fechaHasta
 	and ifnull(T0."U_CNT_AUT",0) = :cntAutorizaciones
 	and 'E' = :ventana
+	and :codAutorizador in (select TX0."Autorizadores" from :TMP_AUTORIZADORES TX0 where TX0."Code" = T3."Code" 
+	and TX0."AutBackup" = ifnull(T3."U_TIENEAUTBKP",'N'))
 	
 	union all 
 	
@@ -56,12 +60,9 @@ BEGIN
 	and T0."U_EXP_ESTADO" = 'E'
 	and ifnull(T0."Canceled",'') != 'Y'
 	and T1.U_TIPO_DOC = :tipoDocumento
-	and
-	(
-	 	T2."U_CODAUTORI" = :codAutorizador or
-		case when ifnull(T1."U_TIENEAUTBKP",'') = 'Y' then T2."U_CODAUTBKP" else T2."U_CODAUTORI" end  = :codAutorizador
-	)
 	and T0."CreateDate" between :fechaDesde and :fechaHasta
 	and ifnull(T0."U_EXP_CNTAUT",0) = :cntAutorizaciones
-	and 'P' = :ventana;
+	and 'P' = :ventana
+	and :codAutorizador in (select TX0."Autorizadores" from :TMP_AUTORIZADORES TX0 where TX0."Code" = T1."Code" 
+	and TX0."AutBackup" = ifnull(T1."U_TIENEAUTBKP",'N'));
 END
