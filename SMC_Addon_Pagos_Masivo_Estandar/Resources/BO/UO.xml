@@ -354,12 +354,24 @@
 				<ColDesc>Code</ColDesc>
 				<ColEdit>Y</ColEdit>
 			</row>
+      <row>
+        <SonNum>0</SonNum>
+        <ColAlias>Name</ColAlias>
+        <ColDesc>Name</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
 			<row>
 				<SonNum>0</SonNum>
 				<ColAlias>U_VENTANA</ColAlias>
 				<ColDesc>Ventana</ColDesc>
 				<ColEdit>Y</ColEdit>
 			</row>
+      <row>
+        <SonNum>0</SonNum>
+        <ColAlias>U_TIPO_DOC</ColAlias>
+        <ColDesc>Tipo documento</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
 			<row>
 				<SonNum>0</SonNum>
 				<ColAlias>U_CANTAUTO</ColAlias>
@@ -402,6 +414,36 @@
 				<ColDesc>Cod autorizador backup</ColDesc>
 				<ColEdit>Y</ColEdit>
 			</row>
+      <row>
+        <SonNum>1</SonNum>
+        <ColAlias>U_CODAUTBKP2</ColAlias>
+        <ColDesc>Cod autorizador backup 2</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
+      <row>
+        <SonNum>1</SonNum>
+        <ColAlias>U_CODAUTBKP3</ColAlias>
+        <ColDesc>Cod autorizador backup 3</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
+      <row>
+        <SonNum>1</SonNum>
+        <ColAlias>U_CODAUTBKP4</ColAlias>
+        <ColDesc>Cod autorizador backup 4</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
+      <row>
+        <SonNum>1</SonNum>
+        <ColAlias>U_CODAUTBKP5</ColAlias>
+        <ColDesc>Cod autorizador backup 5</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
+      <row>
+        <SonNum>1</SonNum>
+        <ColAlias>U_CODAUTBKP6</ColAlias>
+        <ColDesc>Cod autorizador backup 6</ColDesc>
+        <ColEdit>Y</ColEdit>
+      </row>
 		</UDO3>
 	</BO>
 
