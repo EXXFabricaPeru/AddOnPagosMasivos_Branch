@@ -476,7 +476,7 @@ namespace SMC_APM.Controller
             finally { }
         }
 
-        public static void GenerarTXTBancos(int docEntry, string codBanco, int codSucursal, string codMoneda, string GLAccount, string codPais, string formatoScotia)
+        public static void GenerarTXTBancos(int docEntry, string codBanco, int codSucursal, string codMoneda, string GLAccount, string medioDePago, string codPais, string formatoScotia)
         {
             try
             {
@@ -490,7 +490,7 @@ namespace SMC_APM.Controller
                 recordset.DoQuery(qry);
                 var nroCuenta = recordset.Fields.Item(0).Value;
                 var nombre = attachPath + @"PagosMasivos\";
-                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-" + codMoneda + "-" + nroCuenta + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
+                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-"+ medioDePago +"-" + codMoneda + "-" + nroCuenta + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
 
                 switch (codPais)
                 {
@@ -499,7 +499,7 @@ namespace SMC_APM.Controller
                         {
                             case "002":
                                 if (Globales.Company.DbServerType == BoDataServerTypes.dst_HANADB)
-                                    qry = $"CALL SBO_EXX_PM_BCP_DEV({docEntry},{codSucursal},'{GLAccount}')";
+                                    qry = $"CALL SBO_EXX_PM_BCP_DEV({docEntry},{codSucursal},'{GLAccount}','{medioDePago}')";
                                 else
                                     qry = $"EXEC SBO_EXX_PM_BCP {docEntry},{codSucursal},'{GLAccount}'";
                                 break;
@@ -792,8 +792,9 @@ namespace SMC_APM.Controller
                     Moneda = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_MONEDA_PAGO")).FirstOrDefault()?.Element("value").Value,
                     Banco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODBANCO")).FirstOrDefault()?.Element("value").Value,
                     CodSucursal = Convert.ToInt32(g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_COD_SUCURSAL")).FirstOrDefault()?.Element("value").Value),
-                    CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value
-                }).Select(s => new { Banco = s.Key.Banco, Sucursal = s.Key.CodSucursal, CtaBanco = s.Key.CtaBanco, Moneda = s.Key.Moneda });
+                    CtaBanco = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_CODCTABANCO")).FirstOrDefault()?.Element("value").Value,
+                    MedioDePago = g.Descendants("cell").Where(w => w.Element("uid").Value.Contains("U_EXP_MEDIODEPAGO")).FirstOrDefault()?.Element("value").Value
+                }).Select(s => new { Banco = s.Key.Banco, Sucursal = s.Key.CodSucursal, CtaBanco = s.Key.CtaBanco, Moneda = s.Key.Moneda, MedioDePago = s.Key.MedioDePago });
             }
             finally { }
         }

@@ -2,7 +2,8 @@ CREATE PROCEDURE SBO_EXX_PM_BCP_DEV
 (
 	NroPM int,
 	NroSC int,
-	NroCT varchar(50)
+	NroCT varchar(50),
+	MedPag varchar(4)
 )
 AS
 BEGIN
@@ -47,6 +48,7 @@ BEGIN
 			and T2."DocEntry" = :NroPM
 			and T1."U_EXP_COD_SUCURSAL" = :NroSC
 			and T1."U_EXP_CODCTABANCO" = :NroCT
+			and T1."U_EXP_MEDIODEPAGO" = :MedPag
 			and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 			group by T2."DocEntry",T1."U_EXP_COD_SUCURSAL",T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 		),
@@ -93,6 +95,7 @@ BEGIN
 			where T2."DocEntry" = :NroPM 
 			and T1."U_EXP_COD_SUCURSAL" = :NroSC
 			and T1."U_EXP_CODCTABANCO" = :NroCT
+			and T1."U_EXP_MEDIODEPAGO" = :MedPag
 			and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 			and T4."U_EXC_ACTIVO" = 'Y'
 		)
@@ -180,6 +183,7 @@ BEGIN
 					and T2."DocEntry" = :NroPM
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 					group by T2."DocEntry",T1."U_EXP_COD_SUCURSAL",T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 				),
@@ -187,11 +191,20 @@ BEGIN
 				CTE_PROV AS
 				(
 					select 
-						'2'																						as "TipoRegistro",
-						case T1."U_EXP_CODBANCOPROV" when '002' then ifnull(T4."UsrNumber2",' ') else 'B' end	as "TipoCuentaAbono",
-						ifnull(replace(case when T4."BankCode" = '002' 
-						then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')				as "NroCtaAbono",
-						'1'																			as "ModalidadDePago",
+						'2'																			as "TipoRegistro",
+						case when :MedPag = 'CG' then ' '
+						else
+							case T1."U_EXP_CODBANCOPROV" 
+								when '002' then ifnull(T4."UsrNumber2",' ') 
+								else 'B' 
+							end	
+						end																			as "TipoCuentaAbono",
+						case when :MedPag = 'CG' then '0'
+						else
+							ifnull(replace(case when T4."BankCode" = '002' 
+							then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')
+						end																			as "NroCtaAbono",
+						case when :MedPag = 'CG' then '2' else '1' end								as "ModalidadDePago",
 						ifnull(case T3."U_EXX_TIPODOCU" 
 						when '4' then '3'
 						when '7' then '4'
@@ -214,6 +227,7 @@ BEGIN
 					where T2."DocEntry" = :NroPM 
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 					and T4."U_EXC_ACTIVO" = 'Y'
 					group by T3."CardCode",T1."U_EXP_CODBANCOPROV",T4."UsrNumber2",T4."BankCode",T4."Account"
@@ -225,13 +239,19 @@ BEGIN
 					select 
 						'3'																as "TipoRegistro",									
 						case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end		as "TipoDocumento",
-						T1."U_EXP_NROSUNAT"												as "NroDocAPagar",
+						case when :MedPag = 'CG' 
+						then 
+							replace(T1."U_EXP_NROSUNAT",'-','0')
+						else 
+							T1."U_EXP_NROSUNAT" 
+						end																as "NroDocAPagar",
 						TO_DECIMAL(T1."U_EXP_IMPORTE",14,4)								as "Importe",
 						T1."U_EXP_CARDCODE"												as "CodigoProveedor"						
 					from 
 					"@EXP_PMP1"	T1 where T1."DocEntry" = :NroPM
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 				)
 		
@@ -263,7 +283,7 @@ BEGIN
 					select 1 as "Orden","CodigoProveedor",1 as "Orden2",
 						"TipoRegistro"			||
 						"TipoCuentaAbono"		||
-						rpad("NroCtaAbono",20,' ') ||
+						rpad(case when :MedPag = 'CG' then '' else "NroCtaAbono" end,20,' ') ||
 						"ModalidadDePago"		||
 						"TipoDocumentoProv"		||
 						rpad("NroDocProv",12,' ')			||
@@ -311,18 +331,28 @@ BEGIN
 					and T2."DocEntry" = :NroPM
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 					group by T2."DocEntry",T1."U_EXP_COD_SUCURSAL",T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 				),
 		
 				CTE_PROV AS
 				(
-					select 
-						'2'																						as "TipoRegistro",
-						case T1."U_EXP_CODBANCOPROV" when '002' then ifnull(T4."UsrNumber2",' ') else 'B' end	as "TipoCuentaAbono",
-						ifnull(replace(case when T4."BankCode" = '002' 
-						then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')				as "NroCtaAbono",
-						'1'																			as "ModalidadDePago",
+					select
+						'2'																			as "TipoRegistro", 
+						case when :MedPag = 'CG' then ' '
+						else
+							case T1."U_EXP_CODBANCOPROV" 
+								when '002' then ifnull(T4."UsrNumber2",' ') 
+								else 'B' 
+							end	
+						end																			as "TipoCuentaAbono",	
+						case when :MedPag = 'CG' then '0'
+						else
+							ifnull(replace(case when T4."BankCode" = '002' 
+							then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')
+						end																			as "NroCtaAbono",
+						case when :MedPag = 'CG' then '2' else '1' end								as "ModalidadDePago",
 						ifnull(case T3."U_EXX_TIPODOCU" 
 						when '4' then '3'
 						when '7' then '4'
@@ -345,6 +375,7 @@ BEGIN
 					where T2."DocEntry" = :NroPM 
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 					and T4."U_EXC_ACTIVO" = 'Y'
 				)
@@ -354,13 +385,19 @@ BEGIN
 					select 
 						'3'																as "TipoRegistro",									
 						case when T1."U_EXP_TIPODOC" = '18' then 'F' else 'D' end		as "TipoDocumento",
-						T1."U_EXP_NROSUNAT"												as "NroDocAPagar",
+						case when :MedPag = 'CG' 
+						then 
+							replace(T1."U_EXP_NROSUNAT",'-','0')
+						else 
+							T1."U_EXP_NROSUNAT" 
+						end																as "NroDocAPagar",
 						TO_DECIMAL(T1."U_EXP_IMPORTE",14,4)								as "Importe",
 						"LineId"														as "NroLinea"
 					from 
 					"@EXP_PMP1"	T1 where T1."DocEntry" = :NroPM
 					and T1."U_EXP_COD_SUCURSAL" = :NroSC
 					and T1."U_EXP_CODCTABANCO" = :NroCT
+					and T1."U_EXP_MEDIODEPAGO" = :MedPag
 					and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 				)
 		
@@ -392,7 +429,7 @@ BEGIN
 					select 1 as "Orden","NroLinea",
 						"TipoRegistro"			||
 						"TipoCuentaAbono"		||
-						rpad("NroCtaAbono",20,' ') ||
+						rpad(case when :MedPag = 'CG' then '' else "NroCtaAbono" end,20,' ') ||
 						"ModalidadDePago"		||
 						"TipoDocumentoProv"		||
 						rpad("NroDocProv",12,' ')			||
@@ -441,6 +478,7 @@ BEGIN
 				and T2."DocEntry" = :NroPM
 				and T1."U_EXP_COD_SUCURSAL" = :NroSC
 				and T1."U_EXP_CODCTABANCO" = :NroCT
+				and T1."U_EXP_MEDIODEPAGO" = :MedPag
 				and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 				group by T2."DocEntry",T1."U_EXP_COD_SUCURSAL",T2."CreateDate",T1."U_EXP_MONEDA",T3."Account",T1."U_EXP_COMENTARIO",T2."DocNum"
 			),
@@ -449,10 +487,19 @@ BEGIN
 			(
 				select 
 					'2'																			as "TipoRegistro",
-					case T1."U_EXP_CODBANCOPROV" when '002' then ifnull(T4."UsrNumber2",' ') else 'B' end	as "TipoCuentaAbono",
-					ifnull(replace(case when T4."BankCode" = '002' 
-					then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')				as "NroCtaAbono",
-					'1'																			as "ModalidadDePago",
+					case when :MedPag = 'CG' then ' '
+					else
+						case T1."U_EXP_CODBANCOPROV" 
+							when '002' then ifnull(T4."UsrNumber2",' ') 
+							else 'B' 
+						end	
+					end																			as "TipoCuentaAbono",					
+					case when :MedPag = 'CG' then '0'
+					else
+						ifnull(replace(case when T4."BankCode" = '002' 
+						then T4."Account" else T4."U_EXM_INTERBANCARIA"end ,'-',''),'')
+					end																			as "NroCtaAbono",
+					case when :MedPag = 'CG' then '2' else '1' end								as "ModalidadDePago",
 					ifnull(case T3."U_EXX_TIPODOCU" 
 					when '4' then '3'
 					when '7' then '4'
@@ -474,6 +521,7 @@ BEGIN
 				where T2."DocEntry" = :NroPM 
 				and T1."U_EXP_COD_SUCURSAL" = :NroSC
 				and T1."U_EXP_CODCTABANCO" = :NroCT
+				and T1."U_EXP_MEDIODEPAGO" = :MedPag
 				and coalesce(T1."U_EXP_SLC_PAGO",'') = 'Y'
 				and T4."U_EXC_ACTIVO" = 'Y'
 			)
@@ -501,7 +549,7 @@ BEGIN
 			select 
 				"TipoRegistro"			||
 				"TipoCuentaAbono"		||
-				rpad("NroCtaAbono",20,' ') ||
+				rpad(case when :MedPag = 'CG' then '' else "NroCtaAbono" end,20,' ') ||
 				"ModalidadDePago"		||
 				"TipoDocumentoProv"		||
 				rpad("NroDocProv",12,' ')			||

@@ -1,4 +1,4 @@
-CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA --'20231013'
+CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA
 (
 	@fechaEscPago date,
 	@codSucursal int,
@@ -8,9 +8,9 @@ CREATE PROCEDURE EXP_SP_PMP_LISTARDOCUMENTOSPORFECHA --'20231013'
 as
 begin
 
-	declare @mndLoc varchar(5) = (select "MainCurncy"  from OADM);
+	declare @mndLoc varchar(5);
 	
-	
+	set @mndLoc = (select "MainCurncy" from OADM);
 	--Factura de proveedor
 	WITH RSLT1
 	as
@@ -49,7 +49,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T4."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -97,7 +100,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T4."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -142,7 +148,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T4."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -187,7 +196,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T4."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -215,7 +227,7 @@ begin
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			isnull(T4."FCCurrency",'SOL')			as "Moneda",
+			isnull(T4."FCCurrency",@mndLoc)			as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			T4."Line_ID"				as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -232,7 +244,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T7."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -269,7 +284,7 @@ begin
 			T4."ShortName"				as "CardCode",
 			T5."CardName"				as "CardName",
 			T5."LicTradNum"				as "NroDocumentoSN",
-			isnull(T4."FCCurrency",'SOL') 			as "Moneda",
+			isnull(T4."FCCurrency",@mndLoc) 			as "Moneda",
 			T1."U_TOTAL_PAGO"			as "Importe",
 			T4."Line_ID"				as "NroLineaAsiento",
 			'0'							as "NroCuota",
@@ -286,7 +301,10 @@ begin
 			T1."U_TIENE_RETENCION"		as "TieneRetencion",
 			T1."U_APLICA_RETENCION"		as "AplicaRetencion",
 			T7."U_EXX_PRIPAG"			as "CodPrioridad",
-			T1."LineId"					as "NroLineaEP"
+			T1."LineId"					as "NroLineaEP",
+			T1."U_COMENTARIOS"			as "Comentarios",
+			T1."U_TOTAL_PAGO_MS"		as "ImporteMS",
+			T1."U_RETENCION_MS"			as "ImporteRetencionMS"
 		from "@EXD_OEPG" 				T0 
 		inner 	join "@EXD_EPG1" 		T1 on T0."DocEntry" 	= T1."DocEntry"
 		inner 	join OACT 				T2 on T2."AcctCode" 	= T1.U_COD_CTA_PAGO
@@ -325,14 +343,21 @@ begin
 		T0."CardCode",
 		T0."CardName",
 		T0."Moneda",
-		T0."Importe" - case when T0."AplicaRetencion" = 'Y' then isnull(T0."MontoRetencion",0) else 0.00 end as "Importe",
+		T0."Importe" - 
+		case when T0."AplicaRetencion" = 'Y' 
+		then 
+			isnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP") * T0."MontoRetencion",0) 
+		else 0.00 end as "Importe",
 		T0."NroCuota",
 		T0."NroLineaAsiento",
 		T0."NroDocumentoSN",
 		T0."NroCtaProveedor",
 		T0."CodBncProveedor",
-		case when isnull(T0."MontoRetencion",0) > 0 then T0."CodRetencion" else '' end "CodRetencion",
-		isnull(T0."MontoRetencion",0) as "MontoRetencion",
+		case when (isnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) * T0."MontoRetencion")  > 0 then T0."CodRetencion" else '' end "CodRetencion",
+		isnull((select TX0.U_TOTAL_PAGO/TX0.U_TOTAL from "@EXD_EPG1" TX0 
+			where TX0."DocEntry" = T0."CodEscenarioPago" and TX0."LineId" = T0."NroLineaEP"),0) * T0."MontoRetencion" as "MontoRetencion",
 		case when isnull(T0."MontoRetencion",0) > 0 then  isnull((select max('Y') from RSLT2 TX0 where isnull(TX0."OffclCode",'') = 'RIGV' and TX0."ObjType" = T0."TipoDocumento" 
 		and TX0."AbsEntry"= T0."DocEntryDocumento" ),'N') else 'N' end as "AplSerieRetencion",
 		T0."TCDocumento",
@@ -343,15 +368,17 @@ begin
 		T0."TieneRetencion",
 		T0."AplicaRetencion",
 		T0."CodPrioridad",
-		T0."NroLineaEP"
-	from RSLT1 T0 
-	where (isnull((select max('Y') from "@EXP_PMP1" TX0 
+		T0."NroLineaEP",
+		T0."Comentarios",
+		T0."ImporteMS",
+		T0."ImporteRetencionMS"
+	from RSLT1 T0 where (isnull((select max('Y') from "@EXP_PMP1" TX0 
 	where TX0."U_EXP_COD_ESCENARIOPAGO" = T0."CodEscenarioPago" 
 	and TX0."U_EXP_TIPODOC" = T0."TipoDocumento"
 	and TX0."U_EXP_DOCENTRYDOC" = T0."DocEntryDocumento"
 	and isnull(TX0."U_EXP_ASNROLINEA",'0') = isnull(T0."NroLineaAsiento",'0')
 	and isnull(TX0."U_EXP_NMROCUOTA",'0') = isnull(T0."NroCuota",'0')),'') != 'Y')
-	and isnull(T0."codSucursal",'0') = isnull(case when @codSucursal = '-1' then T0."CodSucursal" else @codSucursal end,'0')
+	and isnull(T0."CodSucursal",'0') = isnull(case when @codSucursal = '-1' then T0."CodSucursal" else @codSucursal end,'0')
 	and isnull(T0."CodPrioridad",'') = isnull(case when @codPrioridad = '' then T0."CodPrioridad" else @codPrioridad end,'')
 	and T0."TipoDocumento" = case when @tipoDocumento = '0' then T0."TipoDocumento" else @tipoDocumento end;
 end

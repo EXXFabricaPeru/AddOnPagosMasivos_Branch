@@ -38,6 +38,7 @@ namespace SMC_APM.View.USRForms
         private Dictionary<string, string> dcMetodoEnvPorBanco = null;
 
         private string codMonedaLocal = string.Empty;
+        private string codMonedaUSD = string.Empty;
 
         public FormPagoMasivo(string id) : base(TYPE, MENU, id, PATH)
         {
@@ -134,6 +135,9 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
+                recSet.DoQuery("select \"CurrCode\" from OCRN where \"ISOCurrCod\" = 'USD'");
+                codMonedaUSD = recSet.Fields.Item(0).Value.ToString();
+
                 Form.Items.Item("btnTrcRtn").Visible = esTerceroRetenedor;
                 Form.Items.Item("btnLibSNT").Visible = esTerceroRetenedor;
                 Form.Items.Item("Item_19").Visible = esTerceroRetenedor;
@@ -217,7 +221,7 @@ namespace SMC_APM.View.USRForms
             dbsOPMP.SetValue("U_EXP_FECHA", 0, DateTime.Today.ToString("yyyyMMdd"));
             dbsOPMP.SetValue("U_EXP_FECHAPAGO", 0, DateTime.Today.ToString("yyyyMMdd"));
             dbsOPMP.SetValue("U_EXP_ESTADOEJEC", 0, "0");
-            dbsOPMP.SetValue("U_EXP_TIPODECAMBIO", 0, sboBOB.GetCurrencyRate("USD", DateTime.Today).Fields.Item(0).Value.ToString());
+            dbsOPMP.SetValue("U_EXP_TIPODECAMBIO", 0, sboBOB.GetCurrencyRate(codMonedaUSD, DateTime.Today).Fields.Item(0).Value.ToString());
             dbsOPMP.SetValue("U_EXP_FORMA_SCOTIA", 0, "PV");
             dbsOPMP.SetValue("U_EXP_COD_PRIORIDAD", 0, "");
             dbsOPMP.SetValue("U_EXP_TIPO_DOCUMENTO", 0, "0");
@@ -339,7 +343,7 @@ namespace SMC_APM.View.USRForms
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
                     Form.GetUserDataSource("UD_TOTAL").ValueEx = lstDocumentos.Where(d => d.Moneda == codMonedaLocal).Sum(d => d.Importe).ToString();
-                    Form.GetUserDataSource("UD_TOT_USD").ValueEx = lstDocumentos.Where(d => d.Moneda == "USD").Sum(d => d.Importe).ToString();
+                    Form.GetUserDataSource("UD_TOT_USD").ValueEx = lstDocumentos.Where(d => d.Moneda == codMonedaUSD).Sum(d => d.Importe).ToString();
 
                     //Agrego los bancos de la consulta
                     var nroLinea = 0;
@@ -417,7 +421,7 @@ namespace SMC_APM.View.USRForms
                         Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
                         Matrix.FlushToDataSource();
                         var pgoDS = dbsPMP1.GetAsXML();
-                        var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS);
+                        var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS).Distinct();
                         var lstPagos = PagoMasivoController.ObtenerListaPagos(dbsOPMP, pgoDS, dbsPMP2, esAgenteRetenedor, esHostToHost);
                         //var estado = string.Empty;
                         var msjError = string.Empty;
@@ -593,7 +597,7 @@ namespace SMC_APM.View.USRForms
                                 }
                                 else
                                 {
-                                    PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, codPais, formatoScotia);
+                                    PagoMasivoController.GenerarTXTBancos(docEntry, banc.Banco, banc.Sucursal, banc.Moneda, banc.CtaBanco, banc.MedioDePago, codPais, formatoScotia);
                                     Globales.Aplication.StatusBar.SetText($"Archivos para banco {banc.Banco} generados correctamente en la ruta \n C:\\PagosMasivos\\", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                                 }
                             }
@@ -702,7 +706,7 @@ namespace SMC_APM.View.USRForms
                         {
                             if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == codMonedaLocal)
                                 totSlc += Convert.ToDouble(((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_11", i + 1)).Value);
-                            if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == "USD")
+                            if (((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_10", i + 1)).Value == codMonedaUSD)
                                 totSlcUSD += Convert.ToDouble(((SAPbouiCOM.EditText)mtxDocs.GetCellSpecific("Col_11", i + 1)).Value);
 
                         }
@@ -744,7 +748,7 @@ namespace SMC_APM.View.USRForms
                     {
                         var sboBOB = (SAPbobsCOM.SBObob)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoBridge);
                         var fchPago = DateTime.ParseExact(dbsOPMP.GetValueExt("U_EXP_FECHAPAGO"), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
-                        var rslt = sboBOB.GetCurrencyRate("USD", fchPago);
+                        var rslt = sboBOB.GetCurrencyRate(codMonedaUSD, fchPago);
                         CargarSeriesDePago(fchPago.Year);
                         if (!rslt.EoF) dbsOPMP.SetValueExt("U_EXP_TIPODECAMBIO", (string)Convert.ToString(rslt.Fields.Item(0).Value));
                         if (Form.Mode == BoFormMode.fm_ADD_MODE)
@@ -878,7 +882,7 @@ namespace SMC_APM.View.USRForms
                         EXP_PMP1.Offset = i;
                         if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == codMonedaLocal)
                             totPgoMsv += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
-                        if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == "USD")
+                        if (EXP_PMP1.GetValue("U_EXP_MONEDA", i) == codMonedaUSD)
                             totPgoMsvUSD += Convert.ToDouble(EXP_PMP1.GetValue("U_EXP_IMPORTE", i));
                     }
                     Form.GetUserDataSource("UD_TOTAL").ValueEx = totPgoMsv.ToString();
@@ -952,7 +956,7 @@ namespace SMC_APM.View.USRForms
         private void EstablecerCuentasParaNumerosDeOperacion(string estado)
         {
             var pgoDS = dbsPMP1.GetAsXML();
-            var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS).ToList();
+            var lstBancos = PagoMasivoController.ObtenerListaBancoPorPago(pgoDS).Distinct().ToList();
             var nroFila = 0;
 
             if (estado == "A")
@@ -1305,7 +1309,7 @@ namespace SMC_APM.View.USRForms
                 {
                     Globales.Aplication.StatusBar.SetText($"Proceso finalizado con éxito", SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Success);
                     dbsOPMP.SetValueExt("Status", "C");
-                    dbsOPMP.SetValueExt("U_EXP_ESTADO","C");
+                    dbsOPMP.SetValueExt("U_EXP_ESTADO", "C");
                     if (Form.Mode != SAPbouiCOM.BoFormMode.fm_UPDATE_MODE) Form.Mode = SAPbouiCOM.BoFormMode.fm_UPDATE_MODE;
                     Form.GetItem("1").Click(SAPbouiCOM.BoCellClickType.ct_Regular);
                 }
