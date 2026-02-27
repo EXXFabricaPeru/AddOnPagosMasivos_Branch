@@ -1016,6 +1016,24 @@
     </AdmInfo>
     <UserFieldsMD>
       <row>
+        <Name>EXP_COD_FLUCAJ</Name>
+        <Type>db_Numeric</Type>
+        <Size>6</Size>
+        <Description>Cod. flujo de caja</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_OPMP</TableName>
+        <EditSize>1</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
         <Name>EXP_COD_ESCENARIOPAGO</Name>
         <Type>db_Alpha</Type>
         <Size>10</Size>
@@ -1851,6 +1869,24 @@
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP1</TableName>
         <EditSize>20</EditSize>
+        <Mandatory>tNO</Mandatory>
+      </row>
+    </UserFieldsMD>
+  </BO>
+  <BO>
+    <AdmInfo>
+      <Object>152</Object>
+      <Version>2</Version>
+    </AdmInfo>
+    <UserFieldsMD>
+      <row>
+        <Name>EXP_COD_FLUCAJ</Name>
+        <Type>db_Numeric</Type>
+        <Size>6</Size>
+        <Description>Cod. flujo de caja</Description>
+        <SubType>st_None</SubType>
+        <TableName>@EXP_PMP1</TableName>
+        <EditSize>1</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -3770,7 +3806,7 @@
       </row>
     </UserFieldsMD>
   </BO>
-  
+
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -3989,7 +4025,7 @@
       </row>
     </UserFieldsMD>
   </BO>
-  
+
   <BO>
     <AdmInfo>
       <Object>152</Object>
@@ -4361,7 +4397,7 @@
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
-  </BO>  
+  </BO>
   <BO>
     <AdmInfo>
       <Object>152</Object>

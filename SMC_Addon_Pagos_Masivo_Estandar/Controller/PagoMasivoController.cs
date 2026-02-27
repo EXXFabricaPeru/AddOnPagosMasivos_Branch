@@ -490,7 +490,7 @@ namespace SMC_APM.Controller
                 recordset.DoQuery(qry);
                 var nroCuenta = recordset.Fields.Item(0).Value;
                 var nombre = attachPath + @"PagosMasivos\";
-                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-"+ medioDePago +"-" + codMoneda + "-" + nroCuenta + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
+                nombre = nombre + "ArchivoBanco-" + codBanco + "-" + codSucursal + "-" + medioDePago + "-" + codMoneda + "-" + nroCuenta + "-" + DateTime.Now.ToString("dd_MM_yyyyThh-mm") + ".txt";
 
                 switch (codPais)
                 {
@@ -877,7 +877,8 @@ namespace SMC_APM.Controller
                     sboPayments.Checks.Trnsfrable = SAPbobsCOM.BoYesNoEnum.tNO;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        //sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(docEntry, sboPayments.BPLID, pago.MetodoPago.Banco, pago.Moneda);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtChecks;
                         if (pago.Moneda == "SOL")
                             sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
@@ -898,7 +899,8 @@ namespace SMC_APM.Controller
                     sboPayments.CounterReference = sboPayments.TransferReference;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        //sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(docEntry, sboPayments.BPLID, pago.MetodoPago.Banco, pago.Moneda);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtBankTransfer;
                         /*
                         if (pago.Moneda == "SOL")
@@ -916,7 +918,8 @@ namespace SMC_APM.Controller
                     sboPayments.CashSum = pago.Monto;
                     if (EsRelevanteFlujoDeCaja(pago.MetodoPago.Cuenta))
                     {
-                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        //sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(pago.CodSucursal, tieneSucursales);
+                        sboPayments.PrimaryFormItems.CashFlowLineItemID = ObtenerIDFlujoDeCaja(docEntry, sboPayments.BPLID, pago.MetodoPago.Banco, pago.Moneda);
                         sboPayments.PrimaryFormItems.PaymentMeans = PaymentMeansTypeEnum.pmtCash;
                         if (pago.Moneda == "SOL")
                             sboPayments.PrimaryFormItems.AmountLC = pago.Monto;
@@ -1015,6 +1018,18 @@ namespace SMC_APM.Controller
             {
                 sqlQry = $"select TX1.\"U_EXD_CFWID\" from  OBPL TX1 where TX1.\"BPLId\" = '{codSucursal}' and coalesce(TX1.\"U_EXD_CFWID\",'-1') <> '-1'";
             }
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF)
+                return Convert.ToInt32(recSet.Fields.Item(0).Value);
+            else
+                throw new InvalidOperationException($"No se ha definido el ID del flujo de caja para la sucursal cod ID:{codSucursal}");
+        }
+
+        private static int ObtenerIDFlujoDeCaja(int docEntry, int codSucursal, string codBanco, string codMoneda)
+        {
+            var sqlQry = $"select max(U_EXP_COD_FLUCAJ) from \"@EXP_PMP1\" where \"DocEntry\" = '{docEntry}' and U_EXP_COD_SUCURSAL = '{codSucursal}' and U_EXP_CODBANCO = '{codBanco}' and U_EXP_MONEDA_PAGO = '{codMoneda}'";
+
             var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
             recSet.DoQuery(sqlQry);
             if (!recSet.EoF)

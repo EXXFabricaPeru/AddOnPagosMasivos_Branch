@@ -186,6 +186,24 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
+                var cmbFlujoDeCaja = Form.GetComboBox("Item_42");
+                while (cmbFlujoDeCaja.ValidValues.Count > 0) cmbFlujoDeCaja.ValidValues.Remove(0, BoSearchKey.psk_Index);
+                cmbFlujoDeCaja.ValidValues.Add(string.Empty, string.Empty);
+                recSet.DoQuery("select \"CFWId\",\"CFWName\" from OCFW where \"Postable\" = 'Y'");
+                while (!recSet.EoF)
+                {
+                    cmbFlujoDeCaja.ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    Matrix.Columns.Item("Col_48").ValidValues.Add(recSet.Fields.Item(0).Value, recSet.Fields.Item(1).Value);
+                    recSet.MoveNext();
+                }
+
+                var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '15' and coalesce(U_VALOR,'') <> '' ";
+                recSet.DoQuery(sqlQry);
+                if (!recSet.EoF)
+                {
+                    cmbFlujoDeCaja.Select(recSet.Fields.Item(0).Value.ToString(), BoSearchKey.psk_ByValue);
+                }
+
                 /*
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -339,6 +357,7 @@ namespace SMC_APM.View.USRForms
                         dbsPMP1.SetValue("U_EXP_IMPORTE_MS", lineNum, doc.ImporteMS.ToString());
                         dbsPMP1.SetValue("U_EXP_IMP_RETENCION_MS", lineNum, doc.ImporteRetencionMS.ToString());
                         dbsPMP1.SetValue("U_EXP_COMENTARIOS", lineNum, doc.Comentarios.ToString());
+                        dbsPMP1.SetValue("U_EXP_COD_FLUCAJ", lineNum, dbsOPMP.GetValueExt("U_EXP_COD_FLUCAJ"));
                     }
                     Matrix.LoadFromDataSource();
                     Matrix.AutoResizeColumns();
@@ -862,6 +881,25 @@ namespace SMC_APM.View.USRForms
                 return true;
             }));
 
+            Eventos.Add(new EventoItem(BoEventTypes.et_COMBO_SELECT, "Item_42", e =>
+             {
+                 if (!e.BeforeAction)
+                 {
+                     var codFljCaj = dbsOPMP.GetValueExt("U_EXP_COD_FLUCAJ");
+                     Matrix = (SAPbouiCOM.Matrix)Form.Items.Item("Item_12").Specific;
+                     Matrix.FlushToDataSource();
+
+                     for (int i = 0; i < Matrix.RowCount; i++)
+                     {
+                         Matrix.SetCellWithoutValidation(i + 1, "Col_48", codFljCaj);
+                     }
+
+                     Matrix.FlushToDataSource();
+
+                 }
+                 return true;
+             }));
+
             //************## Data events ##*******************************************************************************************
             Eventos.Add(new EventoData(SAPbouiCOM.BoEventTypes.et_FORM_DATA_LOAD, TYPE, e =>
             {
@@ -1102,6 +1140,7 @@ namespace SMC_APM.View.USRForms
             Form.Items.Item("Item_23").Enabled = false;
             Form.Items.Item("Item_24").Enabled = false;
             Form.Items.Item("Item_34").Enabled = false;
+            Form.Items.Item("Item_42").Enabled = false;
             Form.GetMatrix("Item_12").Columns.Item("Col_2").Editable = false;
             if (codEstado == "P" || codEstado == "R")
             {
@@ -1118,6 +1157,7 @@ namespace SMC_APM.View.USRForms
                 Form.Items.Item("Item_23").Enabled = true;
                 Form.Items.Item("Item_24").Enabled = true;
                 Form.Items.Item("Item_40").Enabled = (Form.Mode != SAPbouiCOM.BoFormMode.fm_ADD_MODE);
+                Form.Items.Item("Item_42").Enabled = true;
                 Form.GetMatrix("Item_12").Columns.Item("Col_2").Editable = false;
             }
             else if (codEstado == "A")
@@ -1132,6 +1172,7 @@ namespace SMC_APM.View.USRForms
                 Form.Items.Item("btnLibSNT").Enabled = true;
                 Form.Items.Item("btnCrgRsp").Enabled = true;
                 Form.Items.Item("Item_40").Enabled = true;
+                Form.Items.Item("Item_42").Enabled = true;
                 if (esTerceroRetenedor)
                 {
                     switch (dbsOPMP.GetValueExt("U_EXP_ESTADOEJEC"))
