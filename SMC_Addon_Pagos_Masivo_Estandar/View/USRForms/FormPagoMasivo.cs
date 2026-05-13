@@ -1418,7 +1418,7 @@ namespace SMC_APM.View.USRForms
                         //pgo.Monto = pgo.Detalle.Sum(d => d.MontoPagado);
                         pgo.Monto = pgo.Detalle.Sum(d => d.MontoAPagar * ((d.MonedaDoc == mndLoc ? 1 : tipoDeCambio)
                         / (pgo.Moneda == mndLoc ? 1 : tipoDeCambio)));
-                        PagoMasivoController.QuitarRetencionDocumento(pgo);
+                        PagoMasivoController.QuitarRetencionDocumento(pgo, codMonedaLocal);
                         pgo.Referencia = PagoMasivoController.ObtenerNroOperacion(docEntryForm, pgo.CodSucursal, pgo.MetodoPago.Banco, pgo.MetodoPago.Cuenta, pgo.Moneda);
                         nroPago = PagoMasivoController.GenerarPagoEfectuadoSBO(pgo, tieneSucursales);
                     }

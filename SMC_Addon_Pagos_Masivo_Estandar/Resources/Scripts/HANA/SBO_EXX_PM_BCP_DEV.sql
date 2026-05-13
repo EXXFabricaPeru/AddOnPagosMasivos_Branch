@@ -65,7 +65,7 @@ BEGIN
 					when 'C' then LEFT(rpad(replace(T4."Account",'-',''),20,' '),3)||'0'||SUBSTRING(rpad(replace(T4."Account",'-',''),20,' '),4,LENGTH(rpad(replace(T4."Account",'-',''),20,' ')))
 					else T4."U_EXM_INTERBANCARIA" end
 				else T4."U_EXM_INTERBANCARIA" end ,'-',''),'')							as "NroCtaAbono",
-				T3."CardName"																			as "NombreProveedor",
+				LIMPIA_CADENA(T3."CardName")																		as "NombreProveedor",
 				case when T1."U_EXP_MONEDA" = :mndLoc then 'S/' else 'US' end							as "Moneda",
 				TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)														as "Importe",
 				ifnull(case T3."U_EXX_TIPODOCU" 
@@ -211,7 +211,7 @@ BEGIN
 						else T3."U_EXX_TIPODOCU" END,'') 											as "TipoDocumentoProv",
 						T3."LicTradNum"																as "NroDocProv",
 						'   '																		as "CorrDocProv",
-						T3."CardName"																as "NombreProveedor",
+						LIMPIA_CADENA(T3."CardName")												as "NombreProveedor",
 						/*ifnull(T1."U_EXP_NROSUNAT",'')*/''										as "ReferenciaProveedor",
 						/*ifnull(T1."U_EXP_NROSUNAT",'')*/''										as "ReferenciaEmpresa",
 						case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end			as "Moneda",
@@ -359,7 +359,7 @@ BEGIN
 						else T3."U_EXX_TIPODOCU" END,'') 											as "TipoDocumentoProv",
 						T3."LicTradNum"																as "NroDocProv",
 						'   '																		as "CorrDocProv",
-						T3."CardName"																as "NombreProveedor",
+						LIMPIA_CADENA(T3."CardName")												as "NombreProveedor",
 						ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaProveedor",
 						ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaEmpresa",
 						case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end				as "Moneda",
@@ -506,10 +506,10 @@ BEGIN
 					else T3."U_EXX_TIPODOCU" END,'') 												as "TipoDocumentoProv",
 					T3."LicTradNum"																as "NroDocProv",
 					'   '																		as "CorrDocProv",
-					T3."CardName"																as "NombreProveedor",
+					LIMPIA_CADENA(T3."CardName")												as "NombreProveedor",
 					ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaProveedor",
 					ifnull(T1."U_EXP_NROSUNAT",'')												as "ReferenciaEmpresa",
-					case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end				as "Moneda",
+					case when T1."U_EXP_MONEDA" = :mndLoc then '0001' else '1001' end			as "Moneda",
 					TO_DECIMAL(T1."U_EXP_IMPORTE",14,2)											as "Importe",
 					'S'																			as "Validar",
 					''																			as "Filler"

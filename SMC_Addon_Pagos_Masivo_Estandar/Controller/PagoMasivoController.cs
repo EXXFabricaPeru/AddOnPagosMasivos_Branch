@@ -36,8 +36,17 @@ namespace SMC_APM.Controller
         public static SAPbobsCOM.Recordset ObtenerSeriesRetencion()
         {
             var recordset = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(BoObjectTypes.BoRecordset);
-            var sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and coalesce(\"U_EXC_CR\",'') = 'Y'";
+
+            var sqlQry = "select coalesce(\"DocNmMtd\",'N') from CINF";
             recordset.DoQuery(sqlQry);
+
+            var variasSeriesPorDoc = recordset.Fields.Item(0).Value;
+            if (variasSeriesPorDoc == "Y")
+                sqlQry = "select T0.\"Series\",\"SeriesName\" from NNM1 T0 inner join NNM3 T1 on T0.\"Series\" = T1.\"Series\" where T1.\"ObjectCode\" = '46' and T0.U_EXC_CR = 'Y'";
+            else
+                sqlQry = $"select \"Series\",\"SeriesName\" from NNM1 where \"ObjectCode\" = '46' and coalesce(\"U_EXC_CR\",'') = 'Y'";
+            recordset.DoQuery(sqlQry);
+
             if (recordset.RecordCount == 0)
                 throw new Exception("No se han configurado series de retención, validar su configuración en el formulario numeración de documentos");
             else
@@ -1228,7 +1237,7 @@ namespace SMC_APM.Controller
             Process.Start(nombre);
         }
 
-        public static void QuitarRetencionDocumento(SBOPago sboPago)
+        public static void QuitarRetencionDocumento(SBOPago sboPago, string codMonedaLocal)
         {
             var document = (SAPbobsCOM.Documents)Globales.Company.GetBusinessObject(BoObjectTypes.oPurchaseInvoices);
 
@@ -1240,7 +1249,7 @@ namespace SMC_APM.Controller
                 {
                     document.GetByKey(d.IdDocumento);
                     document.WithholdingTaxData.SetCurrentLine(0);
-                    if (document.DocCurrency.Equals("SOL"))
+                    if (document.DocCurrency.Equals(codMonedaLocal))
                         document.WithholdingTaxData.WTAmount = 0.00;
                     else
                         document.WithholdingTaxData.WTAmountFC = 0.00;

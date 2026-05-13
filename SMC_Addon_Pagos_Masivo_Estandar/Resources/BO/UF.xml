@@ -1022,7 +1022,7 @@
         <Description>Cod. flujo de caja</Description>
         <SubType>st_None</SubType>
         <TableName>@EXP_OPMP</TableName>
-        <EditSize>1</EditSize>
+        <EditSize>10</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>
@@ -1886,7 +1886,7 @@
         <Description>Cod. flujo de caja</Description>
         <SubType>st_None</SubType>
         <TableName>@EXP_PMP1</TableName>
-        <EditSize>1</EditSize>
+        <EditSize>10</EditSize>
         <Mandatory>tNO</Mandatory>
       </row>
     </UserFieldsMD>

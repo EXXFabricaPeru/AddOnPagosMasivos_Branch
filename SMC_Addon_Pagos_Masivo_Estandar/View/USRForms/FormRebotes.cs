@@ -344,6 +344,7 @@ namespace SMC_APM.View.USRForms
                                         vendorPaymentNew.Checks.CheckSum = (vendorPayment.Checks.CheckSum / vendorPayment.DocRate) - rebote.ImpTotal;
                                     vendorPaymentNew.Checks.CountryCode = vendorPayment.Checks.CountryCode;
                                     vendorPaymentNew.Checks.Trnsfrable = vendorPayment.Checks.Trnsfrable;
+                                    vendorPaymentNew.UserFields.Fields.Item("U_EXX_MPCHEQUE").Value = vendorPayment.UserFields.Fields.Item("U_EXX_MPCHEQUE").Value;
                                 }
 
                                 if (vendorPayment.TransferSum > 0)
@@ -355,6 +356,7 @@ namespace SMC_APM.View.USRForms
                                         vendorPaymentNew.TransferSum = vendorPayment.TransferSum - rebote.ImpTotal;
                                     else
                                         vendorPaymentNew.TransferSum = (vendorPayment.TransferSum / vendorPayment.DocRate) - rebote.ImpTotal;
+                                    vendorPaymentNew.UserFields.Fields.Item("U_EXX_MPTRABAN").Value = vendorPayment.UserFields.Fields.Item("U_EXX_MPTRABAN").Value;
                                 }
 
                                 if (vendorPayment.CashSum > 0)
@@ -364,6 +366,7 @@ namespace SMC_APM.View.USRForms
                                         vendorPaymentNew.CashSum = vendorPayment.CashSum - rebote.ImpTotal;
                                     else
                                         vendorPaymentNew.CashSum = vendorPayment.CashSumFC - rebote.ImpTotal;
+                                    vendorPaymentNew.UserFields.Fields.Item("U_EXX_MPFONDEF").Value = vendorPayment.UserFields.Fields.Item("U_EXX_MPFONDEF").Value;
                                 }
 
                                 var cfVPNewLine = 0;
@@ -371,7 +374,7 @@ namespace SMC_APM.View.USRForms
                                 {
                                     vendorPayment.PrimaryFormItems.SetCurrentLine(i);
                                     if (vendorPayment.PrimaryFormItems.CashFlowLineItemID == 0) continue;
-                           
+
                                     vendorPaymentNew.PrimaryFormItems.SetCurrentLine(cfVPNewLine);
                                     vendorPaymentNew.PrimaryFormItems.CashFlowLineItemID = vendorPayment.PrimaryFormItems.CashFlowLineItemID;
                                     vendorPaymentNew.PrimaryFormItems.PaymentMeans = vendorPayment.PrimaryFormItems.PaymentMeans;
