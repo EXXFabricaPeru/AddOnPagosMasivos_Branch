@@ -583,6 +583,8 @@ namespace SMC_APM.View.USRForms
                             doc.NomBancoPago = r.Cells.FirstOrDefault(c => c.ColumnUid == "NomBancoPago").Value;
                             doc.CodCtaPago = codCtaPago;
                             doc.NroCtaPago = nroCtaPago;
+                            doc.BankCode = r.Cells.FirstOrDefault(c => c.ColumnUid == "BankCode")?.Value;
+                            doc.NombreBanco = r.Cells.FirstOrDefault(c => c.ColumnUid == "NombreBanco")?.Value;
                             doc.Cuenta = r.Cells.FirstOrDefault(c => c.ColumnUid == "Cuenta")?.Value;
                             doc.TotalPagar = Convert.ToDouble(r.Cells.FirstOrDefault(c => c.ColumnUid == "TotalPagar").Value);
                             doc.Retencion = Convert.ToDouble(montoRetencion);

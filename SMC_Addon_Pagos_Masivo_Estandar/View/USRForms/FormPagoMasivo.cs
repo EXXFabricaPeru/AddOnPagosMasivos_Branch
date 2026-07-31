@@ -197,13 +197,6 @@ namespace SMC_APM.View.USRForms
                     recSet.MoveNext();
                 }
 
-                var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '15' and coalesce(U_VALOR,'') <> '' ";
-                recSet.DoQuery(sqlQry);
-                if (!recSet.EoF)
-                {
-                    cmbFlujoDeCaja.Select(recSet.Fields.Item(0).Value.ToString(), BoSearchKey.psk_ByValue);
-                }
-
                 /*
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_All, SAPbouiCOM.BoModeVisualBehavior.mvb_False);
                 Form.Items.Item("Item_1").SetAutoManagedAttribute(SAPbouiCOM.BoAutoManagedAttr.ama_Editable, (int)SAPbouiCOM.BoAutoFormMode.afm_Add, SAPbouiCOM.BoModeVisualBehavior.mvb_True);
@@ -247,6 +240,16 @@ namespace SMC_APM.View.USRForms
             Form.GetUserDataSource("UD_TOTAL").ValueEx = "0.00";
             Form.GetUserDataSource("UD_TOT_USD").ValueEx = "0.00";
             CargarSeriesDePago(DateTime.Today.Year);
+
+            var recSet = (SAPbobsCOM.Recordset)Globales.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+            var sqlQry = "select U_VALOR from \"@SMC_APM_CONFIAPM\" where \"Code\" = '15' and coalesce(U_VALOR,'') <> '' ";
+            var cmbFlujoDeCaja = Form.GetComboBox("Item_42");
+            recSet.DoQuery(sqlQry);
+            if (!recSet.EoF)
+            {
+                cmbFlujoDeCaja.Select(recSet.Fields.Item(0).Value.ToString(), BoSearchKey.psk_ByValue);
+            }
+
             HabilitarControlesPorEstado("P");
             //Button.Caption = "Grabar";
             //Matrix.Columns.Item("Col_0").Editable = true;
